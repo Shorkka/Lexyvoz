@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "12-products-app",
-    "slug": "12-products-app",
+    "name": "LexyVoz",
+    "slug": "LexyVoz",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "12productsapp",
+    "scheme": "LexyVoz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

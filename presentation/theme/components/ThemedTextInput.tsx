@@ -9,6 +9,7 @@ interface Props extends TextInputProps{
 const ThemedTextInput = ({icon, ...rest}: Props) => {
     const primaryColor = useThemeColor({}, 'primary');
     const textColor = useThemeColor({}, 'text');
+    const placeholderColor = useThemeColor({}, 'secondaryText');  
 
     const [isActrive, setIsActrive] = useState(false)
     const inputRef = useRef<TextInput>(null)
@@ -31,7 +32,8 @@ const ThemedTextInput = ({icon, ...rest}: Props) => {
       <TextInput
         {...rest}
         ref = {inputRef}
-        placeholderTextColor="#5c5c5c"
+        
+        placeholderTextColor={placeholderColor}
         onFocus={() => setIsActrive(true)}
         onBlur={() =>  setIsActrive(false)}
         style = {{
@@ -54,5 +56,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#fff3e7'
   }
 })
