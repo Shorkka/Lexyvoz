@@ -40,6 +40,8 @@ const ThemedTextInput = ({icon, ...rest}: Props) => {
           flex: 1,
           color: textColor,
           marginRight: 10,
+          borderWidth: 0, 
+          outlineWidth: 0
         }}
         />
     </View>

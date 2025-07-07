@@ -46,8 +46,8 @@ const LoginScreen = () => {
       'Error al iniciar sesión'  )
   }
   
-  const getResponsivePadding = (value: number, base: number ) => {
- if (Platform.OS === 'web') { 
+const getResponsivePadding = (value: number, base: number ) => {
+  if (Platform.OS === 'web') { 
       return Math.min(width * 0.3, value);
     } else {
 
@@ -107,7 +107,6 @@ const LoginScreen = () => {
         </View>
             <View style = {{marginTop: 10,}}/>
           <ThemedButton 
-          icon = "arrow-forward"
           onPress = {onLogin}
           disabled = {isPosting}
           

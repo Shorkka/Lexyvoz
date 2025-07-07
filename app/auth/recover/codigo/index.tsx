@@ -1,35 +1,30 @@
-import React, { useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native'
-import { ThemedText } from '@/presentation/theme/components/ThemedText'
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import { router } from 'expo-router';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 
-const RecoveryScreen = () => {
+const CodigoRecuperacionScreen = () => {
   const { height, width } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
-  const [form, setForm] = useState({
-    email: ''
-  });
+  const [code, setCode] = useState('');
   const [isPosting, setIsPosting] = useState(false);
 
-  const onSendRecovery = async () => {
-    const { email } = form;
-    if (email.length === 0) {
-      return Alert.alert('Por favor ingresa tu email');
+  const onSubmitCode = async () => {
+    if (!code) {
+      return Alert.alert('Ingresa el código de recuperación');
     }
     setIsPosting(true);
-    // Aquí deberías llamar a lu API para enviar el correo de recuperación
-    // await sendRecoveryEmail(email);
+    // Aquí deberías validar el código con tu backend
     setTimeout(() => {
       setIsPosting(false);
-      Alert.alert('Si el correo existe, se ha enviado un código de recuperación');
-      router.replace('/auth/login');
-    }, 1500);
+      // Si el código es válido, navega a la pantalla de confirmación
+      router.replace('/auth/recover/confirmar_accion/index');
+    }, 1200);
   };
 
   const getResponsivePadding = (value: number, base: number ) => {
@@ -53,13 +48,12 @@ const RecoveryScreen = () => {
         <View style={{ paddingTop: height * 0.30 }}>
           <ThemedBackground />
           <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
-          <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Recuperar contraseña</ThemedText>
-          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Mandame un código de restauración</ThemedText>
-          {/* Email */}
+          <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Ingresa tu código</ThemedText>
+          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Introduce el código que recibiste por correo</ThemedText>
           <View style={{ marginTop: 20 }}>
-            <ThemedText>Email</ThemedText>
+            <ThemedText>Código</ThemedText>
             <ThemedTextInput
-              placeholder="correo@ejemplo.com"
+              placeholder="Código de recuperación"
               style={{
                 borderBottomWidth: 1,
                 borderColor: 'grey',
@@ -67,34 +61,22 @@ const RecoveryScreen = () => {
                 fontSize: 16,
               }}
               autoCapitalize="none"
-              keyboardType="email-address"
-              icon="mail-outline"
-              value={form.email}
-              onChangeText={(value) => setForm({ ...form, email: value })}
+              keyboardType="default"
+              value={code}
+              onChangeText={setCode}
             />
           </View>
           <View style={{ marginTop: 10 }} />
           <ThemedButton
-            onPress={onSendRecovery}
+            onPress={onSubmitCode}
             disabled={isPosting}
           >
-            Enviar código
+            Validar código
           </ThemedButton>
-          <View style={{ marginTop: 50 }} />
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <ThemedText style={{ color: secondaryColor }}>¿Ya tienes una cuenta?</ThemedText>
-            <ThemedLink href='/auth/recover/confirmar_accion/index' style={{ marginHorizontal: 5 }}>
-              Iniciar sesión
-            </ThemedLink>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-export default RecoveryScreen
+export default CodigoRecuperacionScreen;

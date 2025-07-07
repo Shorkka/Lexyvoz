@@ -7,12 +7,9 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import ThemedLink from '@/presentation/theme/components/ThemedLink';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { router } from 'expo-router';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 
-
-import * as Progress from 'react-native-progress';
 import ThemedProgressBar from '@/presentation/theme/components/ThemedProgressBar';
 
 const LoginScreen = () => {
@@ -24,30 +21,25 @@ const LoginScreen = () => {
   //const { login } =  useAuthStore();
   const [form, setForm] = useState({
     email: '',
-    password: ''
+    password: '',
+    nombre: '',
   })
 
-  {/*
-  const [isPosting, setIsPosting] = useState(false);
 
-  const onLogin = async () => {
-    const { email, password } = form;
-    console.log({email, password})
-    if (email.length === 0 || password.length === 0 ) {
-      return alert('Por favor ingrese su email y contraseña')
-    }
-    setIsPosting(true);
-    const wasSuccessful = await login(email, password);
-    setIsPosting(false);
+const onRegister = () =>{ 
+    const {email, nombre, password} = form;
 
-    if(wasSuccessful) {
-      router.replace('/');
-      return
+    if( nombre.length === 0 || email.length === 0 || password.length ===0){
+      return Alert.alert('Llena todos los datos por favor');
     }
-    Alert.alert(
-      'Error al iniciar sesión'  )
-  }
-  */}
+    return router.push(
+      {pathname: '/auth/register/register-nextPage',
+      params: { email, nombre, password }
+  });
+
+
+    }
+
   const getResponsivePadding = (value: number, base: number ) => {
  if (Platform.OS === 'web') { 
       return Math.min(width * 0.3, value);
@@ -68,7 +60,7 @@ const LoginScreen = () => {
       <View style = {{
         paddingTop:height * 0.30,
       }}>
-       <ThemedBackground/>
+        <ThemedBackground/>
         <View style = {{marginLeft: 30, position: 'absolute', top: height* 0.15,  alignItems: 'center'}}>
           <ThemedText>Paso 1 de 2</ThemedText>
           <ThemedProgressBar progress  = { 0.5}  color = {barColor}  widthAndroid={width *0.67} widthWeb= {width *0.36}/>
@@ -78,7 +70,7 @@ const LoginScreen = () => {
   
         <ThemedText style = {{color:secondaryColor, alignSelf: 'center'}}></ThemedText>
         { /* Email y Password */ }
-        <View style = {{marginTop: 10}}>
+        <View>
         <ThemedText style = {{fontSize: 14, top: 3}}>Nombre completo</ThemedText>
           <ThemedTextInput
             placeholder = "Nombre"
@@ -90,8 +82,8 @@ const LoginScreen = () => {
             autoCapitalize = 'words'
             keyboardType = 'default'
             icon = 'person-circle-outline'
-            value= {form.email}
-            onChangeText = {(value) => setForm({...form, email: value})}
+            value= {form.nombre}
+            onChangeText = {(value) => setForm({...form, nombre: value})}
             
           />
            <ThemedText style = {{fontSize: 14, top: 3}}>Correo</ThemedText>
@@ -119,20 +111,21 @@ const LoginScreen = () => {
               fontSize: 16,
             }}
             autoCapitalize = "none"
+            secureTextEntry
             keyboardType = "default"
             icon = "lock-closed-outline"
-            value= {form.email}
-            onChangeText = {(value) => setForm({...form, email: value})}
+            value= {form.password}
+            onChangeText = {(value) => setForm({...form, password: value})}
             />
-          <ThemedButton style = {{flexDirection: 'row', paddingRight: 10,}} icon = "lock-closed-outline"/>
+  
         </View>
-            
+          <View style = {{marginTop: 40}}/> 
           <ThemedButton 
           icon = "arrow-forward"
-         // onPress = {}
+          onPress = {onRegister}
           //disabled = {isPosting}
           
-          >ingresar</ThemedButton>
+          >Siguiente</ThemedButton>
             <View style = {{marginTop: 20}}/>
 
             <View style = {{
@@ -141,7 +134,7 @@ const LoginScreen = () => {
               alignItems: 'center',
               }}>
                 <ThemedText style = {{color:secondaryColor}}>¿Ya tienes una cuenta?</ThemedText>
-                <ThemedLink href = "/auth/login" style = {{marginHorizontal: 5}}>
+                <ThemedLink href = '/auth/login' style = {{marginHorizontal: 5}}>
                     Iniciar sesión
                 </ThemedLink>
             </View>
