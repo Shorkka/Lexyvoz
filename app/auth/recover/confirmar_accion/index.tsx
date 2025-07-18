@@ -26,7 +26,7 @@ const ConfirmarAccion = () => {
 
   const handleCancelar = () => {
     Alert.alert('Operación cancelada', 'Serás redirigido a la página principal.', [
-      { text: 'OK', onPress: () => router.replace('/') }
+      { text: 'OK', onPress: () => router.replace('/(lexyvoz-app)/(home)') }
     ]);
   };
 
@@ -40,27 +40,24 @@ const ConfirmarAccion = () => {
           alignContent: 'center',
         }}>
         <View style={{ paddingTop: height * 0.30 }}>
-          <ThemedBackground />
+          <ThemedBackground backgroundColor='#fff' align='center'>
           <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>¿Deseas actualizar tu contraseña?</ThemedText>
           <ThemedText style={{ color: secondaryColor, alignSelf: 'center', marginBottom: 20, marginTop: 10 }}>
             Si continúas, podrás establecer una nueva contraseña para tu cuenta.
           </ThemedText>
-          <View style={{ marginTop: 30, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+          <View>
             <ThemedButton
               onPress={handleActualizar}
-              style={{ marginHorizontal: 10 }}
-            >
-              Sí, actualizar
+            >Sí, actualizar
             </ThemedButton>
             <ThemedButton
               onPress={handleCancelar}
-              style={{ marginHorizontal: 10 }}
-          
-            >
-              No, regresar
+    
+            >No, regresar
             </ThemedButton>
           </View>
+          </ThemedBackground>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

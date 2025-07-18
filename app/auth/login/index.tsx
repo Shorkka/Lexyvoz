@@ -1,8 +1,6 @@
-import React, { useState } from 'react'
-
-import { Alert, KeyboardAvoidingView,Platform,ScrollView, useWindowDimensions, View } from 'react-native'
-
-import { ThemedText } from '@/presentation/theme/components/ThemedText'
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
@@ -10,131 +8,113 @@ import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { router } from 'expo-router';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-
-
-
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LoginScreen = () => {
-  
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
-  const { login } =  useAuthStore();
-  const [form, setForm] = useState({
-    email: '',
-    password: ''
-  })
+  const { login } = useAuthStore();
 
+  const [form, setForm] = useState({ email: '', password: '', tipo: '' });
   const [isPosting, setIsPosting] = useState(false);
-
 
   const onLogin = async () => {
     const { email, password } = form;
-    console.log({email, password})
-    if (email.length === 0 || password.length === 0 ) {
-      return alert('Por favor ingrese su email y contraseña')
+    if (!email || !password) {
+      return alert('Por favor ingrese su email y contraseña');
     }
     setIsPosting(true);
     const wasSuccessful = await login(email, password);
     setIsPosting(false);
-
-    if(wasSuccessful) {
-      router.replace('/');
-      return
-    }
-    Alert.alert(
-      'Error al iniciar sesión'  )
-  }
-  
-const getResponsivePadding = (value: number, base: number ) => {
-  if (Platform.OS === 'web') { 
-      return Math.min(width * 0.3, value);
+    if (wasSuccessful) {
+      router.replace('/(lexyvoz-app)/(home)');
     } else {
-
-      const basePadding = width * 0.1; 
-      return Math.max(16, Math.min(basePadding, base)); 
+      alert('Ocurrió un error al iniciar sesión');
     }
-  }
+  };
+
   return (
-    <KeyboardAvoidingView behavior = "padding"  style = {{flex: 1}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor}} >
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
       <ScrollView
-      style = {{
-        flex: 1,
-        backgroundColor: backgroundColor,
-        paddingHorizontal:getResponsivePadding (700, 30),
-        alignContent: 'center'
-      }}>
-      <View style = {{
-        paddingTop:height * 0.30,
-      }}>
-        <ThemedBackground/>
-        <ThemedText type = "title" style = {{alignSelf: 'center', top: height* 0.06, position: 'absolute', }}>Lexyvoz</ThemedText>
-        <ThemedText type = "subtitle" style = {{alignSelf: 'center'}}>Inicia sesión</ThemedText>
-        <ThemedText style = {{color:secondaryColor, alignSelf: 'center'}}>Por favor ingrese para continuar</ThemedText>
-        { /* Email y Password */ }
-        <View style = {{marginTop: 20}}>
-        <ThemedText>Correo</ThemedText>
-          <ThemedTextInput
-            placeholder = "correo@ejemplo.com"
-            style = {{
-              borderBottomWidth: 1,
-              borderColor: 'grey',
-              paddingVertical: 10,
-              fontSize: 16,
-            }}
-            autoCapitalize = "none"
-            keyboardType = "email-address"
-            icon = "mail-outline"
-            value= {form.email}
-            onChangeText = {(value) => setForm({...form, email: value})}
+        style={{ flex: 1, backgroundColor: backgroundColor }}
+        contentContainerStyle={{
+          minHeight: height,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}
+      >
+          <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
+          <ThemedText type="title" style={{ alignSelf: 'center', marginBottom: 10 }}>
+            Lexyvoz
+          </ThemedText>
+          <ThemedBackground backgroundColor='#fff' align='center'>
             
-          />
-          <ThemedText style = {{marginTop: 5}}>Contraseña</ThemedText>
-          <ThemedTextInput
-            style = {{
-              borderBottomWidth: 1,
-              borderColor: 'grey',
-              paddingVertical: 10,
-              fontSize: 16,
-            }}
-            placeholder='***********'
-            autoCapitalize = "none"
-            secureTextEntry
-            icon = "lock-closed-outline"
-            value= {form.password}
-            onChangeText = {(value) => setForm({...form, password: value})}
-          />
-        </View>
-            <View style = {{marginTop: 10,}}/>
-          <ThemedButton 
-          onPress = {onLogin}
-          disabled = {isPosting}
-          
-          >ingresar</ThemedButton>
-            <View style = {{marginTop: 50}}/>
+          <View style={{ paddingHorizontal: 30, paddingVertical: 40 }}>
+            <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>
+              Inicia sesión
+            </ThemedText>
+            <ThemedText style={{ color: secondaryColor, alignSelf: 'center', marginBottom: 30 }}>
+              Por favor ingrese para continuar
+            </ThemedText>
 
-            <View style = {{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              }}>
-                <ThemedText style = {{color:secondaryColor}}>¿No tienes una cuenta?</ThemedText>
-                <ThemedLink href = "/auth/register" style = {{marginHorizontal: 5}}>
-                    Crear cuenta
+            <ThemedText>Correo</ThemedText>
+            <ThemedTextInput
+              placeholder="correo@ejemplo.com"
+              icon="mail-outline"
+              style={{
+                borderBottomWidth: 1,
+                borderColor: 'grey',
+                paddingVertical: 10,
+                fontSize: 16,
+              }}
+              value={form.email}
+              onChangeText={(value) => setForm({ ...form, email: value })}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <ThemedText style={{ marginTop: 20 }}>Contraseña</ThemedText>
+            <ThemedTextInput
+              placeholder="***********"
+              icon="lock-closed-outline"
+              style={{
+                borderBottomWidth: 1,
+                borderColor: 'grey',
+                paddingVertical: 10,
+                fontSize: 16,
+              }}
+              secureTextEntry
+              value={form.password}
+              onChangeText={(value) => setForm({ ...form, password: value })}
+              autoCapitalize="none"
+            />
+
+            <View style={{ marginTop: 30 }} />
+            <ThemedButton onPress={onLogin} disabled={isPosting}>
+              ingresar
+            </ThemedButton>
+
+            <View style={{ marginTop: 30 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                <ThemedText style={{ color: secondaryColor }}>¿No tienes una cuenta?</ThemedText>
+                <ThemedLink href="/auth/register" style={{ marginLeft: 5 }}>
+                  Crear cuenta
                 </ThemedLink>
+              </View>
+              <View style={{ marginTop: 5, alignItems: 'center' }}>
+                <ThemedLink href="/auth/recover">¿Olvidaste tu contraseña?</ThemedLink>
+              </View>
             </View>
-            <View style = {{
-              flexDirection: 'row',
-              justifyContent: 'center',
-              alignItems: 'center',
-              }}>
-                <ThemedLink href = "/auth/recover">¿Olvidaste tu contraseña?</ThemedLink>
-                
-            </View>
-      </View>
-</ScrollView>
+          </View>
+          </ThemedBackground>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
-  )
-}
+    </SafeAreaView>
+  );
+};
 
-export default LoginScreen
+export default LoginScreen;

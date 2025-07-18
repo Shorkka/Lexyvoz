@@ -10,6 +10,7 @@ const tintColorDark = '#fff';
 export const Colors = {
   light: {
     text: '#ee7200',
+    textButton: '#ffffff',
     secondaryText: '#eba86a',
     background: '#fefcc3',
     tint: tintColorLight,
@@ -19,11 +20,16 @@ export const Colors = {
     input: '#fff3e7',
     bar: '#ee7200',
     primary: '#ee7200',
-    secondaryBackground: '#ffffff'
+    main: '#ffb525',
+    secondaryBackground: '#ffffff',
+    backgroundMain: '#fba557',
+    error: 'black'
   },
   dark: {
+    backgroundMain: '#fba557',
     text: '#ee7200',
-     secondaryText: '#eba86a',
+    secondaryText: '#eba86a',
+    textButton: '#ffffff',
     background: '#fefcc3',
     tint: tintColorDark,
     icon: '#ee7200',
@@ -32,6 +38,8 @@ export const Colors = {
     input: '#fff3e7',
     bar: '#ee7200',
     primary: '#ee7200',
-    secondaryBackground: '#ffffff'
+    main: '#ffb525',
+    secondaryBackground: '#ffffff',
+    error: 'black'
   },
 };

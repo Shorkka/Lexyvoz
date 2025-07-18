@@ -1,7 +1,7 @@
-import { authCheckStatus, authLogin } from "@/core/auth/actions/auth-actions";
+import { authCheckStatus, authLogin, authRegister } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
 import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 export type AuthStatus  = 'authenticated' | 'unauthenticated' | 'checking';
 
@@ -14,7 +14,6 @@ export interface AuthState{
     login: (email: string, password: string) => Promise<boolean>;
     checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
-    
     changeStatus: (token?:string, user?:User) => Promise<boolean>;
 
 }
@@ -54,9 +53,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     checkStatus: async()=> {
         const  resp = await authCheckStatus();
         get().changeStatus(resp?.token, resp?.user);
-  
         
     },
+
+    register: async(registerData: any) => {
+        const resp = await authRegister(registerData);
+        return get().changeStatus(resp?.token, resp?.user);
+    },
+    
     logout: async()=> {
         // Clear Token del secure store
         SecureStorageAdapter.deleteItem('token');

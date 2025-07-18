@@ -2,12 +2,17 @@ import { productsApi } from '../api/productsApi';
 import { User } from '../interface/user';
 
 export interface AuthResponse {
-    id: string;
-    email: string;
-    fullName: string;
-    isActive: boolean;
-    roles: string[];
-    token: string;
+    nombre:              string;
+    correo:              string;
+    contraseña:          string;
+    fecha_de_nacimiento: Date;
+    numero_telefono:     string;
+    sexo:                string;
+    tipo:                string;
+    escolaridad?:         string;
+    especialidad?:        string;
+    token:                string;
+    domicilio:           string;
 }
 
 const returnUserToken = (data: AuthResponse) : {
@@ -32,7 +37,6 @@ export const authLogin = async (email: string, password: string) => {
     return returnUserToken(data);
   } catch (error) {
     console.log(error);
-    // throw new Error('User and/or password not valid');
     return null;
   };
 }
@@ -42,6 +46,18 @@ export const authCheckStatus = async () => {
 
     return returnUserToken(data);
   } catch (error) {
+    console.log(error);
+    return null;
+  }
+};
+
+
+export const authRegister = async (registerData: User): Promise<{ token: string; user: User } | null> => {
+  try {
+    const { data } = await productsApi.post<{ token: string; user: User }>('/auth/register', registerData);
+    return data;
+  } catch (error) {
+    console.log(error);
     return null;
   }
 };

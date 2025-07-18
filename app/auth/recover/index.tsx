@@ -1,15 +1,15 @@
-import React, { useState } from 'react'
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native'
-import { ThemedText } from '@/presentation/theme/components/ThemedText'
-import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedLink from '@/presentation/theme/components/ThemedLink';
-import { router } from 'expo-router';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import ThemedLink from '@/presentation/theme/components/ThemedLink';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
 
 const RecoveryScreen = () => {
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
   const [form, setForm] = useState({
@@ -32,27 +32,25 @@ const RecoveryScreen = () => {
     }, 1500);
   };
 
-  const getResponsivePadding = (value: number, base: number ) => {
-    if (Platform.OS === 'web') { 
-      return Math.min(width * 0.3, value);
-    } else {
-      const basePadding = width * 0.1; 
-      return Math.max(16, Math.min(basePadding, base)); 
-    }
-  };
+
 
   return (
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
       <ScrollView
-        style={{
-          backgroundColor: backgroundColor,
-          flex: 1,
-          paddingHorizontal: getResponsivePadding(700, 30),
-          alignContent: 'center',
-        }}>
-        <View style={{ paddingTop: height * 0.30 }}>
-          <ThemedBackground />
-          <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
+        style={{ flex: 1, backgroundColor: backgroundColor }}
+        contentContainerStyle={{
+          minHeight: height,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 20,
+        }}
+      >
+      <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
+       <ThemedText type="title" style={{ alignSelf: 'center', marginBottom: 10 }}>
+                  Lexyvoz
+                </ThemedText>
+        <ThemedBackground backgroundColor='#fff' align='center'>
+
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Recuperar contraseña</ThemedText>
           <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Mandame un código de restauración</ThemedText>
           {/* Email */}
@@ -80,18 +78,15 @@ const RecoveryScreen = () => {
           >
             Enviar código
           </ThemedButton>
-          <View style={{ marginTop: 50 }} />
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <ThemedText style={{ color: secondaryColor }}>¿Ya tienes una cuenta?</ThemedText>
-            <ThemedLink href='/auth/recover/confirmar_accion/index' style={{ marginHorizontal: 5 }}>
+          <View style = {{flexDirection: 'row', marginTop: 20, justifyContent: 'center', alignItems: 'center'}}>
+            <ThemedText style={{ color: secondaryColor }}>¿Recordaste la contraseña?</ThemedText>
+            <ThemedLink href='/auth/recover/confirmar_accion' style={{ marginHorizontal: 5 }}>
               Iniciar sesión
             </ThemedLink>
           </View>
-        </View>
+            </ThemedBackground>
+
+          </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

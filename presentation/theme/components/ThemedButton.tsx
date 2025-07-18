@@ -1,6 +1,6 @@
-import { Pressable,Text,  StyleSheet, View, PressableProps, useWindowDimensions, Platform } from 'react-native'
-import React from 'react'
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Platform, Pressable, PressableProps, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 interface Props extends PressableProps{
@@ -21,27 +21,31 @@ const ThemedButton = ({children, widthWeb = 0, widthAndroid = 0, icon, ...rest }
                     web:width*widthWeb,
                     default:width*widthAndroid})}
     }
-    const primaryColor = useThemeColor({}, 'primary');
+    
+
+    
+        const backgroundColor = useThemeColor({}, 'primary');
+        const textColor = useThemeColor({}, 'textButton');
     return (
     <View>
         <Pressable
             style={({pressed}) => [
                 {
-                    backgroundColor: pressed ? primaryColor + '90' : primaryColor,
+                    backgroundColor: pressed ? backgroundColor + '90' : backgroundColor,
                 }, 
                 resto(),
                 styles.button,
                
             ]}
-            
             {...rest}
+            
         >
-      <Text style = {{color: 'white'}}>{children}</Text>
+      <Text style = {{color: textColor, fontWeight: 'bold'}}>{children}</Text>
         {icon && (
         <Ionicons
             name={icon}
             size={24}
-            color="white"
+            color={textColor}
             style={{alignItems: 'flex-end', left: Platform.select({ web: width *0.08, default: width*0.2})}}/>
         )}
         </Pressable>
@@ -60,6 +64,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'center',
+        minWidth: 74,
 
     },
 

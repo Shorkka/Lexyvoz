@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import { router } from 'expo-router';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
 
 const NuevoPasswordScreen = () => {
   const { height, width } = useWindowDimensions();
@@ -58,25 +57,11 @@ const NuevoPasswordScreen = () => {
           alignContent: 'center',
         }}>
         <View style={{ paddingTop: height * 0.30 }}>
-          <ThemedBackground />
+          <ThemedBackground backgroundColor='#fff' align='center'>
           <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Nueva contraseña</ThemedText>
-          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Ingresa el código recibido y tu nueva contraseña</ThemedText>
+          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Ingresa tu nueva contraseña</ThemedText>
           <View style={{ marginTop: 20 }}>
-            <ThemedText>Código</ThemedText>
-            <ThemedTextInput
-              placeholder="Código de recuperación"
-              style={{
-                borderBottomWidth: 1,
-                borderColor: 'grey',
-                paddingVertical: 10,
-                fontSize: 16,
-              }}
-              autoCapitalize="none"
-              keyboardType="default"
-              value={form.code}
-              onChangeText={(value) => setForm({ ...form, code: value })}
-            />
             <ThemedText style={{ marginTop: 10 }}>Nueva contraseña</ThemedText>
             <ThemedTextInput
               placeholder="***********"
@@ -110,20 +95,19 @@ const NuevoPasswordScreen = () => {
           <ThemedButton
             onPress={onChangePassword}
             disabled={isPosting}
+            style={{
+              alignSelf: 'center',
+              marginBottom: 10,
+              minWidth: 180,
+              maxWidth: '100%',
+              paddingHorizontal: 12,
+              flexShrink: 1,
+            }}
           >
             Cambiar contraseña
           </ThemedButton>
-          <View style={{ marginTop: 50 }} />
-          <View style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-            <ThemedText style={{ color: secondaryColor }}>¿Ya tienes una cuenta?</ThemedText>
-            <ThemedLink href="/auth/login" style={{ marginHorizontal: 5 }}>
-              Iniciar sesión
-            </ThemedLink>
-          </View>
+          <View style={{ marginTop: 30 }} />
+        </ThemedBackground> 
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

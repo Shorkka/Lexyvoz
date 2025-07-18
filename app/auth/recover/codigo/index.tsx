@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
 
 const CodigoRecuperacionScreen = () => {
   const { height, width } = useWindowDimensions();
@@ -23,7 +23,7 @@ const CodigoRecuperacionScreen = () => {
     setTimeout(() => {
       setIsPosting(false);
       // Si el código es válido, navega a la pantalla de confirmación
-      router.replace('/auth/recover/confirmar_accion/index');
+      router.replace('/auth/recover/confirmar_accion');
     }, 1200);
   };
 
@@ -46,7 +46,7 @@ const CodigoRecuperacionScreen = () => {
           alignContent: 'center',
         }}>
         <View style={{ paddingTop: height * 0.30 }}>
-          <ThemedBackground />
+          <ThemedBackground backgroundColor='#fff' align='center'>
           <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Ingresa tu código</ThemedText>
           <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Introduce el código que recibiste por correo</ThemedText>
@@ -73,6 +73,7 @@ const CodigoRecuperacionScreen = () => {
           >
             Validar código
           </ThemedButton>
+          </ThemedBackground>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -10,6 +10,16 @@ export class SecureStorageAdapter {
     }
   }
 
+  static async setRegister(key: string, value: string, tipo: string): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(key, value );
+    } catch (error) {
+        console.log(error);
+      Alert.alert('Error setting item in secure storage with role:');
+    }
+  }
+
+
   static async getItem(key: string): Promise<string | null> {
     try {
       return await SecureStore.getItemAsync(key);
