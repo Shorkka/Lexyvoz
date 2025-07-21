@@ -4,16 +4,15 @@ import { create } from 'zustand';
 interface RegisterForm {
   // Paso 1
   nombre?: string;
-  email?: string;
-  password?: string;
+  correo?: string;
+  contraseña?: string;
   // Paso 2
-  telefono?: string;
+  numero_telefono?: string;
   sexo?: string;
-  direccion?: string;
-  codigoPostal?: string;
+  domicilio?: string;
   // Paso 3
-  rol?: string;
-  fechaNacimiento?: Date;
+  tipo?: string;
+  fecha_de_nacimiento?: Date;
   escolaridad?: string;
   especialidad?: string;
   titulo?: string;
@@ -30,14 +29,13 @@ export const useRegisterStore = create<RegisterStore>((set) => ({
   reset: () =>
     set({
       nombre: undefined,
-      email: undefined,
-      password: undefined,
-      telefono: undefined,
+      correo: undefined,
+      contraseña: undefined,
+      numero_telefono: undefined,
       sexo: undefined,
-      direccion: undefined,
-      codigoPostal: undefined,
-      rol: undefined,
-      fechaNacimiento: undefined,
+      domicilio: undefined,
+      tipo: undefined,
+      fecha_de_nacimiento: undefined,
       escolaridad: undefined,
       especialidad: undefined,
       titulo: undefined,

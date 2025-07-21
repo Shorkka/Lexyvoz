@@ -1,4 +1,5 @@
-
+import { useRegisterStore } from '@/core/auth/context/RegisterContext';
+import AddressAutocomplete from '@/presentation/theme/components/AddressAutocomplete';
 import GenderSelector from '@/presentation/theme/components/GenderSelector';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -9,24 +10,22 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, useWindowDimensions } from 'react-native';
-import AddressAutocomplete from '@/presentation/theme/components/AddressAutocomplete';
 import { GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
-import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 const Step2Screen = () => {
   const backgroundColor = useThemeColor({}, 'background');
   const { height } = useWindowDimensions();
   const addressRef = useRef<GooglePlacesAutocompleteRef>(null);
   const set = useRegisterStore((s) => s.set);
   const [form, setForm] = useState({
-    telefono: '3310227778',
+    numero_telefono: '3310227778',
     sexo: 'Masculino',
-    direccion: '',
+    domicilio: '',
     codigoPostal: '44760',
   });
   const [errors, setErrors] = useState({
-    telefono: '',
+    numero_telefono: '',
     sexo: '',
-    direccion: '',
+    domicilio: '',
     codigoPostal: '',
   });
   const onChange = (field: string, value: string) => {
@@ -36,34 +35,34 @@ const Step2Screen = () => {
 
   const validateFields = () => {
     return {
-      direccion: !form.direccion.trim() ? 'La dirección es obligatoria' : '',
-      telefono: !/^\d{10}$/.test(form.telefono) ? 'Ingresa un número de 10 dígitos' : '',
+      domicilio: !form.domicilio.trim() ? 'La dirección es obligatoria' : '',
+      numero_telefono: !/^\d{10}$/.test(form.numero_telefono) ? 'Ingresa un número de 10 dígitos' : '',
       sexo: !form.sexo.trim() ? 'Selecciona un sexo' : '',
       codigoPostal: !/^\d{5}$/.test(form.codigoPostal) ? 'Código postal inválido' : '',
     };
   };
    const handleAddressSelect = ({
-    direccion,
-    colonia,
-    codigoPostal,
-  }: {
-    direccion: string;
-    colonia: string;
-    codigoPostal: string;
-  }) => {
-    setForm((prev) => ({
-      ...prev,
       direccion,
       colonia,
       codigoPostal,
-    }));
-    setErrors((prev) => ({
-      ...prev,
-      direccion: '',
-      colonia: '',
-      codigoPostal: '',
-    }));
-  };
+    }: {
+      direccion: string;
+      colonia: string;
+      codigoPostal: string;
+    }) => {
+      setForm((prev) => ({
+        ...prev,
+        domicilio: direccion, // <-- así sí actualiza el campo correcto
+        colonia,
+        codigoPostal,
+      }));
+      setErrors((prev) => ({
+        ...prev,
+        domicilio: '',
+        colonia: '',
+        codigoPostal: '',
+      }));
+    };
   const nextRegisterScreen = () => {
     const newErrors = validateFields();
     setErrors(newErrors);
@@ -72,10 +71,9 @@ const Step2Screen = () => {
       return;
     }
     set({
-      telefono: form.telefono,
+      numero_telefono: form.numero_telefono,
       sexo: form.sexo,
-      direccion: form.direccion,
-      codigoPostal: form.codigoPostal,
+      domicilio: form.domicilio,
   });
     router.push('/auth/register/registerStep3');
   };
@@ -103,9 +101,9 @@ const Step2Screen = () => {
               ref={addressRef}
               onAddressSelect={handleAddressSelect}
             />
-            {errors.direccion ? (
+            {errors.domicilio ? (
               <ThemedText type="error" style={{ marginTop: 4 }}>
-                {errors.direccion}
+                {errors.domicilio}
               </ThemedText>
             ) : null}
           </View>
@@ -125,10 +123,10 @@ const Step2Screen = () => {
             <View style={{ width: '100%', marginTop: 12 }}>
               <ThemedText>Telefono</ThemedText>
               <ThemedTextInput
-                value={form.telefono}
-                onChangeText={(value) => onChange('telefono', value)}
-                error={!!errors.telefono}
-                errorMessage={errors.telefono}
+                value={form.numero_telefono}
+                onChangeText={(value) => onChange('numero_telefono', value)}
+                error={!!errors.numero_telefono}
+                errorMessage={errors.numero_telefono}
                 keyboardType="phone-pad"
                 placeholder=""
               />

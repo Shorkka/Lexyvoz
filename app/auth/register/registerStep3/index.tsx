@@ -57,14 +57,14 @@ const Step3Screen = () => {
   const [form, setForm] = useState({
     tipo: '',
     escolaridad: '',
-    fechaNacimiento: new Date(),
+    fecha_de_nacimiento: new Date(),
     especialidad: '',
     titulo: '',
   });
   
   const [errors, setErrors] = useState({
     escolaridad: '',
-    fechaNacimiento: '',
+    fecha_de_nacimiento: '',
     especialidad: '',
     titulo: '',
     tipo: '',
@@ -73,7 +73,7 @@ const Step3Screen = () => {
   const completarRegistro = async () => {
     const newErrors = {
       escolaridad: '',
-      fechaNacimiento: '',
+      fecha_de_nacimiento: '',
       especialidad: '',
       titulo: '',
       tipo: '',
@@ -87,12 +87,12 @@ const Step3Screen = () => {
     }
     
     if (!fechaTocada) {
-      newErrors.fechaNacimiento = 'Selecciona tu fecha de nacimiento';
+      newErrors.fecha_de_nacimiento = 'Selecciona tu fecha de nacimiento';
       hasError = true;
     }
     
-    if (!form.fechaNacimiento) {
-      newErrors.fechaNacimiento = 'Selecciona tu fecha de nacimiento';
+    if (!form.fecha_de_nacimiento) {
+      newErrors.fecha_de_nacimiento = 'Selecciona tu fecha de nacimiento';
       hasError = true;
     }
     
@@ -119,13 +119,13 @@ const Step3Screen = () => {
     }
       const payload = {
         nombre:              data.nombre!,
-        correo:              data.email!,
-        contraseña:          data.password!,
-        fecha_de_nacimiento: form.fechaNacimiento.toISOString().split('T')[0], // 2022-10-17
-        numero_telefono:     data.telefono!,
+        correo:              data.correo!,
+        contraseña:          data.contraseña!,
+        fecha_de_nacimiento: form.fecha_de_nacimiento.toISOString().split('T')[0],
+        numero_telefono:     data.numero_telefono!,
         sexo:                data.sexo!,
         tipo:                form.tipo!,
-        domicilio:           `${data.direccion}, ${data.codigoPostal}`,
+        domicilio:           `${data.domicilio}`,
         ...(form.tipo === 'Paciente' && { escolaridad: form.escolaridad }),
         ...(form.tipo === 'Doctor' && {
           especialidad: form.especialidad,
@@ -195,16 +195,16 @@ const Step3Screen = () => {
               ) : null}
               <ThemedDatePicker
                 label="Fecha de Nacimiento"
-                value={form.fechaNacimiento}
+                value={form.fecha_de_nacimiento}
                 onChange={(date) => {
-                  setForm({ ...form, fechaNacimiento: date });
+                  setForm({ ...form, fecha_de_nacimiento: date });
                   setFechaTocada(true);
                 }}
                 style={{ width: '100%' }}
               />
-              {errors.fechaNacimiento ? (
+              {errors.fecha_de_nacimiento ? (
                 <ThemedText type="error" style={{ marginTop: 4, marginBottom: 8 }}>
-                  {errors.fechaNacimiento}
+                  {errors.fecha_de_nacimiento}
                 </ThemedText>
               ) : null}
               {(form.tipo === 'Paciente') && (
