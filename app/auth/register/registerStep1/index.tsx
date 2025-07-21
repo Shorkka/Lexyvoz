@@ -1,49 +1,62 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, useWindowDimensions } from 'react-native';
-
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedLink from '@/presentation/theme/components/ThemedLink';
-import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
-import FieldLabel from '@/presentation/theme/components/FieldLabel';
-
+import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 const Step1Screen = () => {
-  const { height } = useWindowDimensions();
-  
+    const { height } = useWindowDimensions();
+    const set = useRegisterStore((s) => s.set);
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
 
   const [form, setForm] = useState({
-    nombre: 'Yared Isaac Araujo Barron',
-    email: 'yaredaraujo20@gmail.com',
-    password: 'yared909',
+    nombre: 'Ortega Morfin',
+    email: 'ortega@gmail.com',
+    password: 'paciente123',
   });
   const [errors, setErrors] = useState({
-    nombre: false,
-    email: false,
-    password: false,
+    nombre: '',
+    email: '',
+    password: '',
   });
+    const isLoginDisabled =
+    !form.nombre ||
+    !form.email ||
+    !form.password ||
+    form.password.length < 6;
+  const validDomains = ['gmail.com', 'outlook.com', 'yahoo.com', 'hotmail.com'];
+  const validateEmail = (email: string): string => {
+    if (!email.trim()) return 'Ingresa una dirección de correo electrónico válida';
+    const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    if (!emailRegex.test(email)) return 'Ingresa una dirección de correo electrónico válida';
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!validDomains.includes(domain)) return 'El dominio del correo no es válido';
+    return '';
+  };
+  const validatePassword = (password: string): string => {
+    if (!password || password.length < 6) return 'Crea una contraseña de al menos 6 caracteres de largo';
+    return '';
+  };
+
   const onRegister = () => {
-    const { email, nombre, password } = form;
+  
     const newErrors = {
-      nombre: !nombre.trim(),
-      email: !email.trim(),
-      password: password.length <= 6,
+      nombre: !form.nombre.trim() ? 'El nombre es obligatorio' : '',
+      email: validateEmail(form.email),
+      password: validatePassword(form.password),
     };
-  setErrors(newErrors);
-
-    if (Object.values(newErrors).some((v) => v)) {
-      return alert('Por favor, completa correctamente los campos obligatorios.');
-    }
-    
-
+    setErrors(newErrors);
+    if (Object.values(newErrors).some((v) => v)) { return; }
+    set({ nombre: form.nombre, email: form.email, password: form.
+      password });
     return router.push('/auth/register/registerStep2');
-      
-};
+  };
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -63,7 +76,7 @@ const Step1Screen = () => {
 
             <View style={{ width: '100%', gap: 12 }}>
               <View>
-                <FieldLabel label="Nombre completo" required showError={errors.nombre} />
+                <ThemedText>Nombre completo</ThemedText>
                 <ThemedTextInput
                   placeholder="Nombre completo"
                   autoCapitalize="words"
@@ -74,32 +87,50 @@ const Step1Screen = () => {
               </View>
 
               <View>
-                <FieldLabel label="Correo electrónico" required showError={errors.email} />
+                <ThemedText>Correo electrónico</ThemedText>
                 <ThemedTextInput
                   placeholder="correo@ejemplo.com"
                   autoCapitalize="none"
                   keyboardType="email-address"
                   icon="mail-outline"
                   value={form.email}
-                  onChangeText={(value) => setForm({ ...form, email: value })}
+                  onChangeText={(value) => {
+                    setForm({ ...form, email: value });
+                    setErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  error={!!errors.email}
+                  errorMessage={errors.email}
                 />
               </View>
 
               <View>
-                <FieldLabel label="Contraseña" required showError={errors.password} />
+                <ThemedText>Contraseña</ThemedText>
                 <ThemedTextInput
                   placeholder="***********"
                   autoCapitalize="none"
                   secureTextEntry
                   icon="lock-closed-outline"
                   value={form.password}
-                  onChangeText={(value) => setForm({ ...form, password: value })}
+                  onChangeText={(value) => {
+                    setForm({ ...form, password: value });
+                    setErrors((prev) => ({ ...prev, password: '' }));
+                  }}
+                  error={!!errors.password}
+                  errorMessage={errors.password}
                 />
               </View>
             </View>
 
             <View style={{ marginVertical: 32, width: '100%' }}>
-              <ThemedButton icon="arrow-forward" onPress={onRegister}>
+              <ThemedButton icon="arrow-forward" 
+              onPress={onRegister}
+              disabled={isLoginDisabled} 
+              backgroundColor={
+                    form.password.length < 6 || form.email.length < 1
+                      ? '#974525ff'
+                      : undefined
+                  }
+              >
                 Siguiente
               </ThemedButton>
             </View>

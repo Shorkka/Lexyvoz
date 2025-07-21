@@ -1,47 +1,42 @@
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import { Redirect, Stack } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-
-
+import { ActivityIndicator } from 'react-native';
 
 const CheckAuthenticationLayout = () => {
+  const backgroundColor = useThemeColor({}, 'background');
+  const { status, checkStatus, user } = useAuthStore();
 
-    const backgroundColor = useThemeColor({}, 'background');
-
-    const {status, checkStatus} = useAuthStore();
-    useEffect(() => {
-        checkStatus();
-    },[checkStatus]);
-    if (status === 'checking'){    
-    return(
-            <View style = {{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 5,
-        }}>
-            <ActivityIndicator />
-        </View>
-        )
-}
-
-   if ( status === 'unauthenticated'){
-      return <Redirect href={'/auth/login'}/>
-   }
+  useEffect(() => {
+    checkStatus();
+  }, [checkStatus]);
 
 
+   useEffect(() => {
+    if (status === 'authenticated' && user) {
+      const routeMap = {
+        'Paciente': '/(lexyvoz-app)/(paciente)/home',
+        'Doctor': '/(lexyvoz-app)/(doctor)/home',
+        'Usuario': '/(lexyvoz-app)/(usuario)/home'
+      };
+     const tipo = user?.tipo as keyof typeof routeMap | undefined;
+     const target = tipo && routeMap[tipo] ? routeMap[tipo] : '/auth/login';
+        router.replace(target as any);
+    } else if (status === 'unauthenticated') {
+      router.replace('/auth/login');
+    }
+  }, [status, user]);
 
-return (
-     <Stack screenOptions={{ 
-      headerShown: false,  
-       contentStyle: { backgroundColor: backgroundColor },
-       
-       }} >
+  if (status === 'checking') {
+    return <ActivityIndicator />;
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor }}}>
+
     </Stack>
-  )
+  );
 };
 
-export default CheckAuthenticationLayout
-
+export default CheckAuthenticationLayout;

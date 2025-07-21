@@ -9,10 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyAjioqnWhlLjpFypYcHld0RCxU3hLdVZR4"
+      }
     },
     "android": {
       "package": "com.lexyvoz.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAjioqnWhlLjpFypYcHld0RCxU3hLdVZR4"
+        }
+      },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -41,11 +49,12 @@
       "typedRoutes": true
     },
     "extra": {
+      "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID": "AIzaSyAjioqnWhlLjpFypYcHld0RCxU3hLdVZR4",
+      "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB": "AIzaSyCMmyYsCL-zz7AluSOjO_vuchHzRyV0-_0",
       "router": {},
       "eas": {
         "projectId": "ecf70396-2b4b-4884-8b08-dc8033cd051f"
       }
-    
     }
   }
 }

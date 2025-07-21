@@ -15,7 +15,7 @@ export interface AuthState{
     checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
     changeStatus: (token?:string, user?:User) => Promise<boolean>;
-
+    register: (registerData: any) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -38,6 +38,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
             status: 'authenticated',
             token: token,
             user: user,
+            
         })
         await SecureStorageAdapter.setItem('token', token);
         return true;

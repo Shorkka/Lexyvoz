@@ -23,7 +23,7 @@ export const Colors = {
     main: '#ffb525',
     secondaryBackground: '#ffffff',
     backgroundMain: '#fba557',
-    error: 'black'
+    error: 'red'
   },
   dark: {
     backgroundMain: '#fba557',
@@ -40,6 +40,6 @@ export const Colors = {
     primary: '#ee7200',
     main: '#ffb525',
     secondaryBackground: '#ffffff',
-    error: 'black'
+    error: 'red'
   },
 };

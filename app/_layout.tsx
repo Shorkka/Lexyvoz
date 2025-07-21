@@ -25,6 +25,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      
     <GestureHandlerRootView
     style ={{backgroundColor: backgroundColor, flex: 1}}
     >

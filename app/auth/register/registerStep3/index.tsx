@@ -12,12 +12,14 @@ import {
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedDropdown from '@/presentation/theme/components/ThemedDropdown';
-import ThemedProgressBar from '@/presentation/theme/components/ThemedProgressBar';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import ThemedDatePicker from '@/presentation/theme/components/ThemedDatePicker';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
 import ThemedInput from '@/presentation/theme/components/ThemedInput';
+import { useRegisterStore } from '@/core/auth/context/RegisterContext';
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 const escolaridadData = [
   { label: 'Primaria', value: 'primaria' },
   { label: 'Secundaria', value: 'secundaria' },
@@ -29,44 +31,54 @@ const escolaridadData = [
   { label: 'Sin estudios', value: 'sin_estudios' },
 ];
 const Step3Screen = () => {
+  const data = useRegisterStore((s) => s);    
+  const reset = useRegisterStore((s) => s.reset);
+  const register = useAuthStore((s) => s.register);
   const { height, width } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
+  const [fechaTocada, setFechaTocada] = useState(false);
+
   const [form, setForm] = useState({
-    rol: 'Paciente',
+    rol: '',
     escolaridad: '',
     fechaNacimiento: new Date(),
     especialidad: '',
     titulo: '',
   });
   const [errors, setErrors] = useState({
-    escolaridad: false,
-    fechaNacimiento: false,
-    especialidad: false,
-    titulo: false,
+    escolaridad: '',
+    fechaNacimiento: '',
+    especialidad: '',
+    titulo: '',
   });
-  const completarRegistro = () => {
+
+  const completarRegistro = async () => {
     const newErrors = {
-      escolaridad: false,
-      fechaNacimiento: false,
-      especialidad: false,
-      titulo: false,
+      escolaridad: '',
+      fechaNacimiento: '',
+      especialidad: '',
+      titulo: '',
     };
     let hasError = false;
     if ((form.rol === 'Paciente' || form.rol === 'Estudiante') && !form.escolaridad) {
-      newErrors.escolaridad = true;
+      newErrors.escolaridad = 'Selecciona tu nivel de escolaridad';
       hasError = true;
     }
-    if (form.rol === 'Paciente' && !form.fechaNacimiento) {
-      newErrors.fechaNacimiento = true;
+    if (!fechaTocada) {
+      newErrors.fechaNacimiento = 'Selecciona tu fecha de nacimiento';
+      hasError = true;
+    }
+    if (!form.fechaNacimiento) {
+      newErrors.fechaNacimiento = 'Selecciona tu fecha de nacimiento';
       hasError = true;
     }
     if (form.rol === 'Doctor') {
       if (!form.especialidad) {
-        newErrors.especialidad = true;
+        newErrors.especialidad = 'Ingresa tu especialidad';
         hasError = true;
       }
       if (!form.titulo) {
-        newErrors.titulo = true;
+        newErrors.titulo = 'Ingresa tu título profesional';
         hasError = true;
       }
     }
@@ -85,10 +97,40 @@ const Step3Screen = () => {
         onPress: () => router.replace('/auth/login'),
       },
     ]);
+
+    const payload = {
+      nombre: data.nombre,
+      email: data.email,
+      password: data.password,
+      telefono: data.telefono,
+      sexo: data.sexo,
+      direccion: data.direccion,
+      codigoPostal: data.codigoPostal,
+      rol: form.rol, // Usar el rol del formulario actual
+      fechaNacimiento: form.fechaNacimiento?.toISOString?.(),
+      ...(form.rol === 'Paciente' && { escolaridad: form.escolaridad }),
+      ...(form.rol === 'Doctor' && {
+        especialidad: form.especialidad,
+        titulo: form.titulo,
+      }),
+    };
+
+    try {
+      const ok = await register(payload);  
+      if (ok) {
+        reset();
+        router.replace('/auth/login');     
+      } else {
+        Alert.alert('Error', 'No se pudo crear la cuenta');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Ocurrió un error al registrar');
+      console.log('Error al registrar:', error);
+    }
   };
-  const volverAtras = () => {
-    router.back();
-  };
+
+
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
     <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
@@ -101,19 +143,11 @@ const Step3Screen = () => {
           paddingHorizontal: 20,  
         }}
       >
-        <ThemedText type="title" style={{ alignSelf: 'center', bottom: 10 }}>
-          Lexyvoz
-        </ThemedText>
-        <ThemedText>Paso 3 de 3</ThemedText>
-        <ThemedProgressBar progress={1} width={400} align="center" color="#FF6600" />
-        <View style={{ width: '100%', maxWidth: 480 }}>
+       
+          <ProgressHeader step={2} />
           <ThemedBackground backgroundColor="#fff" align="center">
-            <ThemedText
-              type="subtitle"
-              style={{ alignSelf: 'center', marginBottom: 20 }}
-            >
-              Información adicional
-            </ThemedText>
+          <ThemedText type="subtitle">Registro de usuario</ThemedText>
+          <View style={{ width: '100%', marginTop: 12 }}>
             {/* Tipo de usuario */}
             <ThemedText style={{ fontSize: 14, top: 15 }}>Tipo de usuario *</ThemedText>
             <View
@@ -131,7 +165,7 @@ const Step3Screen = () => {
                 gap: 12,
               }}
             >
-              {['Paciente', 'Doctor'].map((rol) => (
+              {['Paciente', 'Doctor', 'Usuario'].map((rol) => (
                 <RadioButton
                   key={rol}
                   label={rol}
@@ -154,14 +188,13 @@ const Step3Screen = () => {
                   search={true}
                   searchPlaceholder="Buscar nivel..."
                   icon="book"
-                  error={errors.escolaridad}
+                  error={!!errors.escolaridad}
                 />
-              <ThemedDatePicker
-                label="Fecha de Nacimiento *"
-                value={form.fechaNacimiento}
-                onChange={(date) => setForm({ ...form, fechaNacimiento: date })}
-                error={errors.fechaNacimiento}
-              />
+                {errors.escolaridad ? (
+                  <ThemedText type="error" style={{ marginTop: 4 }}>
+                    {errors.escolaridad}
+                  </ThemedText>
+                ) : null}
               </>
             )}
             {form.rol === 'Doctor' && (
@@ -172,7 +205,8 @@ const Step3Screen = () => {
                   value={form.especialidad}
                   onChangeText={(text) => setForm({ ...form, especialidad: text })}
                   icon="stethoscope"
-                  error={errors.especialidad}
+                  error={!!errors.especialidad}
+                  errorMessage={errors.especialidad}
                 />
                 <ThemedInput
                   label="Título profesional *"
@@ -180,10 +214,31 @@ const Step3Screen = () => {
                   value={form.titulo}
                   onChangeText={(text) => setForm({ ...form, titulo: text })}
                   icon="certificate"
-                  error={errors.titulo}
+                  error={!!errors.titulo}
+                  errorMessage={errors.titulo}
                 />
               </>
             )}
+          <ThemedDatePicker
+              label="Fecha de Nacimiento *"
+              value={form.fechaNacimiento}
+              onChange={(date) => {
+                setForm({ ...form, fechaNacimiento: date });
+                setFechaTocada(true);
+              }}
+              error={!!errors.fechaNacimiento}
+              style={{ width: '100%' }}
+            />
+            {errors.fechaNacimiento ? (
+              <ThemedText type="error" style={{ marginTop: 4, marginBottom: 8 }}>
+                {errors.fechaNacimiento}
+              </ThemedText>
+            ) : null}
+            {errors.fechaNacimiento ? (
+              <ThemedText type="error" style={{ marginTop: 4, marginBottom: 8 }}>
+                {errors.fechaNacimiento}
+              </ThemedText>
+            ) : null}
             <View
               style={{
                 flexDirection: 'row',
@@ -192,15 +247,15 @@ const Step3Screen = () => {
                 marginTop: 20,
               }}
             >
-              <ThemedButton widthAndroid={0.2} widthWeb={0.1} onPress={volverAtras}>
+              <ThemedButton widthAndroid={0.2} widthWeb={0.1} onPress={() => router.back()}>
                 Regresar
               </ThemedButton>
               <ThemedButton widthAndroid={0.25} widthWeb={0.15} onPress={completarRegistro}>
                 Completar Registro
               </ThemedButton>
             </View>
+            </View>
           </ThemedBackground>
-        </View>
       </ScrollView>
     </KeyboardAvoidingView>
     </SafeAreaView>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Platform, useWindowDimensions } from 'react-native';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
-import LabelWithAsterisk from '@/presentation/theme/components/LabelWithAsterisk';
+import { ThemedText } from './ThemedText';
 
 interface Props {
   selected: string;
@@ -14,8 +14,8 @@ const GenderSelector: React.FC<Props> = ({ selected, onSelect, showError }) => {
 
   return (
     <>
-      <LabelWithAsterisk label="Género" required={showError} />
-      
+      <ThemedText>Género</ThemedText>
+
       <View
         style={{
           flexDirection: Platform.select({
