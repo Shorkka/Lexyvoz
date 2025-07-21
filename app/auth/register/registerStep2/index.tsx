@@ -20,7 +20,7 @@ const Step2Screen = () => {
   const [form, setForm] = useState({
     telefono: '3310227778',
     sexo: 'Masculino',
-    direccion: 'Jose Jeronimo Hernandez 3939',
+    direccion: '',
     codigoPostal: '44760',
   });
   const [errors, setErrors] = useState({
