@@ -25,13 +25,13 @@ const returnUserToken = (data: AuthResponse) : {
         token,
     }
 }
-export const authLogin = async (email: string, password: string) => {
-  email = email.toLowerCase();
+export const authLogin = async (correo: string, contraseña: string) => {
+  correo = contraseña.toLowerCase();
 
   try {
     const { data } = await productsApi.post<AuthResponse>('/auth/login', {
-      email,
-      password,
+      correo,
+      contraseña,
     });
 
     return returnUserToken(data);
