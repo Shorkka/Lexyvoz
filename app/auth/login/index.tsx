@@ -23,6 +23,7 @@ const LoginScreen = () => {
   const [loginError, setLoginError] = useState('');
 
   const onLogin = async () => {
+   
     const { email, password } = form;
     setLoginError('');
     if (!email || !password) {
@@ -31,6 +32,7 @@ const LoginScreen = () => {
     setIsPosting(true);
     const wasSuccessful = await login(email, password);
     setIsPosting(false);
+    console.log('Login fue exitoso?', wasSuccessful);
     if (wasSuccessful) {
       router.replace('/(lexyvoz-app)');
     } else {
@@ -56,6 +58,38 @@ const LoginScreen = () => {
             paddingHorizontal: 20,
           }}
         >
+
+          {/* Prubea de login sin backend */}
+        <ThemedButton
+        onPress={() => {
+          // Cambia aquí el rol que quieres probar: 'doctor' | 'paciente' | 'usuario'
+          useAuthStore.getState().simulateLogin('Doctor');
+          router.push('/(lexyvoz-app)');
+        }}
+        style={{ marginTop: 20 }}
+      >
+        Simular login como doctor
+      </ThemedButton>
+            <ThemedButton
+        onPress={() => {
+          // Cambia aquí el rol que quieres probar: 'doctor' | 'paciente' | 'usuario'
+          useAuthStore.getState().simulateLogin('Paciente');
+          router.push('/(lexyvoz-app)');
+        }}
+        style={{ marginTop: 20 }}
+      >
+        Simular login como Paciente
+      </ThemedButton>
+            <ThemedButton
+        onPress={() => {
+          // Cambia aquí el rol que quieres probar: 'doctor' | 'paciente' | 'usuario'
+          useAuthStore.getState().simulateLogin('Usuario');
+          router.push('/(lexyvoz-app)');
+        }}
+        style={{ marginTop: 20 }}
+      >
+        Simular login como Usuario
+      </ThemedButton>
           <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
             <ThemedBackground backgroundColor="#fff" align="center">
               <View style={{ paddingHorizontal: 30, paddingVertical: 40 }}>

@@ -26,7 +26,7 @@ const returnUserToken = (data: AuthResponse) : {
     }
 }
 export const authLogin = async (correo: string, contraseña: string) => {
-  correo = contraseña.toLowerCase();
+  correo = correo.toLowerCase();
 
   try {
     const { data } = await productsApi.post<AuthResponse>('/auth/login', {
@@ -35,11 +35,13 @@ export const authLogin = async (correo: string, contraseña: string) => {
     });
 
     return returnUserToken(data);
-  } catch (error) {
+  } catch (error: any) {
+    console.log('Login error:', error?.response?.data || error);
     console.log(error);
     return null;
   };
 }
+{/*  
 export const authCheckStatus = async () => {
   try {
     const { data } = await productsApi.get<AuthResponse>('/auth/check-status');
@@ -50,12 +52,12 @@ export const authCheckStatus = async () => {
     return null;
   }
 };
+*/}
 
-
-export const authRegister = async (registerData: User): Promise<{ token: string; user: User } | null> => {
+export const authRegister = async (registerData: AuthResponse) => {
   try {
-    const { data } = await productsApi.post<{ token: string; user: User }>('/auth/register', registerData);
-    return data;
+    const { data } = await productsApi.post<AuthResponse>('/auth/register', registerData);
+    return returnUserToken(data);
   } catch (error) {
     console.log(error);
     return null;

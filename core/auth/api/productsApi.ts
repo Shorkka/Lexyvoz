@@ -18,12 +18,10 @@ const productsApi = axios.create({
 
 // TODOS interceptores
 
-
 productsApi.interceptors.request.use( async (config) => {
-  // Verificar si tenemos un token de autenticación
   const token = await SecureStorageAdapter.getItem('token');
+  console.log('Token en interceptor:', token);
   if (token) {
-    // Si existe, agregarlo a los headers de la petición
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config

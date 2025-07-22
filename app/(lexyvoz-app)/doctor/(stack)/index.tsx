@@ -17,7 +17,6 @@ const StackLayout = () => {
     <Stack
       screenOptions={({ navigation }) => ({
         headerShown: false,
-        // Removemos headerShadowVisible para evitar warnings en web
         contentStyle: { backgroundColor: 'white' },
         headerLeft: () => (
           <Ionicons

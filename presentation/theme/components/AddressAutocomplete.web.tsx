@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ff9900',
     textAlign: 'left',
-    outline: 'none',
     boxSizing: 'border-box',
     fontFamily: 'inherit',
   },

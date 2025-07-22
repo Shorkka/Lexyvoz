@@ -92,7 +92,6 @@ const ThemedTextInput = ({ icon, error, errorMessage, label, value, ...rest }: P
             color: textColor,
             marginRight: 10,
             borderWidth: 0,
-            outlineWidth: 0,
             paddingTop: label ? 16 : 0,
             fontSize: 16,
             textAlign: 'left',
