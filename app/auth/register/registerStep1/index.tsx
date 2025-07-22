@@ -10,6 +10,7 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 const Step1Screen = () => {
+   console.log('registerScreen1 rendered');
     const { height } = useWindowDimensions();
     const set = useRegisterStore((s) => s.set);
   const backgroundColor = useThemeColor({}, 'background');
@@ -53,7 +54,7 @@ const Step1Screen = () => {
     };
     setErrors(newErrors);
     if (Object.values(newErrors).some((v) => v)) { return; }
-    set({ nombre: form.nombre, email: form.email, password: form.
+    set({ nombre: form.nombre, correo: form.email, contraseña: form.
       password });
     return router.push('/auth/register/registerStep2');
   };

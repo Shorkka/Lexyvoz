@@ -5,7 +5,7 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler'
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useColorScheme } from '@/presentation/theme/hooks/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import CheckAuthenticationLayout from './(lexyvoz-app)/_layout';
+import { Stack } from 'expo-router';
 
 export default function RootLayout() {
    const backgroundColor = useThemeColor({}, 'background');
@@ -30,7 +30,10 @@ export default function RootLayout() {
     style ={{backgroundColor: backgroundColor, flex: 1}}
     >
     <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
-          <CheckAuthenticationLayout />
+
+          <Stack screenOptions={{ headerShown: false }}>
+      
+        </Stack>
     </ThemeProvider>
     </GestureHandlerRootView>
     </SafeAreaProvider>

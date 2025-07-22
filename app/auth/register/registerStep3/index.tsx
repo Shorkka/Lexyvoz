@@ -12,7 +12,6 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -20,20 +19,6 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-
-export interface AuthResponse {
-  nombre: string;
-  correo: string;
-  contraseña: string;
-  fecha_de_nacimiento: Date;
-  numero_telefono: string;
-  sexo: string;
-  tipo: string;
-  escolaridad?: string;
-  especialidad?: string;
-  token: string;
-  domicilio: string;
-}
 
 const escolaridadData = [
   { label: 'Primaria', value: 'primaria' },
@@ -47,6 +32,7 @@ const escolaridadData = [
 ];
 
 const Step3Screen = () => {
+  console.log("Componente Step3Screen montado");
   const data = useRegisterStore((s) => s);    
   const reset = useRegisterStore((s) => s.reset);
   const register = useAuthStore((s) => s.register);
@@ -70,6 +56,7 @@ const Step3Screen = () => {
     tipo: '',
   });
 
+  console.log(data.nombre, data.correo, data.contraseña, data.numero_telefono, data.sexo, data.domicilio, form.tipo, form.escolaridad, form.fecha_de_nacimiento, form.especialidad, form.titulo);
   const completarRegistro = async () => {
     const newErrors = {
       escolaridad: '',
@@ -80,8 +67,7 @@ const Step3Screen = () => {
     };
     
     let hasError = false;
-    
-    if ((form.tipo === 'Paciente' || form.tipo === 'Estudiante') && !form.escolaridad) {
+    if ((form.tipo === 'Paciente') && !form.escolaridad) {
       newErrors.escolaridad = 'Selecciona tu nivel de escolaridad';
       hasError = true;
     }
@@ -114,9 +100,10 @@ const Step3Screen = () => {
     
     if (hasError) {
       setErrors(newErrors);
-      Alert.alert('Error', 'Por favor completa los campos obligatorios.');
+      alert('Por favor completa los campos obligatorios.');
       return;
     }
+    
       const payload = {
         nombre:              data.nombre!,
         correo:              data.correo!,
@@ -132,12 +119,14 @@ const Step3Screen = () => {
           titulo: form.titulo,
         }),
       };
+      console.log('Payload para registro:', payload);
     try {
       const ok = await register(payload);  
       if (ok) {
         reset();
         router.replace('/auth/login');     
       } else {
+        console.log('Llamando a /auth/register con:', register);
         alert('No se pudo crear la cuenta');
       }
     } catch (error) {

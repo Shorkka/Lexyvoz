@@ -12,6 +12,7 @@ import React, { useRef, useState } from 'react';
 import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, useWindowDimensions } from 'react-native';
 import { GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
 const Step2Screen = () => {
+  console.log('registerScreen2 rendered');
   const backgroundColor = useThemeColor({}, 'background');
   const { height } = useWindowDimensions();
   const addressRef = useRef<GooglePlacesAutocompleteRef>(null);
