@@ -6,6 +6,8 @@ type Props = {
   backgroundColor?: string; // Color del fondo
   width?: number |  `${number}%`;  // Ancho: 400, '80%'...
   align?: 'center' | 'left' | 'right'; // Posición horizontal
+  color?: string
+  style?: object; // Estilos adicionales
 };
 
 const ThemedBackground = ({
@@ -13,6 +15,7 @@ const ThemedBackground = ({
   backgroundColor = 'white',
   width = 600,
   align = 'center',
+  style = {},
 }: Props) => {
   const { width: windowWidth } = useWindowDimensions();
 
@@ -26,6 +29,7 @@ const ThemedBackground = ({
       <View
         style={[
           styles.card,
+          style, 
           {
             backgroundColor,
             width:
@@ -36,7 +40,8 @@ const ThemedBackground = ({
                     default: Math.min(400, windowWidth * 0.95), // Más angosto en móvil
                   }),
             alignSelf,
-          },
+            
+          }, 
         ]}
       >
         {children}

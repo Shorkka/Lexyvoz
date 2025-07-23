@@ -10,21 +10,20 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 const Step1Screen = () => {
-   console.log('registerScreen1 rendered');
     const { height } = useWindowDimensions();
     const set = useRegisterStore((s) => s.set);
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
 
   const [form, setForm] = useState({
-    nombre: 'Ortega Morfin',
-    email: 'ortega@gmail.com',
-    password: 'paciente123',
-  });
-  const [errors, setErrors] = useState({
     nombre: '',
     email: '',
     password: '',
+  });
+  const [errors, setErrors] = useState({
+    nombre: '',
+    correo: '',
+    contraseña: '',
   });
     const isLoginDisabled =
     !form.nombre ||
@@ -49,8 +48,8 @@ const Step1Screen = () => {
   
     const newErrors = {
       nombre: !form.nombre.trim() ? 'El nombre es obligatorio' : '',
-      email: validateEmail(form.email),
-      password: validatePassword(form.password),
+      correo: validateEmail(form.email),
+      contraseña: validatePassword(form.password),
     };
     setErrors(newErrors);
     if (Object.values(newErrors).some((v) => v)) { return; }
@@ -99,8 +98,8 @@ const Step1Screen = () => {
                     setForm({ ...form, email: value });
                     setErrors((prev) => ({ ...prev, email: '' }));
                   }}
-                  error={!!errors.email}
-                  errorMessage={errors.email}
+                  error={!!errors.correo}
+                  errorMessage={errors.correo}
                 />
               </View>
 
@@ -116,8 +115,8 @@ const Step1Screen = () => {
                     setForm({ ...form, password: value });
                     setErrors((prev) => ({ ...prev, password: '' }));
                   }}
-                  error={!!errors.password}
-                  errorMessage={errors.password}
+                  error={!!errors.contraseña}
+                  errorMessage={errors.contraseña}
                 />
               </View>
             </View>

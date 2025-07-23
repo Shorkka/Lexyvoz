@@ -5,9 +5,9 @@
   "build": {
     "development": {
       "env": {
-        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID": "AIzaSyAjioqnWhlLjpFypYcHld0RCxU3hLdVZR4",
-        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB": "AIzaSyCMmyYsCL-zz7AluSOjO_vuchHzRyV0-_0"
-      }
+        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID}",
+        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB}"
+  }
     },
     "preview": {
       "developmentClient": true,

@@ -1,17 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { Animated, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 interface Props extends TextInputProps {
   icon?: keyof typeof Ionicons.glyphMap;
+  rightIcon?: keyof typeof Ionicons.glyphMap;
+  onRightIconPress?: () => void;
   error?: boolean;
   errorMessage?: string;
   label?: string;
 }
 
-
-const ThemedTextInput = ({ icon, error, errorMessage, label, value, ...rest }: Props) => {
+const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessage, label, value, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const placeholderColor = useThemeColor({}, 'secondaryText');
@@ -97,6 +98,16 @@ const ThemedTextInput = ({ icon, error, errorMessage, label, value, ...rest }: P
             textAlign: 'left',
           }}
         />
+        {/* Right Icon */}
+        {rightIcon && (
+          <TouchableOpacity onPress={onRightIconPress} style={{ padding: 4 }}>
+            <Ionicons
+              name={rightIcon}
+              size={20}
+              color={isActive ? primaryColor : textColor}
+            />
+          </TouchableOpacity>
+        )}
         {/* Error icon */}
         {error && (
           <Ionicons

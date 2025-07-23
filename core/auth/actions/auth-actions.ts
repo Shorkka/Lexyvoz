@@ -1,7 +1,9 @@
+import { isAxiosError } from 'axios';
 import { productsApi } from '../api/productsApi';
-import { User } from '../interface/user';
+//import { User } from '../interface/user';
 
 export interface AuthResponse {
+    usuario_id: number;
     nombre:              string;
     correo:              string;
     contraseña:          string;
@@ -11,20 +13,10 @@ export interface AuthResponse {
     tipo:                string;
     escolaridad?:         string;
     especialidad?:        string;
-    token:                string;
     domicilio:           string;
 }
 
-const returnUserToken = (data: AuthResponse) : {
-    user: User
-    token: string,
-}=> {
-    const { token, ...user} = data;
-    return{
-        user,
-        token,
-    }
-}
+
 export const authLogin = async (correo: string, contraseña: string) => {
   correo = correo.toLowerCase();
 
@@ -34,11 +26,13 @@ export const authLogin = async (correo: string, contraseña: string) => {
       contraseña,
     });
 
-    return returnUserToken(data);
+      return {
+      userType: data.tipo, // Usar data.tipo directamente
+      user: data
+    };
   } catch (error: any) {
     console.log('Login error:', error?.response?.data || error);
-    console.log(error);
-    return null;
+    throw error;
   };
 }
 {/*  
@@ -54,12 +48,18 @@ export const authCheckStatus = async () => {
 };
 */}
 
-export const authRegister = async (registerData: AuthResponse) => {
+
+// En tu archivo auth-actions.ts
+export const authRegister = async (registerData: any) => {
   try {
-    const { data } = await productsApi.post<AuthResponse>('/auth/register', registerData);
-    return returnUserToken(data);
+    console.log('Datos enviados al registrar:', registerData); // Debug
+    const { data } = await productsApi.post('/auth/register', registerData);
+  return { user: data };
   } catch (error) {
-    console.log(error);
-    return null;
+    if (isAxiosError(error)) {
+      console.error('Error del backend:', error.response?.data);
+      throw new Error(error.response?.data?.message || 'Error en el registro');
+    }
+    throw error;
   }
 };

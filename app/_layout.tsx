@@ -25,17 +25,11 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      
-    <GestureHandlerRootView
-    style ={{backgroundColor: backgroundColor, flex: 1}}
-    >
-    <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
-
-          <Stack screenOptions={{ headerShown: false }}>
-      
-        </Stack>
-    </ThemeProvider>
-    </GestureHandlerRootView>
+      <GestureHandlerRootView style ={{backgroundColor: backgroundColor, flex: 1}}>
+        <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </ThemeProvider>
+      </GestureHandlerRootView>
     </SafeAreaProvider>
   );
 }

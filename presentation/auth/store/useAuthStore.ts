@@ -1,40 +1,33 @@
 import { authLogin, authRegister } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
-import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
+//import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
 import { create } from 'zustand';
 
 export type AuthStatus  = 'authenticated' | 'unauthenticated' | 'checking';
-type Role = 'Doctor' | 'Paciente' | 'Usuario';
+
 
 
 export interface AuthState{
     status: AuthStatus
-    token?: string;
     user?: User;
-    role?: Role | null;
-    setRole: (role: Role) => void;
-    
-
-
+    userType?: string;
 
     login: (correo: string, contraseña: string) => Promise<boolean>;
     // checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
     // changeStatus: (token?:string, user?:User) => Promise<boolean>;
     register: (registerData: any) => Promise<boolean>;
-    simulateLogin: (role: Role) => void;
 
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
     // Properties
     status: 'unauthenticated',
-    token: undefined,
+    //token: undefined,
     user: undefined,
+    userType: undefined,
 
     // Actions
-    role: null,
-    setRole: (role) => set({ role }),
     /*
     changeStatus: async(token?: string, user?: User) => {
          if( !token || !user ){
@@ -53,24 +46,32 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         return true;
     },
     */
+   // return get().changeStatus(resp?.token, resp?.user);
+   // Puedes manejar el estado aquí directamente si lo necesitas
     
-    login: async(correo: string, contraseña: string) =>{
-        const resp = await authLogin(correo, contraseña);
-        // return get().changeStatus(resp?.token, resp?.user);
-        // Puedes manejar el estado aquí directamente si lo necesitas
-        if (!resp?.token || !resp?.user) {
-            set({status: 'unauthenticated', token: undefined, user: undefined});
-            SecureStorageAdapter.deleteItem('token');
-            return false;
+    login: async(correo: string, contraseña: string) => {
+        try {
+            const resp = await authLogin(correo, contraseña);
+            
+            if (!resp?.user) {
+                set({status: 'unauthenticated', user: undefined});
+                return false;
+            }
+            set({
+                status: 'authenticated',
+                userType: resp.userType,
+                user: resp.user,
+            });
+            return true;
+            
+        } catch (error) {
+            console.error('Error en login:', error);
+            set({ status: 'unauthenticated' });
+            throw error; // Propaga el error para mostrar en UI
         }
-        set({
-            status: 'authenticated',
-            token: resp.token,
-            user: resp.user,
-        });
-        await SecureStorageAdapter.setItem('token', resp.token);
-        return true;
     },
+
+    // await SecureStorageAdapter.setItem('token');
 
     /*
     checkStatus: async()=> {
@@ -79,48 +80,35 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     },
     */
 
-    register: async(registerData: any) => {
+    register: async (registerData: any) => {
+    try {
         const resp = await authRegister(registerData);
-        // return get().changeStatus(resp?.token, resp?.user);
-        if (!resp?.token || !resp?.user) {
-            set({status: 'unauthenticated', token: undefined, user: undefined});
-            SecureStorageAdapter.deleteItem('token');
+
+        if (!resp?.user) {
+            console.error('Registro fallido - Respuesta incompleta:', resp);
+            set({ status: 'unauthenticated', user: undefined });
             return false;
         }
+
         set({
-            status: 'authenticated',
-            token: resp.token,
-            user: resp.user,
+        status: 'authenticated',
+        user: resp.user,
         });
-        await SecureStorageAdapter.setItem('token', resp.token);
+        // await SecureStorageAdapter.setItem('token', resp.token);
         return true;
+        
+    } catch (error) {
+        console.error('Error en registro:', error);
+        set({ status: 'unauthenticated' });
+        throw error;
+    }
     },
-    
+        
     logout: async()=> {
         // Clear Token del secure store
-        SecureStorageAdapter.deleteItem('token');
-        set({status: 'unauthenticated', token: undefined, user: undefined})
+        //SecureStorageAdapter.deleteItem('token');
+        set({status: 'unauthenticated', user: undefined})
     },
 
-    simulateLogin: (role: Role) => {
-    const fakeUser: User = {
-        nombre: 'Usuario',
-        correo: `${role}@lexyvoz.com`,
-        contraseña: 'fake-password',
-        fecha_de_nacimiento: new Date(),
-        numero_telefono: '0000000000',
-        sexo: 'Otro',
-        tipo: role.charAt(0).toUpperCase() + role.slice(1), // 'Doctor' | 'Paciente' | 'Usuario'
-        domicilio: 'Dirección falsa',
-        escolaridad: role === 'Doctor' || role === 'Paciente' ? 'Universitaria' : undefined,
-        especialidad: role === 'Doctor' ? 'Cardiología' : undefined,
-    };
-
-    set({
-        status: 'authenticated',
-        token: 'fake-token',
-        user: fakeUser,
-        role,
-    });
-    },
+   
 }))

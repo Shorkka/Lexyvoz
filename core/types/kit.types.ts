@@ -1,9 +1,3 @@
-/**
- * Tipos e interfaces para el sistema de Kits
- * 
- * Este archivo define la estructura de datos para los kits que serán
- * creados por el doctor y asignados a los pacientes.
- */
 
 export interface KitData {
   id: string;

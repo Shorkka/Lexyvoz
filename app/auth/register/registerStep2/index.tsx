@@ -18,10 +18,10 @@ const Step2Screen = () => {
   const addressRef = useRef<GooglePlacesAutocompleteRef>(null);
   const set = useRegisterStore((s) => s.set);
   const [form, setForm] = useState({
-    numero_telefono: '3310227778',
-    sexo: 'Masculino',
+    numero_telefono: '',
+    sexo: '',
     domicilio: '',
-    codigoPostal: '44760',
+    codigoPostal: '',
   });
   const [errors, setErrors] = useState({
     numero_telefono: '',
@@ -119,6 +119,7 @@ const Step2Screen = () => {
               keyboardType="numeric"
               placeholder=""
               maxLength={5}
+              style={{ borderBottomWidth: 0, }}
             />
           </View>
             <View style={{ width: '100%', marginTop: 12 }}>
