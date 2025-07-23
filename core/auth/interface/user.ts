@@ -10,4 +10,5 @@ export interface User {
     escolaridad?:         string;
     especialidad?:        string;
     domicilio:           string;
+    codigo_postal:        string;
 }

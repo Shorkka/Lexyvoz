@@ -3,7 +3,7 @@ import { productsApi } from '../api/productsApi';
 //import { User } from '../interface/user';
 
 export interface AuthResponse {
-    usuario_id: number;
+    usuario_id:           number;
     nombre:              string;
     correo:              string;
     contraseña:          string;
@@ -14,6 +14,8 @@ export interface AuthResponse {
     escolaridad?:         string;
     especialidad?:        string;
     domicilio:           string;
+    codigo_postal:        string;
+
 }
 
 

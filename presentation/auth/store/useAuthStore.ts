@@ -59,7 +59,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
             }
             set({
                 status: 'authenticated',
-                userType: resp.userType,
+                userType: resp.user.tipo,
                 user: resp.user,
             });
             return true;

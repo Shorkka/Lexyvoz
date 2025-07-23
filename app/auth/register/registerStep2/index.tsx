@@ -21,13 +21,13 @@ const Step2Screen = () => {
     numero_telefono: '',
     sexo: '',
     domicilio: '',
-    codigoPostal: '',
+    codigo_postal: '',
   });
   const [errors, setErrors] = useState({
     numero_telefono: '',
     sexo: '',
     domicilio: '',
-    codigoPostal: '',
+    codigo_postal: '',
   });
   const onChange = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
@@ -39,7 +39,7 @@ const Step2Screen = () => {
       domicilio: !form.domicilio.trim() ? 'La dirección es obligatoria' : '',
       numero_telefono: !/^\d{10}$/.test(form.numero_telefono) ? 'Ingresa un número de 10 dígitos' : '',
       sexo: !form.sexo.trim() ? 'Selecciona un sexo' : '',
-      codigoPostal: !/^\d{5}$/.test(form.codigoPostal) ? 'Código postal inválido' : '',
+      codigo_postal: !/^\d{5}$/.test(form.codigo_postal) ? 'Código postal inválido' : '',
     };
   };
    const handleAddressSelect = ({
@@ -55,13 +55,13 @@ const Step2Screen = () => {
         ...prev,
         domicilio: direccion, // <-- así sí actualiza el campo correcto
         colonia,
-        codigoPostal,
+        codigo_postal: codigoPostal,
       }));
       setErrors((prev) => ({
         ...prev,
         domicilio: '',
         colonia: '',
-        codigoPostal: '',
+        codigo_postal: '',
       }));
     };
   const nextRegisterScreen = () => {
@@ -75,6 +75,7 @@ const Step2Screen = () => {
       numero_telefono: form.numero_telefono,
       sexo: form.sexo,
       domicilio: form.domicilio,
+      codigo_postal: form.codigo_postal,
   });
     router.push('/auth/register/registerStep3');
   };
@@ -112,10 +113,10 @@ const Step2Screen = () => {
           <View style={{ width: '100%', marginTop: 12 }}>
             <ThemedText>Código Postal</ThemedText>
             <ThemedTextInput
-              value={form.codigoPostal}
+              value={form.codigo_postal}
               onChangeText={(value) => onChange('codigoPostal', value)}
-              error={!!errors.codigoPostal}
-              errorMessage={errors.codigoPostal}
+              error={!!errors.codigo_postal}
+              errorMessage={errors.codigo_postal}
               keyboardType="numeric"
               placeholder=""
               maxLength={5}

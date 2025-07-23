@@ -127,6 +127,7 @@ const Step3Screen = () => {
         sexo:                data.sexo!,
         tipo:                form.tipo!,
         domicilio:           `${data.domicilio}`,
+        codigo_postal:       data.codigo_postal!,
         ...(form.tipo === 'Paciente' && { escolaridad: form.escolaridad }),
         ...(form.tipo === 'Doctor' && {
           especialidad: form.especialidad,
