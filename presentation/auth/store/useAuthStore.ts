@@ -1,114 +1,132 @@
-import { authLogin, authRegister } from "@/core/auth/actions/auth-actions";
+import { authLogin, authRegister, authCheckStatus } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
-//import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
+import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
 import { create } from 'zustand';
 
-export type AuthStatus  = 'authenticated' | 'unauthenticated' | 'checking';
+export type AuthStatus = 'authenticated' | 'unauthenticated' | 'checking';
 
-
-
-export interface AuthState{
-    status: AuthStatus
+export interface AuthState {
+    status: AuthStatus;
     user?: User;
     userType?: string;
 
     login: (correo: string, contraseña: string) => Promise<boolean>;
-    // checkStatus: () => Promise<void>;
+    checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
-    // changeStatus: (token?:string, user?:User) => Promise<boolean>;
     register: (registerData: any) => Promise<boolean>;
-
+    loadSession: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
-    // Properties
     status: 'unauthenticated',
-    //token: undefined,
     user: undefined,
     userType: undefined,
 
-    // Actions
-    /*
-    changeStatus: async(token?: string, user?: User) => {
-         if( !token || !user ){
-            set({status: 'unauthenticated', token: undefined, user: undefined})
-            // TODOS llamar logout
-            SecureStorageAdapter.deleteItem('token');
-            return false;
-        }
-
-        set({
-            status: 'authenticated',
-            token: token,
-            user: user,
-        })
-        await SecureStorageAdapter.setItem('token', token);
-        return true;
-    },
-    */
-   // return get().changeStatus(resp?.token, resp?.user);
-   // Puedes manejar el estado aquí directamente si lo necesitas
-    
-    login: async(correo: string, contraseña: string) => {
+    // Acción para manejar el estado de autenticación
+    checkStatus: async () => {
         try {
+            const resp = await authCheckStatus();
+            if (resp?.user) {
+                await SecureStorageAdapter.setItem('user', JSON.stringify(resp.user));
+                set({
+                    status: 'authenticated',
+                    user: resp.user,
+                    userType: resp.user.tipo
+                });
+            } else {
+                await SecureStorageAdapter.deleteItem('user');
+                set({ status: 'unauthenticated', user: undefined, userType: undefined });
+            }
+        } catch (error) {
+            console.error('Error checking auth status:', error);
+            set({ status: 'unauthenticated' });
+        }
+    },
+     loadSession: async () => {
+    try {
+      const sessionData = await SecureStorageAdapter.getItem('authSession');
+      
+      if (sessionData) {
+        const { user, userType } = JSON.parse(sessionData);
+        set({
+          status: 'authenticated',
+          user,
+          userType
+        });
+        return true;
+      }
+    } catch (error) {
+      console.error('Error loading session:', error);
+    }
+    
+    set({ status: 'unauthenticated' });
+    return false;
+  },
+    // Acción de login
+    login: async (correo: string, contraseña: string) => {
+            try {
             const resp = await authLogin(correo, contraseña);
             
             if (!resp?.user) {
-                set({status: 'unauthenticated', user: undefined});
+                set({ status: 'unauthenticated', user: undefined, userType: undefined });
                 return false;
             }
+
+
+            // Guardar el usuario completo en el almacenamiento
+             await SecureStorageAdapter.setItem('authSession', JSON.stringify({
+                 user: resp.user,
+                userType: resp.user.tipo
+            }));
             set({
                 status: 'authenticated',
-                userType: resp.user.tipo,
                 user: resp.user,
+                userType: resp.user.tipo // Asegurar que el tipo se guarda
             });
-            return true;
             
+            return true;
         } catch (error) {
             console.error('Error en login:', error);
             set({ status: 'unauthenticated' });
-            throw error; // Propaga el error para mostrar en UI
+            throw error;
         }
     },
 
-    // await SecureStorageAdapter.setItem('token');
-
-    /*
-    checkStatus: async()=> {
-        const  resp = await authCheckStatus();
-        get().changeStatus(resp?.token, resp?.user);
-    },
-    */
-
+    // Acción de registro
     register: async (registerData: any) => {
-    try {
-        const resp = await authRegister(registerData);
+        try {
+            const resp = await authRegister(registerData);
 
-        if (!resp?.user) {
-            console.error('Registro fallido - Respuesta incompleta:', resp);
-            set({ status: 'unauthenticated', user: undefined });
-            return false;
+            if (!resp?.user) {
+                console.error('Registro fallido - Respuesta incompleta:', resp);
+                set({ status: 'unauthenticated', user: undefined, userType: undefined });
+                return false;
+            }
+
+            // Guardar el usuario completo
+            await SecureStorageAdapter.setItem('user', JSON.stringify(resp.user));
+
+            set({
+                status: 'authenticated',
+                user: resp.user,
+                userType: resp.user.tipo
+            });
+            
+            return true;
+        } catch (error) {
+            console.error('Error en registro:', error);
+            set({ status: 'unauthenticated' });
+            throw error;
         }
+    },
 
-        set({
-        status: 'authenticated',
-        user: resp.user,
+    // Acción de logout
+    logout: async () => {
+        await SecureStorageAdapter.deleteItem('authSession');
+        set({ 
+        status: 'unauthenticated',
+        user: undefined,
+        userType: undefined
         });
-        // await SecureStorageAdapter.setItem('token', resp.token);
-        return true;
-        
-    } catch (error) {
-        console.error('Error en registro:', error);
-        set({ status: 'unauthenticated' });
-        throw error;
-    }
     },
-        
-    logout: async()=> {
-        // Clear Token del secure store
-        //SecureStorageAdapter.deleteItem('token');
-        set({status: 'unauthenticated', user: undefined})
-    },
-
-   
-}))
+}));

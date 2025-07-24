@@ -5,12 +5,11 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, SafeAreaView, ScrollView, useWindowDimensions, View } from 'react-native';
 
 const NuevoPasswordScreen = () => {
-  const { height, width } = useWindowDimensions();
+  const { height } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
-  const secondaryColor = useThemeColor({}, 'secondaryText');
   const [form, setForm] = useState({
     password: '',
     confirmPassword: '',
@@ -38,31 +37,24 @@ const NuevoPasswordScreen = () => {
     }, 1500);
   };
 
-  const getResponsivePadding = (value: number, base: number ) => {
-    if (Platform.OS === 'web') { 
-      return Math.min(width * 0.3, value);
-    } else {
-      const basePadding = width * 0.1; 
-      return Math.max(16, Math.min(basePadding, base)); 
-    }
-  };
-
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <ScrollView
-        style={{
-          backgroundColor: backgroundColor,
-          flex: 1,
-          paddingHorizontal: getResponsivePadding(700, 30),
-          alignContent: 'center',
-        }}>
-        <View style={{ paddingTop: height * 0.30 }}>
-          <ThemedBackground backgroundColor='#fff' align='center'>
-          <ThemedText type="title" style={{ alignSelf: 'center', top: height * 0.06, position: 'absolute' }}>Lexyvoz</ThemedText>
+       <SafeAreaView style={{ flex: 1, backgroundColor }}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: backgroundColor }}
+          contentContainerStyle={{
+            minHeight: height,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,  
+          }}
+        >
+          <ThemedText type="title">Lexyvoz</ThemedText>
+          <ThemedBackground backgroundColor="#fff" align="center">
+            <View style={{ width: '100%', marginTop: 12 }}>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Nueva contraseña</ThemedText>
-          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Ingresa tu nueva contraseña</ThemedText>
           <View style={{ marginTop: 20 }}>
-            <ThemedText style={{ marginTop: 10 }}>Nueva contraseña</ThemedText>
+          <ThemedText>Ingresa tu nueva contraseña</ThemedText>
             <ThemedTextInput
               placeholder="***********"
               style={{
@@ -95,22 +87,15 @@ const NuevoPasswordScreen = () => {
           <ThemedButton
             onPress={onChangePassword}
             disabled={isPosting}
-            style={{
-              alignSelf: 'center',
-              marginBottom: 10,
-              minWidth: 180,
-              maxWidth: '100%',
-              paddingHorizontal: 12,
-              flexShrink: 1,
-            }}
           >
             Cambiar contraseña
           </ThemedButton>
           <View style={{ marginTop: 30 }} />
-        </ThemedBackground> 
         </View>
+        </ThemedBackground> 
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

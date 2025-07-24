@@ -1,5 +1,6 @@
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import { useAlert } from '@/presentation/hooks/useAlert';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -12,7 +13,6 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -35,10 +35,10 @@ const escolaridadData = [
 const Step3Screen = () => {
   console.log("Componente Step3Screen montado");
   const data = useRegisterStore((s) => s);    
-
   const register = useAuthStore((s) => s.register);
   const { height, width } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
+  const { showAlert } = useAlert(); 
   const [fechaTocada, setFechaTocada] = useState(false);
 
   const [form, setForm] = useState({
@@ -46,31 +46,14 @@ const Step3Screen = () => {
     escolaridad: '',
     fecha_de_nacimiento: new Date(),
     especialidad: '',
-    titulo: '',
   });
   
   const [errors, setErrors] = useState({
     escolaridad: '',
     fecha_de_nacimiento: '',
     especialidad: '',
-    titulo: '',
     tipo: '',
   });
-  const showAlert = (title: string, message: string, buttons?: { text: string; onPress?: () => void }[]) => {
-    if (Platform.OS === 'web') {
-      if (buttons && buttons.length > 0) {
-        const confirmed = window.confirm(`${title}\n\n${message}`);
-        if (confirmed && buttons[0].onPress) {
-          buttons[0].onPress();
-        }
-      } else {
-        window.alert(`${title}\n\n${message}`);
-      }
-    } else {
-      Alert.alert(title, message, buttons);
-    }
-  };
-  console.log(data.nombre, data.correo, data.contraseña, data.numero_telefono, data.sexo, data.domicilio, form.tipo, form.escolaridad, form.fecha_de_nacimiento, form.especialidad, form.titulo);
   const completarRegistro = async () => {
     const newErrors = {
       escolaridad: '',
@@ -101,10 +84,7 @@ const Step3Screen = () => {
         newErrors.especialidad = 'Ingresa tu especialidad';
         hasError = true;
       }
-      if (!form.titulo) {
-        newErrors.titulo = 'Ingresa tu título profesional';
-        hasError = true;
-      }
+
     }
     
     if (!form.tipo) {
@@ -117,7 +97,7 @@ const Step3Screen = () => {
       alert('Por favor completa los campos obligatorios.');
       return;
     }
-    try{
+    try {
       const payload = {
         nombre:              data.nombre!,
         correo:              data.correo!,
@@ -131,27 +111,27 @@ const Step3Screen = () => {
         ...(form.tipo === 'Paciente' && { escolaridad: form.escolaridad }),
         ...(form.tipo === 'Doctor' && {
           especialidad: form.especialidad,
-          titulo: form.titulo,
         }),
       };
-    const success = await register(payload);
-    
-    if (success) {
-    showAlert(
+      
+      const success = await register(payload);
+      
+      if (success) {
+        showAlert(
           'Registro exitoso',
           'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
           [{ text: 'OK', onPress: () => router.replace('/auth/login') }]
         );
-    } else {
-      showAlert('Error', 'No se pudo completar el registro');
+      } else {
+        showAlert('Error', 'No se pudo completar el registro');
+      }
+    } catch (error: any) {
+      showAlert(
+        'Error en registro',
+        error.message || 'Ocurrió un error al registrar. Por favor intente nuevamente.'
+      );
     }
-  } catch (error: any) {
-    showAlert(
-      'Error en registro',
-      error.message || 'Ocurrió un error al registrar. Por favor intente nuevamente.'
-    );
-  }
-};
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
@@ -247,15 +227,6 @@ const Step3Screen = () => {
                     icon="stethoscope"
                     error={!!errors.especialidad}
                     errorMessage={errors.especialidad}
-                  />
-                  <ThemedInput
-                    label="Título profesional *"
-                    placeholder="Ingresa tu título"
-                    value={form.titulo}
-                    onChangeText={(text) => setForm({ ...form, titulo: text })}
-                    icon="certificate"
-                    error={!!errors.titulo}
-                    errorMessage={errors.titulo}
                   />
                 </>
               )}

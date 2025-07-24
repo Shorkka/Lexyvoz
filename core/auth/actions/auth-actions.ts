@@ -1,6 +1,10 @@
 import { isAxiosError } from 'axios';
 import { productsApi } from '../api/productsApi';
-//import { User } from '../interface/user';
+
+export interface LoginResponse {
+  message: string;
+  user: AuthResponse; 
+}
 
 export interface AuthResponse {
     usuario_id:           number;
@@ -23,35 +27,37 @@ export const authLogin = async (correo: string, contraseña: string) => {
   correo = correo.toLowerCase();
 
   try {
-    const { data } = await productsApi.post<AuthResponse>('/auth/login', {
+    const { data } = await productsApi.post<LoginResponse>('/auth/login', {
       correo,
       contraseña,
     });
 
-      return {
-      userType: data.tipo, // Usar data.tipo directamente
-      user: data
+     return {
+      user: {
+        ...data.user, // Accede a data.user que contiene la información
+        tipo: data.user.tipo // Asegura que el tipo está incluido
+      }
     };
   } catch (error: any) {
     console.log('Login error:', error?.response?.data || error);
     throw error;
   };
 }
-{/*  
+
 export const authCheckStatus = async () => {
   try {
     const { data } = await productsApi.get<AuthResponse>('/auth/check-status');
 
-    return returnUserToken(data);
+    return { user: {...data} };
   } catch (error) {
     console.log(error);
     return null;
   }
 };
-*/}
 
 
-// En tu archivo auth-actions.ts
+
+
 export const authRegister = async (registerData: any) => {
   try {
     console.log('Datos enviados al registrar:', registerData); // Debug
@@ -65,3 +71,5 @@ export const authRegister = async (registerData: any) => {
     throw error;
   }
 };
+
+

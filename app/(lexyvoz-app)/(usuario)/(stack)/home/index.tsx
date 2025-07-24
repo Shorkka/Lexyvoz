@@ -9,9 +9,9 @@ import { useThemeColor } from '../../../../../presentation/theme/hooks/useThemeC
 
 const HomePacienteScreen = () => {
   const backgroundColor = useThemeColor({}, 'background');
-  const {user} = useAuthStore();
+  const {userType} = useAuthStore();
  
-
+  console.log('User in HomePacienteScreen:', userType);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
@@ -34,7 +34,7 @@ const HomePacienteScreen = () => {
               Bienvenido
             </ThemedText>
 
-            {user?.tipo === 'Paciente' ? (
+            {userType === 'Paciente ' ? (
               <View style={{ width: '100%' }}>
                 {/* Kits Asignados */}
                 <ThemedText style={{ 

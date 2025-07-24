@@ -1,3 +1,4 @@
+import { useAlert } from '@/presentation/hooks/useAlert';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedLink from '@/presentation/theme/components/ThemedLink';
@@ -6,7 +7,8 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const RecoveryScreen = () => {
   const { height } = useWindowDimensions();
@@ -15,44 +17,61 @@ const RecoveryScreen = () => {
   const [form, setForm] = useState({
     email: ''
   });
-  const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState({
+    email: ''
+  })
 
+  
+  const [isPosting, setIsPosting] = useState(false);
+  const showAlert = useAlert();
   const onSendRecovery = async () => {
+    const newError = {
+      email: '',
+    };
     const { email } = form;
+    let hasError = false;
     if (email.length === 0) {
-      return Alert.alert('Por favor ingresa tu email');
+      newError.email = 'Por favor ingresa tu email';
+      setError(newError);
+      hasError = true;
+    }
+    if (hasError) {
+      setError(newError);
+      alert('Por favor completa los campos obligatorios.');
+      return;
     }
     setIsPosting(true);
     // Aquí deberías llamar a lu API para enviar el correo de recuperación
     // await sendRecoveryEmail(email);
     setTimeout(() => {
       setIsPosting(false);
-      Alert.alert('Si el correo existe, se ha enviado un código de recuperación');
-      router.replace('/auth/login');
-    }, 1500);
+      showAlert.showAlert('Código',
+        'Si el correo existe, se ha enviado un código de recuperación',  [
+        { text: 'OK', onPress: () => router.replace('/auth/login') }
+      ]);
+    }, 
+);
   };
 
 
 
   return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: backgroundColor }}
-        contentContainerStyle={{
-          minHeight: height,
-          justifyContent: 'center',
-          alignItems: 'center',
-          paddingHorizontal: 20,
-        }}
-      >
-      <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
-       <ThemedText type="title" style={{ alignSelf: 'center', marginBottom: 10 }}>
-                  Lexyvoz
-                </ThemedText>
-        <ThemedBackground backgroundColor='#fff' align='center'>
-
+       <SafeAreaView style={{ flex: 1, backgroundColor }}>
+      <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: backgroundColor }}
+          contentContainerStyle={{
+            minHeight: height,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,  
+          }}
+        >
+          <ThemedBackground backgroundColor="#fff" align="center">
+            <ThemedText type="subtitle">Registro de usuario</ThemedText>
+            <View style={{ width: '100%', marginTop: 12 }}>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Recuperar contraseña</ThemedText>
-          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Mandame un código de restauración</ThemedText>
+          <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Mandar un código de restauración</ThemedText>
           {/* Email */}
           <View style={{ marginTop: 20 }}>
             <ThemedText>Email</ThemedText>
@@ -69,7 +88,11 @@ const RecoveryScreen = () => {
               icon="mail-outline"
               value={form.email}
               onChangeText={(value) => setForm({ ...form, email: value })}
-            />
+            />   {error.email ? (
+                            <ThemedText type="error" style={{ marginTop: 4 }}>
+                              {error.email}
+                            </ThemedText>
+                          ) : null}
           </View>
           <View style={{ marginTop: 10 }} />
           <ThemedButton
@@ -84,11 +107,12 @@ const RecoveryScreen = () => {
               Iniciar sesión
             </ThemedLink>
           </View>
-            </ThemedBackground>
-
           </View>
+        </ThemedBackground>
+
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

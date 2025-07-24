@@ -15,7 +15,6 @@ interface RegisterForm {
   fecha_de_nacimiento?: Date;
   escolaridad?: string;
   especialidad?: string;
-  titulo?: string;
   codigo_postal?: string;
 }
 
@@ -39,7 +38,6 @@ export const useRegisterStore = create<RegisterStore>((set) => ({
       fecha_de_nacimiento: undefined,
       escolaridad: undefined,
       especialidad: undefined,
-      titulo: undefined,
       codigo_postal: undefined,
     }),
 }));

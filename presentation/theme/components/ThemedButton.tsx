@@ -10,6 +10,7 @@ interface Props extends PressableProps {
     widthWeb?: number;
     widthAndroid?: number;
     backgroundColor?: string;
+  
 }
 
 const ThemedButton = ({
