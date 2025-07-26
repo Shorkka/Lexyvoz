@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 const avatar = require('../../../assets/images/perfil.png');
 
 const CustomDrawer = (props: DrawerContentComponentProps) => {
-  const { logout, userType } = useAuthStore();
+  const { logout, userType, user } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'main');
   const textColor = useThemeColor({}, 'text');
   const borderColor = useThemeColor({}, 'background');
@@ -66,7 +66,16 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
       marginHorizontal: 16,
     },
   });
+    const getHomeRoute = () => {
+    return userType === 'Doctor' 
+      ? '/(lexyvoz-app)/(drawerDoc)/doctor/home' 
+      : '/(lexyvoz-app)/(drawerUser)/usuario/home';
+  };
 
+    const exit = () => {
+          logout();
+          router.replace('/auth/login');
+      }
   return (
     <View style={{ flex: 1 }}>
       <DrawerContentScrollView
@@ -81,7 +90,7 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
           </View>
           {userType && (
             <Text style={{ marginTop: 10, color: textColor, fontWeight: 'bold' }}>
-              {userType === 'Doctor' ? 'Dr./Dra.' : 'Paciente'}
+              {userType === 'Doctor' ? 'Dr./Dra.' : 'Paciente'} {user?.nombre}
             </Text>
           )}
         </View>
@@ -91,12 +100,17 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
           <Text style={styles.sectionTitle}>Cuenta</Text>
 
         </View>
-        
+        <ThemedPressableDrawerItem
+        icon="home"
+        label="Inicio"
+        onPress={() => router.replace(getHomeRoute())}
+      />
+
         <ThemedPressableDrawerItem
           icon="notifications-none"
           iconSet="MaterialIcons"
           label="Notificaciones"
-          onPress={() => router.push('/')} 
+          onPress={() => router.push('/notifications')} 
           style={styles.menuItem}
           textColor={textColor}
         />
@@ -109,7 +123,7 @@ const CustomDrawer = (props: DrawerContentComponentProps) => {
       <ThemedPressableDrawerItem
         icon="log-out-outline"
         label="Cerrar sesión"
-        onPress={logout}
+        onPress={exit}
         style={styles.logoutButton}
         textColor={textColor}
       />

@@ -27,10 +27,6 @@ export const GlobalStyles = StyleSheet.create({
   appContainer: {
     flex: 1,
     backgroundColor: '#fefcc3',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
     elevation: 5,
     maxWidth: 480,
     width: '100%',
@@ -130,10 +126,6 @@ export const GlobalStyles = StyleSheet.create({
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
     elevation: 3,
   },
   cardTitle: {

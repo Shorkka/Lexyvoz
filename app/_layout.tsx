@@ -5,8 +5,7 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler'
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useColorScheme } from '@/presentation/theme/hooks/useColorScheme';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
-
+import { Slot} from 'expo-router';
 export default function RootLayout() {
    const backgroundColor = useThemeColor({}, 'background');
   
@@ -27,7 +26,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <GestureHandlerRootView style ={{backgroundColor: backgroundColor, flex: 1}}>
         <ThemeProvider value={colorScheme === 'light' ? DarkTheme : DefaultTheme}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <Slot/>
         </ThemeProvider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

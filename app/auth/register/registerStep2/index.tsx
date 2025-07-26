@@ -9,12 +9,12 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-native';
 import { GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
+
 const Step2Screen = () => {
   console.log('registerScreen2 rendered');
   const backgroundColor = useThemeColor({}, 'background');
-  const { height } = useWindowDimensions();
   const addressRef = useRef<GooglePlacesAutocompleteRef>(null);
   const set = useRegisterStore((s) => s.set);
   const [form, setForm] = useState({
@@ -53,7 +53,7 @@ const Step2Screen = () => {
     }) => {
       setForm((prev) => ({
         ...prev,
-        domicilio: direccion, // <-- así sí actualiza el campo correcto
+        domicilio: direccion,
         colonia,
         codigo_postal: codigoPostal,
       }));
@@ -88,7 +88,7 @@ const Step2Screen = () => {
         <ScrollView
           style={{ flex: 1, backgroundColor }}
           contentContainerStyle={{
-            minHeight: height,
+             flexGrow: 1, 
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,

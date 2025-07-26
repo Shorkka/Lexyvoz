@@ -19,7 +19,7 @@ const CodigoRecuperacionScreen = () => {
       return Alert.alert('Ingresa el código de recuperación');
     }
     setIsPosting(true);
-    // Aquí deberías validar el código con tu backend
+    // validar el código con  backend
     setTimeout(() => {
       setIsPosting(false);
       // Si el código es válido, navega a la pantalla de confirmación

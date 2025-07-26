@@ -36,7 +36,7 @@ const Step3Screen = () => {
   console.log("Componente Step3Screen montado");
   const data = useRegisterStore((s) => s);    
   const register = useAuthStore((s) => s.register);
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
   const { showAlert } = useAlert(); 
   const [fechaTocada, setFechaTocada] = useState(false);
@@ -139,7 +139,7 @@ const Step3Screen = () => {
         <ScrollView
           style={{ flex: 1, backgroundColor: backgroundColor }}
           contentContainerStyle={{
-            minHeight: height,
+            flexGrow: 1,
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,  

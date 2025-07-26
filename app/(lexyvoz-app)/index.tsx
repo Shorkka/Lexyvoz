@@ -1,62 +1,54 @@
-import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
-import { Redirect, Stack } from 'expo-router';
-
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 
-
+const APP_ROUTES = {
+  DOCTOR_HOME: '/(lexyvoz-app)/doctor',
+  USER_HOME: '/(lexyvoz-app)/usuario',
+  LOGIN: '/auth/login',
+} as const;
 
 const CheckAuthenticationLayout = () => {
+  const { status, userType, checkStatus, loadSession } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(false);
+  const router = useRouter();
 
-    const backgroundColor = useThemeColor({}, 'background');
-    const { status, userType,checkStatus, loadSession } = useAuthStore(); // Solo usamos status
-
-      useEffect(() => {
-    // Cargar la sesión al iniciar la aplicación
+  useEffect(() => {
     const initializeApp = async () => {
       await loadSession();
+      await checkStatus();
+      setIsInitialized(true);
     };
-    
     initializeApp();
-  }, [loadSession]);
+  }, [loadSession, checkStatus]);
 
-    useEffect(() => {
-        checkStatus();
-    },[checkStatus]);
-    
-    if (status === 'checking'){    
-        return(
-            <View style = {{
-                flex: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: 5,
-            }}>
-            <ActivityIndicator />
-            </View>
-        )
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (status === 'unauthenticated') {
+      router.replace(APP_ROUTES.LOGIN);
+      return;
     }
-    
-    if ( status === 'unauthenticated'){
-        return <Redirect href={'/auth/login'}/>
-    } 
-    if (status === 'authenticated') {
 
-            if (!userType) {
-                console.error('Tipo de usuario no definido');
-                return <Redirect href={'/auth/login'}/>;
-            }
-            if (userType === 'Doctor') return <Redirect href="/" />
-            if (userType === 'Paciente' || userType === 'Usuario') return <Redirect href='/' />
-        }
+    if (status === 'authenticated') {
+      const targetRoute = userType === 'Doctor' 
+        ? APP_ROUTES.DOCTOR_HOME 
+        : APP_ROUTES.USER_HOME;
+      
+      router.replace(targetRoute);
+    }
+  }, [status, userType, isInitialized, router]);
+
+  if (!isInitialized || status === 'checking') {
     return (
-        <Stack screenOptions={{ 
-            headerShown: false,  
-            contentStyle: { backgroundColor: backgroundColor },
-        }} >
-        </Stack>
-    )
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return null;
 };
 
-export default CheckAuthenticationLayout
+export default CheckAuthenticationLayout;

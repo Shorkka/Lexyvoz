@@ -8,16 +8,16 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LoginScreen = () => {
-  const { height } = useWindowDimensions();
+
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
   const { login } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ email: 'yaredaraujo20@gmail.com', password: 'IsaacSk206_' });
+  const [form, setForm] = useState({ email: 'paciente@gmail.com', password: 'paciente123' });
   const [isPosting, setIsPosting] = useState(false);
   const [loginError, setLoginError] = useState('');
 
@@ -50,16 +50,16 @@ const LoginScreen = () => {
         <ScrollView
           style={{ flex: 1, backgroundColor: backgroundColor }}
           contentContainerStyle={{
-            minHeight: height,
+              flexGrow: 1,
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 20,
           }}
         >
-          <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
-            <ThemedText type = "title" style={{ alignSelf: 'center', marginBottom: 20 }}>Lexyvoz</ThemedText>
+        <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
+          <ThemedText type = "title" style={{ alignSelf: 'center', marginTop: 20 }}>Lexyvoz</ThemedText>
             <ThemedBackground backgroundColor="#fff" align="center">
-              <View style={{ paddingHorizontal: 30, paddingVertical: 40 }}>
+              <View style={{ paddingHorizontal: 30}}>
                 <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>
                   Inicia sesión
                 </ThemedText>
@@ -126,7 +126,7 @@ const LoginScreen = () => {
                       Crear cuenta
                     </ThemedLink>
                   </View>
-                  <View style={{ marginTop: 5, alignItems: 'center' }}>
+                  <View style={{ alignItems: 'center' }}>
                     <ThemedLink href="/auth/recover">¿Olvidaste tu contraseña?</ThemedLink>
                   </View>
                 </View>

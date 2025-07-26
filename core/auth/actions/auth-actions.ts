@@ -1,5 +1,6 @@
 import { isAxiosError } from 'axios';
 import { productsApi } from '../api/productsApi';
+import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
 
 export interface LoginResponse {
   message: string;
@@ -34,7 +35,7 @@ export const authLogin = async (correo: string, contraseña: string) => {
 
      return {
       user: {
-        ...data.user, // Accede a data.user que contiene la información
+        ...data.user, 
         tipo: data.user.tipo // Asegura que el tipo está incluido
       }
     };
@@ -46,16 +47,36 @@ export const authLogin = async (correo: string, contraseña: string) => {
 
 export const authCheckStatus = async () => {
   try {
-    const { data } = await productsApi.get<AuthResponse>('/auth/check-status');
+    const session = await SecureStorageAdapter.getItem('authSession');
+    if (!session) {
+      console.warn('No hay sesión guardada.');
+      return null;
+    }
 
-    return { user: {...data} };
+    const { credentials } = JSON.parse(session);
+
+    if (!credentials?.correo || !credentials?.contraseña) {
+      console.warn('Faltan credenciales guardadas.');
+      return null;
+    }
+
+    // Login automático silencioso
+    const resp = await authLogin(credentials.correo, credentials.contraseña);
+
+    // Opcionalmente vuelve a guardar por si el user cambió
+    await SecureStorageAdapter.setItem('authSession', JSON.stringify({
+      user: resp.user,
+      userType: resp.user.tipo,
+      credentials,
+    }));
+
+    return { user: { ...resp.user } };
+
   } catch (error) {
-    console.log(error);
+    console.error('Falló checkStatus (login automático):', error);
     return null;
   }
 };
-
-
 
 
 export const authRegister = async (registerData: any) => {

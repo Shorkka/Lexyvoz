@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
+import { Animated, Platform, StyleSheet, Text, TextInput, TextInputProps, TouchableOpacity, View } from 'react-native';
 import { useThemeColor } from '../hooks/useThemeColor';
 
 interface Props extends TextInputProps {
@@ -54,50 +54,64 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
             style={{ marginRight: 10 }}
           />
         )}
-        {/* Floating label */}
-        {label && (
-          <Animated.Text
-            style={[
-              styles.floatingLabel,
-              {
-                color: error ? errorColor : isActive ? primaryColor : placeholderColor,
-                top: labelAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [16, -8],
-                }),
-                fontSize: labelAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [16, 12],
-                }),
-                left: icon ? 34 : 8,
-                backgroundColor: '#fff3e7',
-                paddingHorizontal: 2,
-                zIndex: 1,
-              },
-            ]}
-            pointerEvents="none"
-          >
-            {label}
-          </Animated.Text>
-        )}
-        <TextInput 
-          {...rest}
-          value={value}
-          ref={inputRef}
-          placeholder={label ? undefined : rest.placeholder}
-          placeholderTextColor={placeholderColor}
-          onFocus={() => setIsActive(true)}
-          onBlur={() => setIsActive(false)}
-          style={{
-            flex: 1,
-            color: textColor,
-            marginRight: 10,
-            borderWidth: 0,
-            paddingTop: label ? 16 : 0,
-            fontSize: 16,
-            textAlign: 'left',
-          }}
-        />
+        
+        <View style={{ flex: 1, position: 'relative', justifyContent: 'center' }}>
+          {/* Floating label */}
+          {label && (
+            <Animated.Text
+              style={[
+                styles.floatingLabel,
+                {
+                  color: error ? errorColor : isActive ? primaryColor : placeholderColor,
+                  top: labelAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [Platform.OS === 'ios' ? 14 : 16, -8], // Ajuste específico para iOS
+                  }),
+                  fontSize: labelAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [16, 12],
+                  }),
+                  left: 0,
+                  backgroundColor: '#fff3e7',
+                  paddingHorizontal: 4,
+                  zIndex: 1,
+                },
+              ]}
+              pointerEvents="none"
+            >
+              {label}
+            </Animated.Text>
+          )}
+          
+          <TextInput 
+            {...rest}
+            value={value}
+            ref={inputRef}
+            placeholder={label ? undefined : rest.placeholder}
+            placeholderTextColor={placeholderColor}
+            onFocus={() => setIsActive(true)}
+            onBlur={() => setIsActive(false)}
+            style={{
+              color: textColor,
+              borderWidth: 0,
+              paddingTop: label ? (Platform.OS === 'ios' ? 18 : 16) : 0, // Ajuste específico para iOS
+              paddingBottom: Platform.OS === 'ios' ? 2 : 0, // Padding inferior para iOS
+              fontSize: 16,
+              textAlign: 'left',
+              textAlignVertical: 'center', // Solo funciona en Android
+              ...Platform.select({
+                web: {
+                  outlineWidth: 0,
+                  outlineColor: 'transparent',
+                },
+                ios: {
+                  lineHeight: 20, // Ayuda con la alineación vertical en iOS
+                },
+              }),
+            }}
+          />
+        </View>
+        
         {/* Right Icon */}
         {rightIcon && (
           <TouchableOpacity onPress={onRightIconPress} style={{ padding: 4 }}>
@@ -108,6 +122,7 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
             />
           </TouchableOpacity>
         )}
+        
         {/* Error icon */}
         {error && (
           <Ionicons
@@ -118,6 +133,7 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
           />
         )}
       </View>
+      
       {/* Error message */}
       {error && errorMessage && (
         <Text
@@ -142,14 +158,14 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center', // Esto centra verticalmente todos los elementos
     backgroundColor: '#fff3e7',
     minHeight: 48,
     position: 'relative',
   },
   floatingLabel: {
     position: 'absolute',
-    left: 8,
+    left: 0,
     paddingHorizontal: 2,
     backgroundColor: 'transparent',
   },

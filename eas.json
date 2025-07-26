@@ -5,6 +5,7 @@
   "build": {
     "development": {
       "env": {
+        
   }
     },
     "preview": {
@@ -12,6 +13,10 @@
       "distribution": "internal"
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID}",
+        "EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB}"
+      },
       "android": {
         "buildType": "apk"
       }

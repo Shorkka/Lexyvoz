@@ -1,21 +1,29 @@
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { router } from 'expo-router';
 import React from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView,  View } from 'react-native';
-import { useThemeColor } from '../../../../../presentation/theme/hooks/useThemeColor';
+import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-native';
 
 
 const HomePacienteScreen = () => {
+  const {status, userType} = useAuthStore();
+
+  console.log(status)
   const backgroundColor = useThemeColor({}, 'background');
-  const {userType} = useAuthStore();
- 
+  const next = () => {
+    router.push('/usuario/kit-game')
+  }
+
   console.log('User in HomePacienteScreen:', userType);
   return (
+    <AuthGuard>
     <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-            <View
+            <ScrollView
               style={{ flex: 1, backgroundColor: backgroundColor }}
             >
               <ThemedBackground backgroundColor="#fba557" style={{ 
@@ -165,27 +173,31 @@ const HomePacienteScreen = () => {
                 </ThemedBackground>
               </View>
             ) : (
-              <View style={{ flexDirection: 'column', justifyContent: 'space-between', marginTop: 20 }}>
-                <View>
-                <ThemedButton>
-                  <ThemedText type="subtitle" style={{ alignSelf: 'center', marginBottom: 20, color: 'white' }}>
-                    Jugar
-                  </ThemedText>
-                </ThemedButton>
-                </View>
-                <View style={{ marginTop: '80%' }}>
-                <ThemedButton>
-                  <ThemedText type="subtitle" style={{ alignSelf: 'center', marginBottom: 20, color: 'white' }}>
-                    Conectar con el Doctor
-                  </ThemedText>
-                </ThemedButton>
+          <View>
+            <View style={{ flex: 1 }}>
+              <View style={{ flex: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+                  <ThemedButton onPress={() => next}>
+                    <ThemedText type="subtitle" style={{ padding: 20, alignSelf: 'center', marginBottom: 20, color: 'white' }}>
+                      Jugar
+                    </ThemedText>
+                  </ThemedButton>
+                  </View>
+                  <View style={{ marginTop: '80%' , alignItems: 'center'}}>
+                  <ThemedButton >
+
+                    <ThemedText type="subtitle" style={{ alignSelf: 'center', color: 'white', padding: 20 }}>
+                      Conectar con el Doctor
+                    </ThemedText>
+                  </ThemedButton>
+                  </View>
                 </View>
               </View>
             )}
-          </ThemedBackground>
-            </View>
+              </ThemedBackground>
+            </ScrollView>
           </KeyboardAvoidingView>
-    </SafeAreaView>
+        </SafeAreaView>
+    </AuthGuard>
   )
 };
 

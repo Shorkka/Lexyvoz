@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-native';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
@@ -10,7 +10,6 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 const Step1Screen = () => {
-    const { height } = useWindowDimensions();
     const set = useRegisterStore((s) => s.set);
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
@@ -63,7 +62,7 @@ const Step1Screen = () => {
         <ScrollView
           style={{ flex: 1 }}
           contentContainerStyle={{
-            minHeight: height,
+            flexGrow: 1,
             padding: 24,
             justifyContent: 'center',
           }}

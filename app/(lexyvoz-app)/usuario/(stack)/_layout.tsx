@@ -49,23 +49,16 @@ const StackLayout = () => {
                 source={avatar}
                 style={{ width: 32, height: 32, borderRadius: 16 }}
               />
-            ) : (
-              <Ionicons
-                name="grid-outline"
-                size={24}
-                color={'white'}
-              />
-            )}
+            ) : (null)}
           </Pressable>
         )
       })}
     >
       <Stack.Screen
-        name="home/index"
+        name='(stack)'
         options={{
           title: '',
           headerShadowVisible: false,
-
         }}
       />
     </Stack>

@@ -67,8 +67,8 @@ const RecoveryScreen = () => {
             paddingHorizontal: 20,  
           }}
         >
+          <ThemedText type="title" style={{ alignSelf: 'center', marginTop: 20 }}>Lexyvoz</ThemedText>
           <ThemedBackground backgroundColor="#fff" align="center">
-            <ThemedText type="subtitle">Registro de usuario</ThemedText>
             <View style={{ width: '100%', marginTop: 12 }}>
           <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>Recuperar contraseña</ThemedText>
           <ThemedText style={{ color: secondaryColor, alignSelf: 'center' }}>Mandar un código de restauración</ThemedText>

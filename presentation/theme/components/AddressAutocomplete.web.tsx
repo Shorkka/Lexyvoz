@@ -63,7 +63,6 @@ const AddressAutocompleteWeb = forwardRef<any, Props>(function AddressAutocomple
 
   return (
     <View style={styles.contenedor}>
-      {/* @ts-ignore */}
       <input
         ref={inputRef}
         placeholder="Escribe tu dirección"
