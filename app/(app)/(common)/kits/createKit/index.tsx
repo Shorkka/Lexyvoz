@@ -10,11 +10,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, KeyboardAvoidingView, SafeAreaView, ScrollView, View, StyleSheet } from 'react-native';
+
+
 type Modality = 'lectura' | 'escrito' | 'visual' | null;
+
+
 const CreateKits = () => {
   const press = useThemeColor({}, 'primary');
-  const [visible, setVisible] = useState(false);
   const { user } = useAuthStore();
+  const [visible, setVisible] = useState(false);
   const { createQueryKit } = useKitsStore();
   const { showAlert } = useAlert();
   const backgroundColor = useThemeColor({}, 'background');

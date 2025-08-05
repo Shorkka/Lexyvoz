@@ -1,5 +1,5 @@
-import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
 import axios from 'axios'
+import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
 import { Platform } from 'react-native';
 // TODOs conectar mediante envs vars, Android e IOS
 

@@ -1,30 +1,14 @@
-import {KeyboardAvoidingView, SafeAreaView, ScrollView, StyleSheet } from 'react-native'
-import React, { useState } from 'react'
+import {KeyboardAvoidingView, SafeAreaView, ScrollView } from 'react-native'
 import AuthGuard from '@/presentation/theme/components/AuthGuard'
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground'
-import { ThemedText } from '@/presentation/theme/components/ThemedText'
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor'
-import ThemedButton from '@/presentation/theme/components/ThemedButton'
+import RenderKits from '@/presentation/theme/components/RenderKits'
 
-type Modality = 'lectura' | 'escrito' | 'visual' | null;
 
 const EjerciciosKits = () => {
-   const press = useThemeColor({}, 'primary');
-  const backgroundColor = useThemeColor({}, 'background');
-    const [selectedModality, setSelectedModality] = useState<Modality>(null);
 
-    const renderLectura = () => {
-      setSelectedModality('lectura');
-   
-    }
-    const renderEscrito = () => {
-      setSelectedModality('escrito');
-   
-    }
-    const renderVisual = () => {
-      setSelectedModality('visual');
-   
-    }
+  const backgroundColor = useThemeColor({}, 'background');
+
 
   return (
     <AuthGuard>
@@ -42,15 +26,7 @@ const EjerciciosKits = () => {
             padding: 30,
             alignItems: 'center'
           }}>
-            <ThemedButton onPress={renderLectura} style = {{backgroundColor:selectedModality === 'lectura' ? press: '#b1b1b1', ...styles.button }}>
-              <ThemedText style = {{color: '#fff'}}>Lectura</ThemedText>
-            </ThemedButton>
-                <ThemedButton onPress={renderEscrito} style = {{backgroundColor:selectedModality === 'escrito' ? press: '#b1b1b1',...styles.button }}>
-              <ThemedText style = {{color: '#fff'}}>Escrito</ThemedText>
-            </ThemedButton>
-                <ThemedButton onPress={renderVisual} style = {{backgroundColor:selectedModality === 'visual' ? press: '#b1b1b1', ...styles.button }}>
-              <ThemedText style = {{color: '#fff'}}>Visual</ThemedText>
-            </ThemedButton>
+            <RenderKits/>
           </ThemedBackground>
           </ScrollView>
       </KeyboardAvoidingView>
@@ -60,17 +36,3 @@ const EjerciciosKits = () => {
 }
 
 export default EjerciciosKits
-
-const styles = StyleSheet.create({
-  button: {
-    marginBottom: 20, 
-    padding: 20, 
-    borderRadius: 10,
-    borderColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'auto',
-    
-  },
-
-});
