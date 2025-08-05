@@ -20,7 +20,6 @@ export interface AuthResponse {
     especialidad?:        string;
     domicilio:           string;
     codigo_postal:        string;
-
 }
 
 
@@ -32,11 +31,11 @@ export const authLogin = async (correo: string, contraseña: string) => {
       correo,
       contraseña,
     });
-
+    console.log('Respuesta del backend:', data);
      return {
       user: {
         ...data.user, 
-        tipo: data.user.tipo // Asegura que el tipo está incluido
+        tipo: data.user.tipo 
       }
     };
   } catch (error: any) {
@@ -93,4 +92,21 @@ export const authRegister = async (registerData: any) => {
   }
 };
 
+export const authUpdateUser = async (usuario_id: number, updatedFields: Partial<AuthResponse>) => {
+  try {
+    const { data } = await productsApi.put<AuthResponse>(`/auth/usuario/${usuario_id}`, updatedFields);
 
+    // Actualiza storage con nuevo usuario
+    const session = await SecureStorageAdapter.getItem('authSession');
+    if (session) {
+      const parsed = JSON.parse(session);
+      parsed.user = data;
+      await SecureStorageAdapter.setItem('authSession', JSON.stringify(parsed));
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error al actualizar usuario:', error);
+    throw new Error('No se pudo actualizar el perfil');
+  }
+};

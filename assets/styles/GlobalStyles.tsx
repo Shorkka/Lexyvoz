@@ -189,4 +189,12 @@ export const GlobalStyles = StyleSheet.create({
   feedbackIncorrectText: {
     color: '#ff4757',
   },
+    scrollContent: {
+      flexGrow: 1, 
+    },
+  orangeBackground: {
+    width: '100%',
+    borderRadius: 20,
+    padding: 20, 
+  },
 });

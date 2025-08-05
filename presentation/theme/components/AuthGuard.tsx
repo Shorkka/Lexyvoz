@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { status, loadSession } = useAuthStore();
+  const { status, loadSession, checkStatus } = useAuthStore();
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
   // Remove navigation ready state and listener, not needed for expo-router
@@ -11,16 +11,17 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initialize = async () => {
       await loadSession();
+        await checkStatus();
       setIsReady(true);
     };
     initialize();
-  }, [loadSession]);
+  }, [loadSession, checkStatus]);
 
   useEffect(() => {
     if (!isReady) return;
     
     if (status === 'unauthenticated') {
-      router.replace('/auth/login');
+      router.replace('/login');
     }
   }, [status, isReady, router]);
 
@@ -28,7 +29,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     if (!isReady) return;
     
     if (status === 'unauthenticated') {
-      router.replace('/auth/login');
+      router.replace('/login');
     }
   }, [status, isReady, router]);
 

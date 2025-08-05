@@ -3,23 +3,27 @@ import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 type Props = {
   children: ReactNode;
-  backgroundColor?: string; // Color del fondo
-  width?: number |  `${number}%`;  // Ancho: 400, '80%'...
-  align?: 'center' | 'left' | 'right'; // Posición horizontal
-  color?: string
-  style?: object; // Estilos adicionales
+  backgroundColor?: string;
+  width?: number | `${number}%`;
+  align?: 'center' | 'left' | 'right';
+  color?: string;
+  style?: object;
+  fullHeight?: boolean; 
+  justifyContent?: 'center' | 'flex-start' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
+
 };
 
 const ThemedBackground = ({
   children,
   backgroundColor = 'white',
-  width = 600,
+  width = '80%',
   align = 'center',
   style = {},
+  fullHeight = false,
+  justifyContent = 'center',
 }: Props) => {
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
-  // Alineación horizontal
   let alignSelf: 'center' | 'flex-start' | 'flex-end' = 'center';
   if (align === 'left') alignSelf = 'flex-start';
   if (align === 'right') alignSelf = 'flex-end';
@@ -29,19 +33,20 @@ const ThemedBackground = ({
       <View
         style={[
           styles.card,
-          style, 
+          style,
           {
             backgroundColor,
             width:
               typeof width === 'string'
                 ? width
                 : Platform.select({
-                    web: Math.min(700, windowWidth * 0.9), // Más ancho en web
-                    default: Math.min(400, windowWidth * 0.95), // Más angosto en móvil
+                    web: Math.min(700, windowWidth * 0.8),
+                    default: Math.min(400, windowWidth * 0.95),
                   }),
             alignSelf,
-            
-          }, 
+            height: fullHeight ? windowHeight * 0.8 : undefined, // <- CLAVE
+            justifyContent
+          },
         ]}
       >
         {children}
@@ -52,15 +57,14 @@ const ThemedBackground = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    // Esto permite múltiples tarjetas en una misma pantalla
     width: '100%',
     paddingVertical: 20,
+    alignItems: 'center',
   },
   card: {
     borderRadius: 16,
     padding: 24,
     minHeight: 100,
-    // Sombra cross-platform
     ...Platform.select({
       ios: {
         shadowColor: '#000',

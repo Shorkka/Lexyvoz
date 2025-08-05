@@ -1,4 +1,4 @@
-import { authLogin, authRegister, authCheckStatus } from "@/core/auth/actions/auth-actions";
+import { authLogin, authRegister, authCheckStatus, authUpdateUser } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
 import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,6 +16,7 @@ export interface AuthState {
     logout: () => Promise<void>;
     register: (registerData: any) => Promise<boolean>;
     loadSession: () => Promise<boolean>;
+    updateUser: (updatedFields: Partial<User>) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -147,7 +148,7 @@ checkStatus: async () => {
         } catch (error) {
             console.error('Error en login:', error);
             set({ status: 'unauthenticated' });
-            throw error;
+            return false;
         }
     },
     // Acción de registro
@@ -178,6 +179,7 @@ checkStatus: async () => {
         }
     },
 
+
     // Acción de logout
     logout: async () => {
         await SecureStorageAdapter.deleteItem('authSession');
@@ -189,4 +191,21 @@ checkStatus: async () => {
         });
         
     },
+    updateUser: async (updatedFields: Partial<User>) => {
+    const currentUser = get().user;
+    if (!currentUser) return;
+
+    try {
+        // Actualiza en el backend
+        const updatedUser = await authUpdateUser(currentUser.usuario_id, updatedFields);
+
+        // Estado global
+        set({ user: updatedUser });
+
+        // También actualiza SecureStorage (opcional si ya lo hace en authUpdateUser)
+    } catch (error) {
+        console.error('Error actualizando usuario:', error);
+    }
+}
 }));
+
