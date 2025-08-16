@@ -1,3 +1,4 @@
+import { GlobalStyles } from '@/assets/styles/GlobalStyles';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -10,7 +11,7 @@ import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-nati
 
 
 const HomePacienteScreen = () => {
-  const {status, userType} = useAuthStore();
+  const {status, userType, user} = useAuthStore();
 
   console.log(status)
   const backgroundColor = useThemeColor({}, 'background');
@@ -22,19 +23,19 @@ const HomePacienteScreen = () => {
   return (
     <AuthGuard>
     <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-            <ScrollView
-              style={{ flex: 1, backgroundColor: backgroundColor }}
-            >
-              <ThemedBackground 
-              justifyContent='flex-start'
-              fullHeight 
-              backgroundColor="#fba557" style={{ 
-            width: '100%', 
-            borderRadius: 20, 
-            padding: 30,
-            alignItems: 'center'
-          }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+        <ScrollView
+          style={{ flex: 1, backgroundColor: backgroundColor }}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+          }}
+        >
+          <View style={{ width: '100%' }}>
+            <ThemedBackground backgroundColor="#fba557" align="center" fullHeight>
+              
             <ThemedText type="welcome" style={{ 
               alignSelf: 'center', 
               color: '#000000',
@@ -42,7 +43,7 @@ const HomePacienteScreen = () => {
               fontWeight: 'bold',
               marginBottom: 30
             }}>
-              Bienvenido, 
+              Bienvenido {user?.nombre}
             </ThemedText>
 
             {userType === 'Paciente' ? (
@@ -119,27 +120,28 @@ const HomePacienteScreen = () => {
                 </ThemedBackground>
               </View>
             ) : (
-          <View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flex: 1, justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, alignItems: 'center',  justifyContent: 'space-between' }}>
+              <View >
                   <ThemedButton onPress={next}>
-                    <ThemedText type="subtitle" style={{ padding: 20, alignSelf: 'center', marginBottom: 20, color: 'white' }}>
+                    <ThemedText type="subtitle" style={{ padding: 20, alignSelf: 'center', color: 'white' }}>
                       Jugar
                     </ThemedText>
                   </ThemedButton>
                   </View>
-                  <View style={{ marginTop: '80%' , alignItems: 'center'}}>
-                  <ThemedButton onPress={() => router.push('/ejercicios')}>
-                  
-                    <ThemedText type="subtitle" style={{ alignSelf: 'auto', color: 'white', padding: 20 }}>
-                      Conectarpp con el Doctor
+                  <View style ={{marginTop: '30%'}}>
+                  <ThemedButton 
+                  style= {GlobalStyles.primaryButton}
+                  onPress={() => router.push('/busqueda-doctores')}>
+
+                    <ThemedText type="subtitle" style={{ color: 'white', padding: 20 }}>
+                      Conectar con el Doctor
                     </ThemedText>
                   </ThemedButton>
                   </View>
                 </View>
-              </View>
             )}
               </ThemedBackground>
+              </View>
             </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>

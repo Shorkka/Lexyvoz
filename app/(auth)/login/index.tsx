@@ -15,13 +15,13 @@ const LoginScreen = () => {
 
   const backgroundColor = useThemeColor({}, 'background');
   const secondaryColor = useThemeColor({}, 'secondaryText');
-  const { login,user} = useAuthStore();
+  const { login} = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({ email: 'doctor@gmail.com', password: 'doctor123' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [isPosting, setIsPosting] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  console.log(user);
+
   const onLogin = async () => {
     
     const { email, password } = form;
@@ -57,10 +57,10 @@ const LoginScreen = () => {
             paddingHorizontal: 20,
           }}
         >
-        <View style={{ width: '100%', maxWidth: 480, position: 'relative' }}>
           <ThemedText type = "title" style={{ alignSelf: 'center', marginTop: 20 }}>Lexyvoz</ThemedText>
             <ThemedBackground backgroundColor="#fff" align="center">
-              <View style={{ paddingHorizontal: 30}}>
+
+            <View style={{ width: '100%', gap: 1 }}>
                 <ThemedText type="subtitle" style={{ alignSelf: 'center' }}>
                   Inicia sesión
                 </ThemedText>
@@ -74,7 +74,7 @@ const LoginScreen = () => {
                   icon="mail-outline"
                   style={{
                     borderBottomWidth: 1,
-                    borderColor: 'grey',
+                    borderColor: 'grey', 
                     paddingVertical: 10,
                     fontSize: 16,
                   }}
@@ -123,17 +123,16 @@ const LoginScreen = () => {
                 <View style={{ marginTop: 30 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                     <ThemedText style={{ color: secondaryColor }}>¿No tienes una cuenta?</ThemedText>
-                    <ThemedLink href="/register/registerStep1" style={{ marginLeft: 5 }}>
+                    <ThemedLink href="/registro" style={{ marginLeft: 5 }}>
                       Crear cuenta
                     </ThemedLink>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <ThemedLink href="/recover">¿Olvidaste tu contraseña?</ThemedLink>
+                    <ThemedLink href="/password/reset">¿Olvidaste tu contraseña?</ThemedLink>
                   </View>
                 </View>
               </View>
             </ThemedBackground>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

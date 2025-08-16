@@ -7,9 +7,10 @@ import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
-import CardViewEditkits from '@/core/kits/CardViewEditkits';
-import RenderizarPaciente from '@/core/kits/RenderizarPaciente';
+import CardViewEditkits from '@/presentation/theme/components/CardViewEditkits';
+
 import { GlobalStyles } from '@/assets/styles/GlobalStyles';
+import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
 
 
 const DoctorScreen = () => {

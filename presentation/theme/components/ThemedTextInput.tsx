@@ -16,7 +16,7 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
   const primaryColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const placeholderColor = useThemeColor({}, 'secondaryText');
-  const errorColor = '#E53935';
+  const errorColor = '#ffffff';
 
   const [isActive, setIsActive] = useState(false);
   const inputRef = useRef<TextInput>(null);

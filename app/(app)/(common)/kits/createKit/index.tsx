@@ -19,7 +19,7 @@ const CreateKits = () => {
   const press = useThemeColor({}, 'primary');
   const { user } = useAuthStore();
   const [visible, setVisible] = useState(false);
-  const { createQueryKit } = useKitsStore();
+  const {createKitMutation  } = useKitsStore();
   const { showAlert } = useAlert();
   const backgroundColor = useThemeColor({}, 'background');
   const [nombre, setNombre] = React.useState('');
@@ -28,20 +28,20 @@ const CreateKits = () => {
   const [modality, setModality] = useState<Modality>(null);
   const kitCreate = async () => {
     try {
-      const result = await createQueryKit.mutateAsync({
+      const result = await createKitMutation.mutateAsync({
         nombre,
         descripcion,
         creado_por: creadoPor
       });
 
-      if (result.success) {
+      if (result) {
         showAlert(
           'Kit creado correctamente',
           'El kit fue creado de manera exitosa, pulsa OK para continuar!.',
           [{ text: 'OK', onPress: () => router.replace('/main') }]
         );
       } else {
-        console.error("Error al crear el kit:", result.error);
+        console.error("Error al crear el kit:", result);
       }
     } catch (error) {
       console.error("Error en la mutación:", error);

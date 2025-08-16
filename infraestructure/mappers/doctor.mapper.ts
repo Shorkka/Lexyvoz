@@ -1,21 +1,25 @@
-import { User } from "@/core/auth/interface/user";
+import { DoctorResponse } from "@/core/auth/interface/user";
 
-export class UserMapper {
-  static fromApiToEntity(apiUser: any): User {
+export class DoctorMapper {
+  static fromApiToEntity(apiUser: any): DoctorResponse {
     return {
-    
-      usuario_id: apiUser.usuario_id,
-      nombre: apiUser.nombre,
-      correo: apiUser.correo,
-      contraseña: apiUser.contraseña,
-      fecha_de_nacimiento: new Date(apiUser.fecha_de_nacimiento),
-      numero_telefono: apiUser.numero_telefono,
-      sexo: apiUser.sexo,
-      tipo: apiUser.tipo,
-      escolaridad: apiUser.escolaridad || undefined,
-      especialidad: apiUser.especialidad || undefined,
-      domicilio: apiUser.domicilio,
-      codigo_postal: apiUser.codigo_postal
+      page: apiUser.page,
+      limit: apiUser.limit,
+      total: apiUser.total,
+      count: apiUser.count,
+      doctors: apiUser.doctors.map((doctor: any) => ({
+        usuario_id: doctor.usuario_id,
+        nombre: doctor.nombre,
+        correo: doctor.correo,
+        fecha_de_nacimiento: new Date(doctor.fecha_de_nacimiento),
+        numero_telefono: doctor.numero_telefono,
+        sexo: doctor.sexo,
+        tipo: doctor.tipo,
+        escolaridad: doctor.escolaridad || undefined,
+        especialidad: doctor.especialidad || undefined,
+        domicilio: doctor.domicilio,
+        codigo_postal: doctor.codigo_postal
+      }))
     };
   }
 }

@@ -55,7 +55,7 @@ const ThemedButton = ({
                         name={icon}
                         size={24}
                         color={textColor}
-                        style={{ alignItems: 'flex-end', left: Platform.select({ web: width * 0.08, default: width * 0.2 }) }}
+                        style={{ alignItems: 'flex-end'  }}
                     />
                 )}
             </Pressable>

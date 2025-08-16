@@ -12,19 +12,17 @@ const StackLayout = () => {
   const pathname = usePathname();
   const handleHeaderLeftPress = () => {
     if (pathname === '/home') {
-      // Si estamos en /main, abre el drawer
       navigation.dispatch(DrawerActions.toggleDrawer());
     } else if (router.canGoBack()) {
-      // Si hay historial, regresa
       router.back();
     }
   }
 
   const handleHeaderRightPress = () => {
     if (router.canDismiss()) {
-      router.dismiss(); // Cierra modales si existen
+      router.dismiss(); 
     }
-    router.replace('/home'); // Navegación con Expo Router
+    router.replace('/home');
   };
 
   return (
@@ -35,7 +33,7 @@ const StackLayout = () => {
           backgroundColor: '#fefcc3',
         },
         contentStyle: {
-          backgroundColor: '#fefcc3', // 👈 Esto evita el flash gris
+          backgroundColor: '#fefcc3',
        },
         headerLeft: () => (
           <Pressable 
@@ -84,6 +82,13 @@ const StackLayout = () => {
           title: '',
           headerBackVisible: false
         }} 
+      />
+      <Stack.Screen 
+        name="busqueda-doctores/index" 
+        options={{ 
+          title: 'Buscar Doctores',
+          headerBackVisible: true
+        }}
       />
     </Stack>
   );

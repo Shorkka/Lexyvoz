@@ -1,4 +1,4 @@
-import { authLogin, authRegister, authCheckStatus, authUpdateUser } from "@/core/auth/actions/auth-actions";
+import { authLogin, authRegister, authCheckStatus, authUpdateUser, recoveryPasswordResponse } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
 import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -11,12 +11,13 @@ export interface AuthState {
     user?: User;
     userType?: string;
 
-    login: (correo: string, contraseña: string) => Promise<boolean>;
+    login: (correo: string, contrasenia: string) => Promise<boolean>;
     checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
     register: (registerData: any) => Promise<boolean>;
     loadSession: () => Promise<boolean>;
     updateUser: (updatedFields: Partial<User>) => Promise<void>;
+    resetPassword: (correo: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -25,7 +26,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     userType: undefined,
 
     // Acción para manejar el estado de autenticación
-checkStatus: async () => {
+    checkStatus: async () => {
         try {
             set({ status: 'checking' });
             
@@ -36,9 +37,9 @@ checkStatus: async () => {
                 const { user, userType, credentials } = JSON.parse(sessionData);
                 
                 // Si hay credenciales guardadas, hacer login para validar
-                if (credentials?.correo && credentials?.contraseña) {
+                if (credentials?.correo && credentials?.contrasenia) {
                     try {
-                        const resp = await authLogin(credentials.correo, credentials.contraseña);
+                        const resp = await authLogin(credentials.correo, credentials.contrasenia);
                         
                         if (resp?.user) {
                             // Actualizar la sesión con datos frescos del backend
@@ -121,36 +122,35 @@ checkStatus: async () => {
         return false;
     },
     // Acción de login
-        login: async (correo: string, contraseña: string) => {
-        try {
-            const resp = await authLogin(correo, contraseña);
+    login: async (correo: string, contrasenia: string) => {
+    try {
+            const resp = await authLogin(correo, contrasenia);
 
             if (!resp?.user) {
-                set({ status: 'unauthenticated', user: undefined, userType: undefined });
-                return false;
+            set({ status: 'unauthenticated', user: undefined, userType: undefined });
+            return false;
             }
 
             const sessionData = {
-                user: resp.user,
-                userType: resp.user.tipo,
-                credentials: { correo, contraseña }
+            user: resp.user,
             };
 
             await SecureStorageAdapter.setItem('authSession', JSON.stringify(sessionData));
 
-            set({
+                set({
                 status: 'authenticated',
                 user: resp.user,
                 userType: resp.user.tipo
-            });
+                });
 
-            return true;
-        } catch (error) {
-            console.error('Error en login:', error);
-            set({ status: 'unauthenticated' });
-            return false;
-        }
-    },
+                return true;
+            } catch (error) {
+                console.error('Error en login:', error);
+                set({ status: 'unauthenticated' });
+                return false;
+            }
+        },
+
     // Acción de registro
     register: async (registerData: any) => {
         try {
@@ -178,9 +178,6 @@ checkStatus: async () => {
             throw error;
         }
     },
-
-
-    // Acción de logout
     logout: async () => {
         await SecureStorageAdapter.deleteItem('authSession');
         AsyncStorage.clear();
@@ -192,20 +189,33 @@ checkStatus: async () => {
         
     },
     updateUser: async (updatedFields: Partial<User>) => {
-    const currentUser = get().user;
-    if (!currentUser) return;
+        const currentUser = get().user;
+        if (!currentUser) return;
 
-    try {
-        // Actualiza en el backend
-        const updatedUser = await authUpdateUser(currentUser.usuario_id, updatedFields);
+        try {
 
-        // Estado global
-        set({ user: updatedUser });
+            const updatedUser = await authUpdateUser(currentUser.usuario_id, updatedFields);
 
-        // También actualiza SecureStorage (opcional si ya lo hace en authUpdateUser)
-    } catch (error) {
-        console.error('Error actualizando usuario:', error);
+            set({ user: updatedUser });
+
+            
+        } catch (error) {
+            console.error('Error actualizando usuario:', error);
+        }
+    },
+    resetPassword: async (correo: string): Promise<boolean> => {
+        try {
+            const response = await recoveryPasswordResponse(correo);
+            if (response.success) {
+                return true;
+            } else {
+                console.error('Error al enviar el correo de recuperación:', response.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error en resetPassword:', error);
+            return false;
+        }
     }
-}
 }));
 

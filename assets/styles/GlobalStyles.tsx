@@ -146,13 +146,10 @@ export const GlobalStyles = StyleSheet.create({
     marginTop: 16,
   },
   primaryButton: {
-    flexDirection: 'row',
-    backgroundColor: '#74b9ff',
+    backgroundColor: '#ee7200',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 10,
   },
   buttonIcon: {
     marginRight: 8,

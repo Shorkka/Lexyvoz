@@ -1,0 +1,116 @@
+// Corrected Search component
+import { View, SafeAreaView, StyleSheet, KeyboardAvoidingView, ScrollView } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import AuthGuard from '@/presentation/theme/components/AuthGuard'
+import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { useDoctorStore } from '@/infraestructure/store/useDoctorStore ';
+import { RenderizarDoctores } from '@/presentation/theme/components/RenderizarDoctores';
+
+const Search = () => {
+  const [form, setForm] = useState({
+    busqueda: '',
+  });
+  const [page, setPage] = useState(1);
+  const limit = 4;
+  const backgroundColor = useThemeColor({}, 'background');
+  const [canGoNext, setCanGoNext] = useState(false);
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  const { useDoctorQuery } = useDoctorStore();
+  const { data: doctorsData, isLoading, isError } = useDoctorQuery(page, limit, form.busqueda);
+
+  const handleSearch = (text: string) => {
+    setForm({ ...form, busqueda: text });
+    setPage(1);
+    
+  };
+    useEffect(() => {
+    setCanGoBack(page > 1);
+    setCanGoNext(!!doctorsData && (page * limit) < doctorsData.total);
+  }, [page, doctorsData]);
+
+  return (
+    <AuthGuard>
+      <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
+          <ScrollView
+            style={{ flex: 1, backgroundColor: backgroundColor }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 20,
+            }}
+          >
+              <ThemedBackground fullHeight backgroundColor="#fba557" >
+                <View style={{ width: '100%'}}>
+                  <ThemedText type='title' style={{ color: 'black' }}>Encuentra a un doctor</ThemedText>
+
+                  <ThemedTextInput
+                  placeholder="Buscar doctor"
+                  autoCapitalize="words"
+                  icon="search"
+                  style={styles.searchInput}
+                  value={form.busqueda}
+                  onChangeText={handleSearch}
+                />
+                </View>
+                {isLoading ? (
+                  <ThemedText style={{ color: 'white' }}>Cargando doctores...</ThemedText>
+                ) : isError ? (
+                  <ThemedText style={{ color: 'white' }}>Error al cargar doctores</ThemedText>
+                ) : (
+                  <View>
+                    <RenderizarDoctores
+                      doctors={doctorsData?.doctors || []}
+                      searchText={form.busqueda}
+                    />
+                    
+                    {/* Pagination controls */}
+                    <View style={styles.paginationContainer}>
+                      <ThemedButton 
+                        icon='caret-back-outline'
+                        backgroundColor={canGoBack ? '#ee7200' : 'grey'}
+                        onPress={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={!canGoBack}
+                      />
+                      <ThemedText style={{ color: 'white' }}>Página {page}</ThemedText>
+                      <ThemedButton 
+                        icon='caret-forward-outline'
+                        onPress={() => setPage(p => p + 1)} 
+                        disabled={!canGoNext}
+                        backgroundColor={canGoNext ? '#ee7200' : 'grey'}
+                      />
+                    </View>
+                  </View>
+                )}
+              </ThemedBackground>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </AuthGuard>
+  );
+}
+export default Search;
+
+const styles = StyleSheet.create({
+  searchInput: {
+    alignSelf: 'center', 
+    borderBottomWidth: 1,
+    borderColor: 'grey',
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  paginationContainer: {
+    alignSelf: 'auto',
+    alignContent: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+});

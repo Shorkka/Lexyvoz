@@ -5,7 +5,7 @@ interface RegisterForm {
   // Paso 1
   nombre?: string;
   correo?: string;
-  contraseña?: string;
+  contrasenia?: string;
   // Paso 2
   numero_telefono?: string;
   sexo?: string;
@@ -30,7 +30,7 @@ export const useRegisterStore = create<RegisterStore>((set) => ({
     set({
       nombre: undefined,
       correo: undefined,
-      contraseña: undefined,
+      contrasenia: undefined,
       numero_telefono: undefined,
       sexo: undefined,
       domicilio: undefined,

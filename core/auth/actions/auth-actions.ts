@@ -3,15 +3,17 @@ import { productsApi } from '../api/productsApi';
 import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
 
 export interface LoginResponse {
+  success: boolean;
   message: string;
-  user: AuthResponse; 
+  token: string;
+  user: AuthResponse;
 }
 
 export interface AuthResponse {
     usuario_id:           number;
     nombre:              string;
     correo:              string;
-    contraseña:          string;
+    contrasenia:          string;
     fecha_de_nacimiento: Date;
     numero_telefono:     string;
     sexo:                string;
@@ -22,28 +24,38 @@ export interface AuthResponse {
     codigo_postal:        string;
 }
 
+export interface RecoveryResponse {
+    success: boolean;
+    message: string;
+    correo: string;
+}
 
-export const authLogin = async (correo: string, contraseña: string) => {
+export const authLogin = async (correo: string, contrasenia: string) => {
   correo = correo.toLowerCase();
 
   try {
     const { data } = await productsApi.post<LoginResponse>('/auth/login', {
       correo,
-      contraseña,
+      contrasenia,
     });
+    
     console.log('Respuesta del backend:', data);
-     return {
-      user: {
-        ...data.user, 
-        tipo: data.user.tipo 
-      }
+
+    // Guardar token para el interceptor
+    if (data.token) {
+      await SecureStorageAdapter.setItem('token', data.token);
+    }
+
+    return {
+      user: { ...data.user, tipo: data.user.tipo },
+      token: data.token
     };
+
   } catch (error: any) {
     console.log('Login error:', error?.response?.data || error);
     throw error;
-  };
-}
-
+  }
+};
 export const authCheckStatus = async () => {
   try {
     const session = await SecureStorageAdapter.getItem('authSession');
@@ -54,13 +66,13 @@ export const authCheckStatus = async () => {
 
     const { credentials } = JSON.parse(session);
 
-    if (!credentials?.correo || !credentials?.contraseña) {
+    if (!credentials?.correo || !credentials?.contrasenia) {
       console.warn('Faltan credenciales guardadas.');
       return null;
     }
 
     // Login automático silencioso
-    const resp = await authLogin(credentials.correo, credentials.contraseña);
+    const resp = await authLogin(credentials.correo, credentials.contrasenia);
 
     // Opcionalmente vuelve a guardar por si el user cambió
     await SecureStorageAdapter.setItem('authSession', JSON.stringify({
@@ -110,3 +122,13 @@ export const authUpdateUser = async (usuario_id: number, updatedFields: Partial<
     throw new Error('No se pudo actualizar el perfil');
   }
 };
+export const recoveryPasswordResponse = async (correo: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    const resp = await productsApi.post<RecoveryResponse>('/auth/forgot-password', { correo });
+    return resp.data;
+  } catch (error) {
+    console.error('Error en recoveryPasswordResponse:', error);
+    return { success: false, message: 'Error en el servidor' };
+  }
+}
+

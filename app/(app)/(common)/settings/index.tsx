@@ -20,7 +20,7 @@ const ProfileScreen = () => {
   const [formData, setFormData] = useState({
     nombre: user?.nombre || '',
     correo: user?.correo || '',
-    contraseña: '', // No mostramos la contraseña actual por seguridad
+    contrasenia: '', // No mostramos la contrasenia actual por seguridad
     fecha_de_nacimiento: user?.fecha_de_nacimiento ? new Date(user.fecha_de_nacimiento) : new Date(),
     numero_telefono: user?.numero_telefono || '',
     sexo: user?.sexo || '',
@@ -148,8 +148,8 @@ const ProfileScreen = () => {
                   <View style={styles.profileSection}>
                     <ThemedText style={styles.label}>Nueva contraseña</ThemedText>
                     <ThemedTextInput
-                      value={formData.contraseña}
-                      onChangeText={(value) => handleInputChange('contraseña', value)}
+                      value={formData.contrasenia}
+                      onChangeText={(value) => handleInputChange('contrasenia', value)}
                       style={styles.input}
                       secureTextEntry
                       placeholder="Dejar en blanco para no cambiar"
@@ -282,7 +282,7 @@ const ProfileScreen = () => {
                         onPress={() => {
                           setFormData({
                             ...formData,
-                            contraseña: '',
+                            contrasenia: '',
                           });
                           setIsEditing(false);
                         }}
