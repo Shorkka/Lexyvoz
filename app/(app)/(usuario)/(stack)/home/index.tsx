@@ -11,15 +11,12 @@ import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-nati
 
 
 const HomePacienteScreen = () => {
-  const {status, userType, user} = useAuthStore();
-
+  const {status, userType, userName} = useAuthStore();
   console.log(status)
   const backgroundColor = useThemeColor({}, 'background');
   const next = () => {
     router.push('/ejercicios');
   }
-
-  console.log('User in HomePacienteScreen:', userType);
   return (
     <AuthGuard>
     <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
@@ -43,7 +40,7 @@ const HomePacienteScreen = () => {
               fontWeight: 'bold',
               marginBottom: 30
             }}>
-              Bienvenido {user?.nombre}
+              Bienvenido {userName}
             </ThemedText>
 
             {userType === 'Paciente' ? (

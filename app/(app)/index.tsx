@@ -22,7 +22,7 @@ console.log('User in CheckAuthenticationLayout:', user);
     };
     initializeApp();
   }, [loadSession, checkStatus]);
-
+  console.log(user)
   useEffect(() => {
     if (!isInitialized) return;
 

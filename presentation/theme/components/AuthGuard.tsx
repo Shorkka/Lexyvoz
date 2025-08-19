@@ -28,6 +28,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+
       // 4. Validar usuario con backend
       await checkStatus();
 

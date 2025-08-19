@@ -1,5 +1,5 @@
 // Corrected Search component
-import { View, SafeAreaView, StyleSheet, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { View, SafeAreaView, StyleSheet, KeyboardAvoidingView, ScrollView, Pressable, } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AuthGuard from '@/presentation/theme/components/AuthGuard'
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
@@ -15,11 +15,11 @@ const Search = () => {
     busqueda: '',
   });
   const [page, setPage] = useState(1);
-  const limit = 4;
+  const limit = 1;
   const backgroundColor = useThemeColor({}, 'background');
   const [canGoNext, setCanGoNext] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
-
+  const [onPress, setOnPress] = useState(false);
   const { useDoctorQuery } = useDoctorStore();
   const { data: doctorsData, isLoading, isError } = useDoctorQuery(page, limit, form.busqueda);
 
@@ -32,7 +32,14 @@ const Search = () => {
     setCanGoBack(page > 1);
     setCanGoNext(!!doctorsData && (page * limit) < doctorsData.total);
   }, [page, doctorsData]);
+  
+  const onPressHandler = () => {
+    setOnPress(true);
+    // Aquí puedes agregar la lógica que deseas ejecutar al presionar el botón
+    setOnPress(false);
 
+
+  };
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor: backgroundColor }}>
@@ -47,7 +54,7 @@ const Search = () => {
             }}
           >
               <ThemedBackground fullHeight backgroundColor="#fba557" >
-                <View style={{ width: '100%'}}>
+                <View>
                   <ThemedText type='title' style={{ color: 'black' }}>Encuentra a un doctor</ThemedText>
 
                   <ThemedTextInput
@@ -65,28 +72,33 @@ const Search = () => {
                   <ThemedText style={{ color: 'white' }}>Error al cargar doctores</ThemedText>
                 ) : (
                   <View>
+                  <ScrollView>
+                    <Pressable style={{opacity: onPress? 0.8 : 1}} onPress={onPressHandler}>
                     <RenderizarDoctores
                       doctors={doctorsData?.doctors || []}
                       searchText={form.busqueda}
-                    />
+                      />
+
+                    </Pressable>
                     
-                    {/* Pagination controls */}
-                    <View style={styles.paginationContainer}>
-                      <ThemedButton 
-                        icon='caret-back-outline'
-                        backgroundColor={canGoBack ? '#ee7200' : 'grey'}
-                        onPress={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={!canGoBack}
-                      />
-                      <ThemedText style={{ color: 'white' }}>Página {page}</ThemedText>
-                      <ThemedButton 
-                        icon='caret-forward-outline'
-                        onPress={() => setPage(p => p + 1)} 
-                        disabled={!canGoNext}
-                        backgroundColor={canGoNext ? '#ee7200' : 'grey'}
-                      />
+                  </ScrollView>
+                      {/* Pagination controls */}
+                      <View style={styles.paginationContainer}>
+                        <ThemedButton 
+                          icon='caret-back-outline'
+                          backgroundColor={canGoBack ? '#ee7200' : 'grey'}
+                          onPress={() => setPage(p => Math.max(1, p - 1))}
+                          disabled={!canGoBack}
+                        />
+                        <ThemedText style={{ color: 'white' }}>Página {page}</ThemedText>
+                        <ThemedButton 
+                          icon='caret-forward-outline'
+                          onPress={() => setPage(p => p + 1)} 
+                          disabled={!canGoNext}
+                          backgroundColor={canGoNext ? '#ee7200' : 'grey'}
+                        />
+                      </View>
                     </View>
-                  </View>
                 )}
               </ThemedBackground>
           </ScrollView>
@@ -99,18 +111,19 @@ export default Search;
 
 const styles = StyleSheet.create({
   searchInput: {
-    alignSelf: 'center', 
+    flex: 1,
     borderBottomWidth: 1,
     borderColor: 'grey',
     paddingVertical: 10,
     fontSize: 16,
   },
   paginationContainer: {
+    flex: 1,
     alignSelf: 'auto',
-    alignContent: 'flex-end',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 10,
   },
+
 });

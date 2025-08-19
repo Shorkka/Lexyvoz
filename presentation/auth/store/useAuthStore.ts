@@ -10,6 +10,7 @@ export interface AuthState {
     status: AuthStatus;
     user?: User;
     userType?: string;
+    userName?: string;
 
     login: (correo: string, contrasenia: string) => Promise<boolean>;
     checkStatus: () => Promise<void>;
@@ -24,29 +25,27 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     status: 'unauthenticated',
     user: undefined,
     userType: undefined,
+    userName: undefined,
 
-    // Acción para manejar el estado de autenticación
     checkStatus: async () => {
         try {
             set({ status: 'checking' });
             
-            // Primero verificar si hay datos guardados
             const sessionData = await SecureStorageAdapter.getItem('authSession');
             
             if (sessionData) {
-                const { user, userType, credentials } = JSON.parse(sessionData);
+                const { user, userType, userName, credentials } = JSON.parse(sessionData);
                 
-                // Si hay credenciales guardadas, hacer login para validar
                 if (credentials?.correo && credentials?.contrasenia) {
                     try {
                         const resp = await authLogin(credentials.correo, credentials.contrasenia);
                         
                         if (resp?.user) {
-                            // Actualizar la sesión con datos frescos del backend
                             const updatedSessionData = {
                                 user: resp.user,
                                 userType: resp.user.tipo,
-                                credentials: credentials
+                                userName: resp.user.nombre,
+                                credentials
                             };
                             
                             await SecureStorageAdapter.setItem('authSession', JSON.stringify(updatedSessionData));
@@ -54,63 +53,64 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
                             set({
                                 status: 'authenticated',
                                 user: resp.user,
-                                userType: resp.user.tipo
+                                userType: resp.user.tipo,
+                                userName: resp.user.nombre
                             });
                             return;
                         }
                     } catch (error) {
                         console.error('Error validating saved credentials:', error);
-                        // Si falla la validación, limpiar datos
                         await SecureStorageAdapter.deleteItem('authSession');
-                        set({ status: 'unauthenticated', user: undefined, userType: undefined });
+                        set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
                         return;
                     }
                 } else {
-                    // Si no hay credenciales completas, usar los datos guardados tal como están
                     set({
                         status: 'authenticated',
                         user,
-                        userType
+                        userType,
+                        userName
                     });
                     return;
                 }
             }
             
-            // Si no hay datos guardados, verificar con el backend
             const resp = await authCheckStatus();
             if (resp?.user) {
                 await SecureStorageAdapter.setItem('authSession', JSON.stringify({
                     user: resp.user,
                     userType: resp.user.tipo,
-                    credentials: {
-                        correo: resp.user.correo,
-                    }
+                    userName: resp.user.nombre,
+                    credentials: { correo: resp.user.correo }
                 }));
 
                 set({
                     status: 'authenticated',
                     user: resp.user,
-                    userType: resp.user.tipo
+                    userType: resp.user.tipo,
+                    userName: resp.user.nombre
                 });
             } else {
                 await SecureStorageAdapter.deleteItem('authSession');
-                set({ status: 'unauthenticated', user: undefined, userType: undefined });
+                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
             }
         } catch (error) {
             console.error('Error checking auth status:', error);
             set({ status: 'unauthenticated' });
         }
     },
-  loadSession: async () => {
+
+    loadSession: async () => {
         try {
             const sessionData = await SecureStorageAdapter.getItem('authSession');
             
             if (sessionData) {
-                const { user, userType } = JSON.parse(sessionData);
+                const { user, userType, userName } = JSON.parse(sessionData);
                 set({
                     status: 'authenticated',
                     user,
-                    userType
+                    userType,
+                    userName
                 });
                 return true;
             }
@@ -121,54 +121,60 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         set({ status: 'unauthenticated' });
         return false;
     },
-    // Acción de login
+
     login: async (correo: string, contrasenia: string) => {
-    try {
+        try {
             const resp = await authLogin(correo, contrasenia);
 
             if (!resp?.user) {
-            set({ status: 'unauthenticated', user: undefined, userType: undefined });
-            return false;
+                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
+                return false;
             }
 
             const sessionData = {
-            user: resp.user,
+                user: resp.user,
+                userType: resp.user.tipo,
+                userName: resp.user.nombre
             };
 
             await SecureStorageAdapter.setItem('authSession', JSON.stringify(sessionData));
 
-                set({
+            set({
                 status: 'authenticated',
                 user: resp.user,
-                userType: resp.user.tipo
-                });
+                userType: resp.user.tipo,
+                userName: resp.user.nombre
+            });
 
-                return true;
-            } catch (error) {
-                console.error('Error en login:', error);
-                set({ status: 'unauthenticated' });
-                return false;
-            }
-        },
+            return true;
+        } catch (error) {
+            console.error('Error en login:', error);
+            set({ status: 'unauthenticated' });
+            return false;
+        }
+    },
 
-    // Acción de registro
     register: async (registerData: any) => {
         try {
             const resp = await authRegister(registerData);
 
             if (!resp?.user) {
                 console.error('Registro fallido - Respuesta incompleta:', resp);
-                set({ status: 'unauthenticated', user: undefined, userType: undefined });
+                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
                 return false;
             }
 
-            // Guardar el usuario completo
-            await SecureStorageAdapter.setItem('user', JSON.stringify(resp.user));
+            await SecureStorageAdapter.setItem('authSession', JSON.stringify({
+                user: resp.user,
+                userType: resp.user.tipo,
+                userName: resp.user.nombre
+            }));
 
             set({
                 status: 'authenticated',
                 user: resp.user,
-                userType: resp.user.tipo
+                userType: resp.user.tipo,
+                userName: resp.user.nombre
             });
             
             return true;
@@ -178,31 +184,44 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
             throw error;
         }
     },
+
     logout: async () => {
         await SecureStorageAdapter.deleteItem('authSession');
         AsyncStorage.clear();
         set({ 
-        status: 'unauthenticated',
-        user: undefined,
-        userType: undefined
+            status: 'unauthenticated',
+            user: undefined,
+            userType: undefined,
+            userName: undefined
         });
-        
     },
+
     updateUser: async (updatedFields: Partial<User>) => {
         const currentUser = get().user;
         if (!currentUser) return;
 
         try {
-
             const updatedUser = await authUpdateUser(currentUser.usuario_id, updatedFields);
 
-            set({ user: updatedUser });
+            const updatedSession = {
+                user: updatedUser,
+                userType: updatedUser.tipo,
+                userName: updatedUser.nombre
+            };
 
-            
+            await SecureStorageAdapter.setItem('authSession', JSON.stringify(updatedSession));
+
+            set({ 
+                user: updatedUser,
+                userType: updatedUser.tipo,
+                userName: updatedUser.nombre
+            });
+
         } catch (error) {
             console.error('Error actualizando usuario:', error);
         }
     },
+
     resetPassword: async (correo: string): Promise<boolean> => {
         try {
             const response = await recoveryPasswordResponse(correo);
@@ -218,4 +237,3 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
     }
 }));
-
