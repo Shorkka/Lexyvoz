@@ -13,10 +13,12 @@ const EjerciciosKits = () => {
   const [currentPage, setCurrentPage] = React.useState(0);
   
   React.useEffect(() => {
-    if (kitsQuery.data) {
+    if (Array.isArray(kitsQuery.data)) {
       setKits(kitsQuery.data);
-      setCurrentPage(0);
+    } else {
+      setKits([]);
     }
+    setCurrentPage(0);
   }, [kitsQuery.data]);
 
   const PAGE_SIZE = 6;

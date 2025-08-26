@@ -32,10 +32,3 @@ export interface UserResponse {
     imagen_url?:         string;
 }
 
-export interface DoctorResponse {
-    page:    number;
-    limit:   number;
-    total:   number;
-    count:   number;
-    doctors: { [key: string]: null | string }[];
-}

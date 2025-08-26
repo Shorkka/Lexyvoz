@@ -10,7 +10,7 @@ import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import CardViewEditkits from '@/presentation/theme/components/CardViewEditkits';
 
 import { GlobalStyles } from '@/assets/styles/GlobalStyles';
-import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
+//import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
 
 
 const DoctorScreen = () => {
@@ -48,9 +48,9 @@ const DoctorScreen = () => {
                       onChangeText={(value) => setForm({ ...form, busqueda: value })}
                     />
 
-                    <RenderizarPaciente
+                    {/* <RenderizarPaciente
                       searchText={form.busqueda}
-                    />
+                    /> */}
                       
                   </View>
                 <CardViewEditkits />

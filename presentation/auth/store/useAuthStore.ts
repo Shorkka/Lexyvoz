@@ -11,6 +11,7 @@ export interface AuthState {
     user?: User;
     userType?: string;
     userName?: string;
+    token?: string;
 
     login: (correo: string, contrasenia: string) => Promise<boolean>;
     checkStatus: () => Promise<void>;
@@ -30,10 +31,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     checkStatus: async () => {
         try {
             set({ status: 'checking' });
-            
+
+            const token = await SecureStorageAdapter.getItem('token');
             const sessionData = await SecureStorageAdapter.getItem('authSession');
             
-            if (sessionData) {
+            if (token && sessionData) {
                 const { user, userType, userName, credentials } = JSON.parse(sessionData);
                 
                 if (credentials?.correo && credentials?.contrasenia) {
@@ -45,7 +47,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
                                 user: resp.user,
                                 userType: resp.user.tipo,
                                 userName: resp.user.nombre,
-                                credentials
+                                credentials,
+                                token,
                             };
                             
                             await SecureStorageAdapter.setItem('authSession', JSON.stringify(updatedSessionData));
@@ -126,15 +129,17 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         try {
             const resp = await authLogin(correo, contrasenia);
 
-            if (!resp?.user) {
-                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
+            if (!resp?.user || !resp?.token) {
+                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined, token: undefined});
                 return false;
             }
+            await SecureStorageAdapter.setItem('token', resp.token);
 
             const sessionData = {
                 user: resp.user,
                 userType: resp.user.tipo,
-                userName: resp.user.nombre
+                userName: resp.user.nombre,
+                token: resp.token
             };
 
             await SecureStorageAdapter.setItem('authSession', JSON.stringify(sessionData));
@@ -143,7 +148,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
                 status: 'authenticated',
                 user: resp.user,
                 userType: resp.user.tipo,
-                userName: resp.user.nombre
+                userName: resp.user.nombre,
+                token: resp.token
             });
 
             return true;

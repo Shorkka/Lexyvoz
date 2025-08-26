@@ -1,4 +1,4 @@
-
+// ✅ useCitasStore.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CitaBody } from "@/core/auth/interface/citas";
 import { 
@@ -7,73 +7,63 @@ import {
   obtenerCitasPorID, 
   editarCita, 
   eliminarCita,
-  vincularCita
-}from "../interface/cita-actions";
+} from "../interface/cita-actions";
 
 export const useCitasStore = () => {
   const queryClient = useQueryClient();
 
-  // Consultas para citas
+  // 🔹 Obtener todas las citas
   const todasCitasQuery = useQuery({
     queryKey: ['citas'],
     queryFn: obtenerTodasCitas,
-    staleTime: 1000 * 60 * 5 // 5 minutos de fresh data
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  const useCitaPorIdQuery = (citaID: string) => useQuery({
-    queryKey: ['cita', citaID],
-    queryFn: () => obtenerCitasPorID(citaID),
-    enabled: !!citaID // Solo se ejecuta si hay un ID
-  });
+  // 🔹 Hook para obtener cita por ID
+  const useCitaPorIdQuery = (citaID?: number) =>
+    useQuery({
+      queryKey: ['cita', citaID],
+      queryFn: () => obtenerCitasPorID(citaID as number),
+      enabled: !!citaID, // Solo si hay un ID
+    });
 
-  // Mutaciones para citas
+  // 🔹 Crear cita
   const crearCitaMutation = useMutation({
-    mutationFn: (citaData: {
-      doctor_id: number;
-      paciente_id: number;
-      fecha_cita: string;
-    }) => crearCita(citaData),
+    mutationFn: (citaData: CitaBody) => crearCita(citaData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['citas'] });
     },
     onError: (error) => {
       console.error('Error al crear cita:', error);
-    }
+    },
   });
 
+  // 🔹 Editar cita
   const editarCitaMutation = useMutation({
-    mutationFn: ({ citaID, citaData }: { citaID: string, citaData: CitaBody }) => 
+    mutationFn: ({ citaID, citaData }: { citaID: number; citaData: CitaBody }) =>
       editarCita(citaID, citaData),
-    onSuccess: () => {
+    onSuccess: (_data, { citaID }) => {
       queryClient.invalidateQueries({ queryKey: ['citas'] });
-      queryClient.invalidateQueries({ queryKey: ['cita'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['cita', citaID] });
+    },
   });
 
+  // 🔹 Eliminar cita
   const eliminarCitaMutation = useMutation({
-    mutationFn: (citaID: string) => eliminarCita(citaID),
+    mutationFn: (citaID: number) => eliminarCita(citaID),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['citas'] });
-    }
-  });
-
-  const vincularCitaMutation = useMutation({
-    mutationFn: ({ doctor_id, pacienteID }: { doctor_id: string, pacienteID: string }) => 
-      vincularCita(doctor_id, pacienteID),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['citas'] });
-    }
+    },
   });
 
   return {
     // Queries
     todasCitasQuery,
     useCitaPorIdQuery,
-    
+
     // Mutations
     crearCitaMutation,
     editarCitaMutation,
     eliminarCitaMutation,
-    vincularCitaMutation
   };
 };

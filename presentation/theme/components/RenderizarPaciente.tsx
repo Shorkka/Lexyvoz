@@ -1,40 +1,46 @@
-import React from 'react';
-import { FlatList, View } from 'react-native';
+// En tu store useDoctorStore
+import { create } from 'zustand';
+import { useQuery } from '@tanstack/react-query';
+import { obtenerPacientesVinculadosConDoctor } from '@/infraestructure/interface/doctor-paciente-actions';
 
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
-import { useDoctorStore } from '@/infraestructure/store/useDoctorStore ';
-
-interface Props {
-  searchText?: string;
+interface Paciente {
+  usuario_id: string;
+  nombre: string;
+  correo: string;
+  imagen_url?: string;
+  escolaridad?: string;
 }
 
-const RenderizarPaciente: React.FC<Props> = ({ searchText = '' }) => {
-  const { user } = useAuthStore(); 
-  const { usePacientesQuery } = useDoctorStore();
+interface UseDoctorStore {
+  pacientes: Paciente[];
+  usePacientesQuery: (doctorId: number) => {
+    data: Paciente[];
+    isLoading: boolean;
+    isError: boolean;
+  };
+}
 
-  const { data: pacientes, isLoading, isError } = usePacientesQuery(user?.usuario_id || 0);
-
-  if (isLoading) return <ThemedText>Cargando pacientes...</ThemedText>;
-  if (isError) return <ThemedText>Error al cargar pacientes</ThemedText>;
-  if (!pacientes || pacientes.length === 0) return <ThemedText>No hay pacientes asignados</ThemedText>;
-
-  const pacientesFiltrados = pacientes.filter((paciente: any) =>
-    paciente.nombre.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  return (
-    <FlatList
-      data={pacientesFiltrados}
-      keyExtractor={(item) => item.usuario_id.toString()}
-      renderItem={({ item }) => (
-        <View style={{ padding: 10, borderBottomWidth: 1 }}>
-          <ThemedText>{item.nombre}</ThemedText>
-          <ThemedText>{item.correo}</ThemedText>
-        </View>
-      )}
-    />
-  );
-};
-
-export default RenderizarPaciente;
+export const useDoctorStore = create<UseDoctorStore>((set, get) => ({
+  pacientes: [],
+  
+  usePacientesQuery: (doctorId: number) => {
+    return useQuery({
+      queryKey: ['pacientes', doctorId],
+      queryFn: () => obtenerPacientesVinculadosConDoctor(doctorId),
+      enabled: !!doctorId, // Solo ejecutar si hay doctorId
+      select: (data) => {
+        // Mapear la respuesta para obtener solo datos del paciente
+        if (data && data.links) {
+          return data.links.map((link: any) => ({
+            usuario_id: link.paciente_id,
+            nombre: link.paciente_nombre,
+            correo: link.paciente_correo,
+            imagen_url: link.paciente_imagen_url,
+            escolaridad: link.paciente_escolaridad
+          }));
+        }
+        return [];
+      }
+    });
+  }
+}));

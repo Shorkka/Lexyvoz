@@ -1,19 +1,10 @@
 import { productsApi } from "@/core/auth/api/productsApi";
 import { CitaBody } from "@/core/auth/interface/citas";
 
-export const crearCita = async (citaData: {
-  doctor_id: number;
-  paciente_id: number;
-  fecha_cita: string;
-}) : Promise<CitaBody> => {
+// Crea una nueva cita
+export const crearCita = async (citaData: CitaBody) => {
   try {
-    const body = {
-      doctorId: citaData.doctor_id.toString(),
-      pacienteId: citaData.paciente_id.toString(),
-      fecha: citaData.fecha_cita,
-    };
-
-    const { data } = await productsApi.post('/citas/crear-cita', body);
+    const { data } = await productsApi.post('/citas/crear-cita', citaData);
     return data;
   } catch (error) {
     console.error('Error al crear cita:', error);
@@ -21,6 +12,7 @@ export const crearCita = async (citaData: {
   }
 };
 
+// Obtiene todas las citas
 export const obtenerTodasCitas = async () =>{
   try {
     const {data} = await productsApi.get('/citas/obtener-citas');
@@ -31,9 +23,10 @@ export const obtenerTodasCitas = async () =>{
   }
 };
 
-export const obtenerCitasPorID = async (citaID: string) => {
+// Obtiene una cita por su ID
+export const obtenerCitasPorID = async (id: number) => {
   try {
-    const {data} = await productsApi.get(`/citas/obtener-cita/${citaID}`);
+    const {data} = await productsApi.get(`/citas/obtener-cita/${id}`);
     return data;
   } catch (error) {
     console.error('Error al obtener cita por ID:', error);
@@ -41,32 +34,24 @@ export const obtenerCitasPorID = async (citaID: string) => {
   }
 };
 
-export const editarCita = async (citaID: string, citaData: CitaBody): Promise<CitaBody> => {
+// Edita una cita existente
+export const editarCita = async (id: number, citaData: CitaBody): Promise<CitaBody> => {
   try {
-    const { data } = await productsApi.put(`/citas/editar-cita/${citaID}`, citaData);
+    const { data } = await productsApi.put(`/citas/editar-cita/${id}`, citaData);
     return data;
   } catch (error) {
     console.error('Error al editar cita:', error);
     return Promise.reject(error);
   }
-}
+};
 
-export const eliminarCita = async (citaID: string): Promise<void> => {
+// Elimina una cita por su ID
+export const eliminarCita = async (id: number): Promise<void> => {
   try {
-    await productsApi.delete(`/citas/eliminar-cita/${citaID}`);
+    await productsApi.delete(`/citas/eliminar-cita/${id}`);
   } catch (error) {
     console.error('Error al eliminar cita:', error);
     return Promise.reject(error);
   }
-}
-
-export const vincularCita = async (doctor_id: string, pacienteID: string): Promise<void> => {
-  try {
-    const {data} = await productsApi.post('/citas/vincular', {doctor_id, pacienteID});
-    return data;
-  } catch (error) {
-    console.error('Error al vincular cita:', error);
-    return Promise.reject(error);
-  }
-}
+};
 
