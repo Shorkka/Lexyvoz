@@ -7,7 +7,6 @@ import {
 } from '@vis.gl/react-google-maps';
 
 const apiKey = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB || '';
-console.log('Google Places API Key:', apiKey);
 interface Props {
   onAddressSelect: (data: {
     direccion: string;

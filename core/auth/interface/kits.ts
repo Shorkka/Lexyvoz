@@ -1,8 +1,22 @@
 export interface ObtenerKitsResponse {
     message:    string;
-    kits:       Kit[];
+    data:       Datum[];
     pagination: Pagination;
 }
+
+export interface Datum {
+    kit_id:           number;
+    name:             string;
+    descripcion:      string;
+    creado_por:       number;
+    fecha_creacion:   Date;
+    updated_at:       Date;
+    activo:           boolean;
+    creador_nombre:   string;
+    creador_correo:   string;
+    total_ejercicios: string;
+}
+
 
 export interface Kit {
     kit_id:           number;

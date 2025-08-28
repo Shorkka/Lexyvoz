@@ -34,7 +34,7 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
   const borderColor = error
     ? errorColor
     : isActive
-    ? primaryColor
+    ? 'white'
     : '#ccc';
 
   return (

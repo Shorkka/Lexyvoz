@@ -4,16 +4,18 @@ export class KitMapper {
   static fromApiToEntity(apiKit: any): ObtenerKitsResponse {
     return {
       message: "Kit obtenido exitosamente",
-      kits: [
-        {
-          kit_id: apiKit.kit_id,
-          name: apiKit.name,
-          descripcion: apiKit.descripcion,
-          creado_por: apiKit.creado_por,
-          activo: apiKit.activo,
-          total_ejercicios: apiKit.total_ejercicios
-        }
-      ],
+      data: apiKit.data.map((kit: any) => ({
+        kit_id: kit.kit_id,
+        name: kit.name,
+        descripcion: kit.descripcion,
+        creado_por: kit.creado_por,
+        fecha_creacion: new Date(kit.fecha_creacion),
+        updated_at: new Date(kit.updated_at),
+        activo: kit.activo,
+        creador_nombre: kit.creador_nombre,
+        creador_correo: kit.creador_correo,
+        total_ejercicios: kit.total_ejercicios
+      })),
       pagination: {
         current_page: apiKit.current_page,
         total_pages: apiKit.total_pages,

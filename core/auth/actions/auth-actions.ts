@@ -39,8 +39,6 @@ export const authLogin = async (correo: string, contrasenia: string) => {
       contrasenia,
     });
     
-    console.log('Respuesta del backend:', data);
-
     // Guardar token para el interceptor
     if (data.token) {
       await SecureStorageAdapter.setItem('token', data.token);
@@ -52,7 +50,6 @@ export const authLogin = async (correo: string, contrasenia: string) => {
     };
 
   } catch (error: any) {
-    console.log('Login error:', error?.response?.data || error);
     throw error;
   }
 };
@@ -60,14 +57,12 @@ export const authCheckStatus = async () => {
   try {
     const session = await SecureStorageAdapter.getItem('authSession');
     if (!session) {
-      console.warn('No hay sesión guardada.');
       return null;
     }
 
     const { credentials } = JSON.parse(session);
 
     if (!credentials?.correo || !credentials?.contrasenia) {
-      console.warn('Faltan credenciales guardadas.');
       return null;
     }
 
@@ -97,7 +92,6 @@ export const authRegister = async (registerData: any) => {
   return { user: data };
   } catch (error) {
     if (isAxiosError(error)) {
-      console.error('Error del backend:', error.response?.data);
       throw new Error(error.response?.data?.message || 'Error en el registro');
     }
     throw error;

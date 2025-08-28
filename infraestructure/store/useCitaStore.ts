@@ -1,4 +1,3 @@
-// ✅ useCitasStore.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CitaBody } from "@/core/auth/interface/citas";
 import { 
@@ -12,14 +11,14 @@ import {
 export const useCitasStore = () => {
   const queryClient = useQueryClient();
 
-  // 🔹 Obtener todas las citas
+  //  Obtener todas las citas
   const todasCitasQuery = useQuery({
     queryKey: ['citas'],
     queryFn: obtenerTodasCitas,
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  // 🔹 Hook para obtener cita por ID
+  // Hook para obtener cita por ID
   const useCitaPorIdQuery = (citaID?: number) =>
     useQuery({
       queryKey: ['cita', citaID],
@@ -27,7 +26,7 @@ export const useCitasStore = () => {
       enabled: !!citaID, // Solo si hay un ID
     });
 
-  // 🔹 Crear cita
+  //  Crear cita
   const crearCitaMutation = useMutation({
     mutationFn: (citaData: CitaBody) => crearCita(citaData),
     onSuccess: () => {
@@ -38,7 +37,7 @@ export const useCitasStore = () => {
     },
   });
 
-  // 🔹 Editar cita
+  //  Editar cita
   const editarCitaMutation = useMutation({
     mutationFn: ({ citaID, citaData }: { citaID: number; citaData: CitaBody }) =>
       editarCita(citaID, citaData),
@@ -48,7 +47,7 @@ export const useCitasStore = () => {
     },
   });
 
-  // 🔹 Eliminar cita
+  //  Eliminar cita
   const eliminarCitaMutation = useMutation({
     mutationFn: (citaID: number) => eliminarCita(citaID),
     onSuccess: () => {

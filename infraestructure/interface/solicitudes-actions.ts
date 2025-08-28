@@ -17,16 +17,18 @@ export interface Solicitud {
 }
 
 // Usuario envia solicitud para ser paciente de un doctor
-export const enviarSolicitudAlDoctor = async (doctor_id: number) => {
-    try {
-        const { data } = await productsApi.post<EnviarSolicitdResponse>('/doctor-paciente/vincular', { doctor_id });
-        return { success: true, data };
-    } catch (error) {
-        console.error('Error al enviar solicitud al doctor:', error);
-        return { success: false, error };
-    }
+export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje: string) => {
+  try {
+    const { data } = await productsApi.post('/solicitudes/enviar', { 
+      doctor_id, 
+      mensaje 
+    });
+    console.log('Respuesta exitosa:', data);
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error };
+  }
 }
-
 // Obtener solicitudes pendientes para un doctor
 export const obtenerSolicitudesDoctorPaciente = async (doctor_id: number) => {
     try {

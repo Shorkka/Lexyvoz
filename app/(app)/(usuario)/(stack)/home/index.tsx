@@ -11,8 +11,7 @@ import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-nati
 
 
 const HomePacienteScreen = () => {
-  const {status, userType, userName} = useAuthStore();
-  console.log(status)
+  const { userType, userName} = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
   const next = () => {
     router.push('/ejercicios');

@@ -1,6 +1,6 @@
 import { productsApi } from "@/core/auth/api/productsApi";
 import { EjerciciosDeUnKit, ObtenerKitsResponse } from "@/core/auth/interface/kits";
-import { KitMapper, ObtenerEjercicioKitMapper } from "../mappers/kit.mapper";
+import { KitIDMapper, KitMapper, ObtenerEjercicioKitMapper } from "../mappers/kit.mapper";
 
 export interface CrearKits {
   name:        string;
@@ -65,7 +65,7 @@ export const crearKitConEjercicios = async (kitData: CrearKitsConEjercicioRespon
 export const obtenerKitPorId = async (id: number) => {
   try {
     const { data } = await productsApi.get<ObtenerKitsResponse>(`/kits/${id}`);
-    return KitMapper.fromApiToEntity(data);
+    return KitIDMapper.fromApiToEntity(data);
   } catch (error) {
     console.error('Error al obtener el kit por ID:', error);
     throw new Error("Error al obtener el kit por ID");

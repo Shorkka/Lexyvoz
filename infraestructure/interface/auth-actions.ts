@@ -16,7 +16,6 @@ export const obtenerDoctores = async (
         ...(searchTerm && { search: searchTerm }) // optional search parameter
       }
     });
-    console.log('Doctores obtenidos:', data);
     return DoctorMapper.fromApiToEntity(data);
   } catch (error) {
     console.log(error);
@@ -38,7 +37,6 @@ export const obtenerPacientes = async (
         ...(searchTerm && { search: searchTerm }) // optional search parameter
       }
     });
-    console.log('Pacientes obtenidos:', data);
     return PacienteMapper.fromApiToEntity(data);
   } catch (error) {
     console.log(error);
@@ -79,7 +77,6 @@ export const obtenerUsuarios = async (
         ...(searchTerm && { search: searchTerm })
       }
     });
-    console.log('Usuarios obtenidos:', data);
     return UsuarioMapper.fromApiToEntity(data);
   } catch (error) {
     console.log(error);

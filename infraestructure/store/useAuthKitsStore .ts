@@ -13,7 +13,7 @@ import {
   VinculacionResponse
 } from "@/core/auth/interface/auth";
 
-export const useAuthStore = () => {
+export const useAuthKitsStore = () => {
   const queryClient = useQueryClient();
 
   // ----------------- QUERIES -----------------

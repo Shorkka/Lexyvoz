@@ -33,7 +33,6 @@ const escolaridadData = [
 ];
 
 const Step3Screen = () => {
-  console.log("Componente Step3Screen montado");
   const data = useRegisterStore((s) => s);    
   const register = useAuthStore((s) => s.register);
   const { width } = useWindowDimensions();

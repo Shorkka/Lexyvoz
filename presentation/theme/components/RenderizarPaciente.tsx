@@ -1,7 +1,6 @@
-// En tu store useDoctorStore
-import { create } from 'zustand';
-import { useQuery } from '@tanstack/react-query';
-import { obtenerPacientesVinculadosConDoctor } from '@/infraestructure/interface/doctor-paciente-actions';
+import React from 'react';
+import { View, StyleSheet, Image } from 'react-native';
+import { ThemedText } from './ThemedText';
 
 interface Paciente {
   usuario_id: string;
@@ -11,36 +10,69 @@ interface Paciente {
   escolaridad?: string;
 }
 
-interface UseDoctorStore {
+interface RenderizarPacienteProps {
   pacientes: Paciente[];
-  usePacientesQuery: (doctorId: number) => {
-    data: Paciente[];
-    isLoading: boolean;
-    isError: boolean;
-  };
+  searchText: string;
 }
 
-export const useDoctorStore = create<UseDoctorStore>((set, get) => ({
-  pacientes: [],
-  
-  usePacientesQuery: (doctorId: number) => {
-    return useQuery({
-      queryKey: ['pacientes', doctorId],
-      queryFn: () => obtenerPacientesVinculadosConDoctor(doctorId),
-      enabled: !!doctorId, // Solo ejecutar si hay doctorId
-      select: (data) => {
-        // Mapear la respuesta para obtener solo datos del paciente
-        if (data && data.links) {
-          return data.links.map((link: any) => ({
-            usuario_id: link.paciente_id,
-            nombre: link.paciente_nombre,
-            correo: link.paciente_correo,
-            imagen_url: link.paciente_imagen_url,
-            escolaridad: link.paciente_escolaridad
-          }));
-        }
-        return [];
-      }
-    });
+const RenderizarPaciente: React.FC<RenderizarPacienteProps> = ({ pacientes, searchText }) => {
+  const normalizedSearch = searchText.toLowerCase();
+
+  const filteredPacientes = pacientes.filter((p) =>
+    (p.nombre ?? "").toLowerCase().includes(normalizedSearch) ||
+    (p.correo ?? "").toLowerCase().includes(normalizedSearch)
+  );
+
+  if (filteredPacientes.length === 0) {
+    return <ThemedText style={{ marginTop: 10 }}>No se encontraron pacientes</ThemedText>;
   }
-}));
+
+  return (
+    <View style={styles.container}>
+      {filteredPacientes.map((paciente) => (
+        <View key={paciente.usuario_id} style={styles.card}>
+          {paciente.imagen_url ? (
+            <Image source={{ uri: paciente.imagen_url }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, styles.avatarPlaceholder]} />
+          )}
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.name}>{paciente.nombre}</ThemedText>
+            <ThemedText>{paciente.correo}</ThemedText>
+            {paciente.escolaridad && <ThemedText>Escolaridad: {paciente.escolaridad}</ThemedText>}
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    marginTop: 10,
+  },
+  card: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
+  },
+  avatarPlaceholder: {
+    backgroundColor: '#ccc',
+  },
+  name: {
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+});
+
+export default RenderizarPaciente;

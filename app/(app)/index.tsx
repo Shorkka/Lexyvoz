@@ -10,10 +10,9 @@ const APP_ROUTES = {
 } as const;
 
 const CheckAuthenticationLayout = () => {
-  const { status, userType, checkStatus, loadSession, user} = useAuthStore();
+  const { status, userType, checkStatus, loadSession} = useAuthStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
-console.log('User in CheckAuthenticationLayout:', user);
   useEffect(() => {
     const initializeApp = async () => {
       await loadSession();
@@ -22,7 +21,6 @@ console.log('User in CheckAuthenticationLayout:', user);
     };
     initializeApp();
   }, [loadSession, checkStatus]);
-  console.log(user)
   useEffect(() => {
     if (!isInitialized) return;
 

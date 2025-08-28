@@ -47,7 +47,6 @@ const RecoveryScreen = () => {
     setIsPosting(true);
       try {
       const success = await resetPassword(email);
-        console.log('Respuesta backend:', success);
       if (success) {
         showAlert.showAlert(
           'Código',

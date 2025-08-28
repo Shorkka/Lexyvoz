@@ -11,7 +11,6 @@ import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, View } from 'react-native';
 const Step2Screen = () => {
-  console.log('registerScreen2 rendered');
   const backgroundColor = useThemeColor({}, 'background');
   const set = useRegisterStore((s) => s.set);
   const [form, setForm] = useState({

@@ -1,4 +1,3 @@
-// ✅ useSolicitudesVinculacion.ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   enviarSolicitudAlDoctor,
@@ -13,11 +12,11 @@ export const useSolicitudesVinculacionStore = () => {
 
   // ----------------- QUERIES -----------------
 
-  // 🔹 Solicitudes pendientes de un doctor
-  const useSolicitudesDoctorQuery = (doctor_id?: number) =>
+  //  Solicitudes pendientes de un doctor
+  const useSolicitudesDoctorQuery = (doctor_id: number) =>
     useQuery({
       queryKey: ["doctor", doctor_id, "solicitudesPendientes"],
-      queryFn: () => obtenerSolicitudesDoctorPaciente(doctor_id as number),
+      queryFn: () => obtenerSolicitudesDoctorPaciente(doctor_id),
       enabled: !!doctor_id,
       staleTime: 1000 * 60 * 5,
     });
@@ -42,7 +41,13 @@ export const useSolicitudesVinculacionStore = () => {
 
   // 🔹 Enviar solicitud a un doctor
   const enviarSolicitudMutation = useMutation({
-    mutationFn: (doctor_id: number) => enviarSolicitudAlDoctor(doctor_id),
+      mutationFn: ({
+      doctor_id,
+      mensaje
+    }: {
+      doctor_id: number;
+      mensaje: string;
+    })=> enviarSolicitudAlDoctor(doctor_id, mensaje),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["solicitudesEnviadasUsuario"] });
     },

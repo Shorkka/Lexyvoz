@@ -10,7 +10,8 @@ import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import CardViewEditkits from '@/presentation/theme/components/CardViewEditkits';
 
 import { GlobalStyles } from '@/assets/styles/GlobalStyles';
-//import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
+import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
+import { router } from 'expo-router';
 
 
 const DoctorScreen = () => {
@@ -48,9 +49,10 @@ const DoctorScreen = () => {
                       onChangeText={(value) => setForm({ ...form, busqueda: value })}
                     />
 
-                    {/* <RenderizarPaciente
+                    <RenderizarPaciente
+                      pacientes={[]}  
                       searchText={form.busqueda}
-                    /> */}
+                    />
                       
                   </View>
                 <CardViewEditkits />
@@ -60,7 +62,7 @@ const DoctorScreen = () => {
               {/* Botón fijo en la parte inferior DEL BACKGROUND NARANJA */}
               <View style={styles.buttonContainer}>
                 <ThemedButton
-                  onPress={() => console.log('Añadir paciente')}
+                  onPress={() => router.push('/(app)/(doctor)/(stack)/add_paciente')}
                   style={styles.addButton}
                 >
                   <ThemedText style={styles.buttonText}>Añadir paciente</ThemedText>
