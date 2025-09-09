@@ -56,7 +56,8 @@ export interface Data {
     estado:           string;
     kit_nombre:       string;
     kit_descripcion:  string;
-    kit_imagen:       string;
+    paciente_nombre:  string;
+    paciente_email:   string;
 }
 
 export interface PaginationPaciente {

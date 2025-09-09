@@ -10,9 +10,10 @@ interface Props extends TextInputProps {
   error?: boolean;
   errorMessage?: string;
   label?: string;
+  color?: string;
 }
 
-const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessage, label, value, ...rest }: Props) => {
+const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessage, label, value, color, ...rest }: Props) => {
   const primaryColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const placeholderColor = useThemeColor({}, 'secondaryText');
@@ -41,6 +42,7 @@ const ThemedTextInput = ({ icon, rightIcon, onRightIconPress, error, errorMessag
     <View style={{ marginTop: 10 }}>
       <View
         style={{
+          backgroundColor: color ? color : '#fff3e7',
           ...styles.border,
           borderColor,
         }}
@@ -155,11 +157,10 @@ export default ThemedTextInput;
 const styles = StyleSheet.create({
   border: {
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 20,
     padding: 5,
     flexDirection: 'row',
-    alignItems: 'center', // Esto centra verticalmente todos los elementos
-    backgroundColor: '#fff3e7',
+    alignItems: 'center', 
     minHeight: 48,
     position: 'relative',
   },

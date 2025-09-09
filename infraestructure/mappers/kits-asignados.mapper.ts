@@ -62,7 +62,8 @@ export class KitsAsignadosAPacientesPorIDMapper {
                 estado: item.estado,
                 kit_nombre: item.kit_nombre,
                 kit_descripcion: item.kit_descripcion,
-                kit_imagen: item.kit_imagen
+                paciente_nombre: item.paciente_nombre,
+                paciente_email: item.paciente_email
             })),
             pagination: {
                 currentPage: data.pagination.current_page,

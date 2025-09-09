@@ -18,7 +18,7 @@ export const useAuthKitsStore = () => {
 
   // ----------------- QUERIES -----------------
 
-  // 🔹 Obtener doctores con paginación y búsqueda
+  //  Obtener doctores con paginación y búsqueda
   const useObtenerDoctoresQuery = (
     page?: number,
     limit?: number,
@@ -31,7 +31,7 @@ export const useAuthKitsStore = () => {
       placeholderData: undefined,
     });
 
-  // 🔹 Obtener pacientes con paginación y búsqueda
+  //  Obtener pacientes con paginación y búsqueda
   const useObtenerPacientesQuery = (
     page?: number,
     limit?: number,
@@ -44,7 +44,7 @@ export const useAuthKitsStore = () => {
       placeholderData: undefined, 
     });
 
-  // 🔹 Obtener vínculos doctor-paciente con paginación
+  //  Obtener vínculos doctor-paciente con paginación
   const useObtenerVinculosDoctorPacienteQuery = (
     page?: number,
     limit?: number
@@ -56,7 +56,7 @@ export const useAuthKitsStore = () => {
     placeholderData: undefined,
     });
 
-  // 🔹 Obtener usuarios con paginación y búsqueda
+  //  Obtener usuarios con paginación y búsqueda
   const useObtenerUsuariosQuery = (
     page?: number,
     limit?: number,
@@ -70,8 +70,6 @@ export const useAuthKitsStore = () => {
     });
 
   // ----------------- REFETCH FUNCTIONS -----------------
-  // (Para invalidar y refrescar datos manualmente si es necesario)
-
   const refetchDoctores = () => {
     queryClient.invalidateQueries({ queryKey: ["doctores"] });
   };

@@ -73,6 +73,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         minWidth: 74,
+         ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        boxShadow: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.6,
+          shadowRadius: 5,
+      },
+    }),
 
     },
 

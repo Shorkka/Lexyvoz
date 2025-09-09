@@ -17,7 +17,7 @@ export interface Solicitud {
 }
 
 // Usuario envia solicitud para ser paciente de un doctor
-export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje: string) => {
+export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje?: string) => {
   try {
     const { data } = await productsApi.post('/solicitudes/enviar', { 
       doctor_id, 
@@ -29,17 +29,26 @@ export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje: string
     return { success: false, error };
   }
 }
-// Obtener solicitudes pendientes para un doctor
 export const obtenerSolicitudesDoctorPaciente = async (doctor_id: number) => {
     try {
         const { data } = await productsApi.get(`/solicitudes/doctor/${doctor_id}/pendientes`);
+        console.log('Respuesta cruda del backend:', data);
+        
+        // Verificar directamente la respuesta antes de mapear
+        if (data && data.solicitudes && Array.isArray(data.solicitudes)) {
+            console.log('Solicitudes encontradas en respuesta:', data.solicitudes);
+        }
+        
         return SolicitudesPendientesMapper.toDomain<Pendientes>(data);
     } catch (error) {
         console.error('Error al obtener solicitudes del doctor:', error);
-        return { success: false, error };
+        return { 
+            success: false, 
+            error,
+            message: 'Error al cargar solicitudes'
+        };
     }
 }
-
 // Obtener solicitudes enviadas por el usuario
 // Retorna todas las solicitudes que el usuario ha enviado a doctores
 export const obtenerSolicitudesEnviadasPorUsuario = async () => {
@@ -56,7 +65,7 @@ export const obtenerSolicitudesEnviadasPorUsuario = async () => {
 // Permite al doctor aceptar o rechazar una solicitud. Si acepta, automáticamente crea la vinculación.
 export const responderSolicitudVinculacion = async (solicitud_id: number, respuesta: string) => {
     try {
-        const { data } = await productsApi.post(`/solicitudes/vinculacion/${solicitud_id}/respuesta`, { respuesta });
+        const { data } = await productsApi.post(`/solicitudes/${solicitud_id}/responder`, { respuesta: respuesta});
         return { success: true, data };
     } catch (error) {
         console.error('Error al responder solicitud de vinculacion:', error);

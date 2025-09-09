@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   View, SafeAreaView, StyleSheet, ScrollView, 
-  Pressable, Modal, Alert, ActivityIndicator 
+  Pressable, Modal, Alert, ActivityIndicator, Image
 } from 'react-native';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
@@ -9,22 +9,37 @@ import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
-
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import { useAlert } from '@/presentation/hooks/useAlert';
 
-interface Solicitud {
-  id: number;
-  mensaje: string;
-  fecha_solicitud: string;
-  usuario_nombre: string; // Añadido para evitar el error
-  usuario_correo: string; // Añadido para evitar el error
+// Definimos las interfaces basadas en la respuesta real de la API
+interface solicitudes {
+  id: number; // Agregamos id basado en la respuesta de la API
+  usuario_id: number;
+  mensaje: string; // Agregamos mensaje basado en la respuesta de la API
+  fecha_solicitud: string; 
+  usuario_nombre: string;
+  usuario_correo: string;
+  usuario_imagen?: string;
+  estado?: string; 
+}
+
+interface SolicitudesResponse {
+  message: string;
+  solicitudes: solicitudes[]; 
+  total: number;
+}
+
+interface ErrorResponse {
+  success: boolean;
+  error: unknown;
 }
 
 const SolicitudesPendientes = () => {
-  const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
-  const [selectedSolicitud, setSelectedSolicitud] = useState<Solicitud | null>(null);
+  const [solicitudes, setSolicitudes] = useState<solicitudes[]>([]);
+  const [selectedSolicitud, setSelectedSolicitud] = useState<solicitudes | null>(null);
   const backgroundColor = useThemeColor({}, 'background');
-  
+  const {showAlert} = useAlert();
   const { user } = useAuthStore();
   const { 
     useSolicitudesDoctorQuery, 
@@ -33,23 +48,30 @@ const SolicitudesPendientes = () => {
 
   // Obtener solicitudes pendientes del doctor
   const { data: solicitudesData, isLoading, isError, refetch } = 
-    useSolicitudesDoctorQuery(user?.usuario_id || 0);
+    useSolicitudesDoctorQuery(user?.doctor_id || 0);
 
   useEffect(() => {
-    if (solicitudesData && 'solicitudes' in solicitudesData) {
-      setSolicitudes(solicitudesData.solicitudes.map(sol => ({
-        ...sol,
-        id: sol.usuario_id, // Asumiendo que usuario_id es el ID de la solicitud
-        mensaje: "Mensaje de solicitud", // Ajusta según tu estructura real
-        fecha_solicitud: new Date().toISOString(), // Ajusta según tu estructura real
-        usuario_correo: sol.usuario_correo || "", // Añadido para evitar el error
-      })));
-    } else if (solicitudesData && 'success' in solicitudesData && !solicitudesData.success) {
-      // Manejar error
-      console.error('Error al obtener solicitudes:', solicitudesData.error);
-      Alert.alert('Error', 'No se pudieron cargar las solicitudes');
+    if (solicitudesData) {
+      // Verificamos el tipo de respuesta usando type guards más específicos
+      if (isSolicitudesResponse(solicitudesData)) {
+        setSolicitudes(solicitudesData.solicitudes);
+      } else if (isErrorResponse(solicitudesData)) {
+        // Es una respuesta de error
+        console.error('Error al obtener solicitudes:', solicitudesData.error);
+        Alert.alert('Error', 'No se pudieron cargar las solicitudes');
+      }
     }
   }, [solicitudesData]);
+
+  // Type guard para verificar si es una respuesta exitosa
+  const isSolicitudesResponse = (data: any): data is SolicitudesResponse => {
+    return data && typeof data === 'object' && 'solicitudes' in data && Array.isArray(data.solicitudes);
+  };
+
+  // Type guard para verificar si es una respuesta de error
+  const isErrorResponse = (data: any): data is ErrorResponse => {
+    return data && typeof data === 'object' && 'success' in data && data.success === false;
+  };
 
   const handleResponderSolicitud = (respuesta: 'aceptada' | 'rechazada') => {
     if (!selectedSolicitud) return;
@@ -61,24 +83,39 @@ const SolicitudesPendientes = () => {
       },
       {
         onSuccess: (result) => {
-          if (result && 'success' in result && result.success) {
+          // Verificamos el tipo de respuesta
+          if (result && 'success' in result) {
+            if (result.success) {
+              const mensaje = respuesta === 'aceptada' 
+                ? `Solicitud aceptada. ${selectedSolicitud.usuario_nombre} es ahora tu paciente.`
+                : `Solicitud rechazada.`;
+              
+              showAlert('Éxito', mensaje);
+              
+              // Actualizar lista de solicitudes
+              setSolicitudes(prev => 
+                prev.filter(s => s.id !== selectedSolicitud.id)
+              );
+            } else {
+              showAlert('Error', 'No se pudo procesar la respuesta');
+            }
+          } else {
+            // Asumimos que si no tiene 'success', fue exitoso
             const mensaje = respuesta === 'aceptada' 
               ? `Solicitud aceptada. ${selectedSolicitud.usuario_nombre} es ahora tu paciente.`
               : `Solicitud rechazada.`;
             
-            Alert.alert('Éxito', mensaje);
+            showAlert('Éxito', mensaje);
             
             // Actualizar lista de solicitudes
             setSolicitudes(prev => 
               prev.filter(s => s.id !== selectedSolicitud.id)
             );
-          } else {
-            Alert.alert('Error', 'No se pudo procesar la respuesta');
           }
           setSelectedSolicitud(null);
         },
         onError: (error) => {
-          Alert.alert('Error', 'Error de conexión');
+          showAlert('Error', 'Error de conexión');
           console.error('Error al responder solicitud:', error);
         }
       }
@@ -176,7 +213,7 @@ const SolicitudesPendientes = () => {
                       </ThemedText>
                       
                       <ThemedText style={styles.solicitudMensaje} numberOfLines={2}>
-                        {solicitud.mensaje}
+                        {solicitud?.mensaje ? solicitud.mensaje : 'Hola doctor, me gustaría ser paciente!'}
                       </ThemedText>
                       
                       <ThemedText style={styles.verDetalles}>
@@ -206,6 +243,13 @@ const SolicitudesPendientes = () => {
                   Solicitud de {selectedSolicitud.usuario_nombre}
                 </ThemedText>
                 
+                {selectedSolicitud.usuario_imagen && (
+                  <Image 
+                    source={{ uri: selectedSolicitud.usuario_imagen }} 
+                    style={styles.userImage}
+                  />
+                )}
+                
                 <ThemedText style={styles.modalLabel}>Correo electrónico:</ThemedText>
                 <ThemedText style={styles.modalValue}>{selectedSolicitud.usuario_correo}</ThemedText>
                 
@@ -217,7 +261,7 @@ const SolicitudesPendientes = () => {
                 <ThemedText style={styles.modalLabel}>Mensaje:</ThemedText>
                 <View style={styles.mensajeContainer}>
                   <ThemedText style={styles.mensajeText}>
-                    {selectedSolicitud.mensaje}
+                    {selectedSolicitud?.mensaje ? selectedSolicitud.mensaje : 'Hola doctor, me gustaría ser paciente!'}
                   </ThemedText>
                 </View>
                 
@@ -237,7 +281,6 @@ const SolicitudesPendientes = () => {
                     backgroundColor="#e74c3c"
                     onPress={() => handleResponderSolicitud('rechazada')}
                     disabled={responderSolicitudMutation.isPending}
-                    style={{ marginHorizontal: 10 }}
                   >
                     Rechazar
                   </ThemedButton>
@@ -342,6 +385,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
+  },
+  userImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: 'center',
+    marginBottom: 15,
   },
   modalLabel: {
     fontWeight: 'bold',

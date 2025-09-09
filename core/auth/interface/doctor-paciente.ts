@@ -15,11 +15,14 @@ export interface UsuarioBase {
 // Paciente extiende de UsuarioBase
 export interface Paciente extends UsuarioBase {
   escolaridad: string;
+  domicilio:   string;
+  paciente_id: number;
 }
 
 // Doctor extiende de UsuarioBase
 export interface Doctor extends UsuarioBase {
   especialidad: string;
+  domicilio:         string;
 }
 
 // Respuesta genérica
@@ -48,4 +51,5 @@ export interface Vinculacione {
     especialidad:      string;
     paciente_nombre:   string;
     escolaridad:       string;
+    domicilio:         string;
 }

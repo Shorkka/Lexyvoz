@@ -12,7 +12,8 @@ export class UserMapper {
       especialidad: apiUser.especialidad || undefined,
       domicilio: apiUser.domicilio || undefined,
       codigo_postal: apiUser.codigo_postal || undefined,
-      imagen_url: apiUser.imagen_url || undefined
+      imagen_url: apiUser.imagen_url || undefined,
+      doctor_id: apiUser.doctor_id || undefined
     };
   }
 }

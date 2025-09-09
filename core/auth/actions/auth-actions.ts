@@ -22,6 +22,9 @@ export interface AuthResponse {
     especialidad?:        string;
     domicilio:           string;
     codigo_postal:        string;
+    tipo_id:              number;
+    doctor_id?:          number;
+    paciente_id?:        number;
 }
 
 export interface RecoveryResponse {

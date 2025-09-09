@@ -12,10 +12,8 @@ const StackLayout = () => {
   const pathname = usePathname();
   const handleHeaderLeftPress = () => {
     if (pathname === '/main') {
-      // Si estamos en /main, abre el drawer
       navigation.dispatch(DrawerActions.toggleDrawer());
     } else if (router.canGoBack()) {
-      // Si hay historial, regresa
       router.back();
     }
   }
@@ -43,8 +41,8 @@ const StackLayout = () => {
             
               })}
             >
-              {pathname === 'main' ? (
-                <Ionicons name="arrow-back-outline" size={24} color={'white'} />
+              {pathname !== '/main' ? (
+                <Ionicons name="arrow-back-outline" size={24} color={'#ffa500'} />
               ) : (
                 <Image 
                   source={avatar} 
@@ -77,7 +75,67 @@ const StackLayout = () => {
           
         }} 
       />
-    </Stack>
+      <Stack.Screen 
+        name="add_paciente/index" 
+        options={{ 
+          title: ' ',
+          headerShown: true,
+          presentation: 'modal'
+        }}
+      />
+      <Stack.Screen 
+        name="kits/kits-list/index" 
+        options={{ 
+          title: 'Listar Kit',
+          headerShown: true,
+          presentation: 'modal'
+        }}
+      />
+      <Stack.Screen 
+        name="kits/createKit/index" 
+        options={{ 
+          title: 'Crear Kits',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen 
+        name="kits/editKit/[kitId]/index" 
+        options={{ 
+          title: 'Editar Kit',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen 
+        name="agenda/index" 
+        options={{ 
+          title: 'Agenda',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name = "ver_perfil_usuario/[paciente_id]/index"
+        options={{ 
+          title: 'Perfil paciente',
+          headerShown: true,
+        }}
+      />
+          <Stack.Screen 
+        name="(common)/notificaciones/index" 
+        options={{ 
+          title: 'Notificaciones',
+          headerBackVisible: true
+        }} 
+      />
+            <Stack.Screen 
+        name="kits/(terminardeCrearKit)/index" 
+        options={{ 
+          title: 'Terminar de Crear Kit',
+          headerShown: true,
+        }}
+      />
+
+      </Stack>
+
   );
 };
 

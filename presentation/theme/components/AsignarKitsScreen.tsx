@@ -1,12 +1,12 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 
-const index = () => {
+const AsignarKitsScreen = () => {
   return (
     <View>
-      <Text>index</Text>
+      <Text>AsignarKitsScreen</Text>
     </View>
   )
 }
 
-export default index
+export default AsignarKitsScreen

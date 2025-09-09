@@ -50,11 +50,22 @@ export const vincularDoctorConUsuario = async (doctor_id: number, usuario_id: nu
 // Obtiene todos los pacientes de un doctor
 export const obtenerPacientesDeDoctor = async (doctor_id: number) => {
   try {
-    const { data } = await productsApi.get(`/doctor-paciente/${doctor_id}/pacientes`);
-    return DoctorPacienteMapper.toDomain<Doctor>(data);
+    const { data } = await productsApi.get(`/doctor-paciente/doctor/${doctor_id}/pacientes`);
+
+    // Asegúrate de que la respuesta tenga la estructura correcta
+    if (data && data.pacientes) {
+      return DoctorPacienteMapper.toDomain<Paciente>(data);
+    } else {
+      console.error('Estructura de datos inesperada:', data);
+      return { 
+        message: 'Estructura de datos inesperada', 
+        data: [], 
+        total: 0 
+      };
+    }
   } catch (error) {
     console.error('Error al obtener pacientes de doctor:', error);
-    return { success: false, error };
+    throw error; // Importante: lanzar el error para que React Query lo capture
   }
 }
 
@@ -62,10 +73,20 @@ export const obtenerPacientesDeDoctor = async (doctor_id: number) => {
 export const obtenerDoctoresDePaciente = async (paciente_id: number) => {
   try {
     const { data } = await productsApi.get(`/doctor-paciente/${paciente_id}/doctores`);
-    return DoctorPacienteMapper.toDomain<Paciente>(data);
+    
+    if (data && data.doctores) {
+      return DoctorPacienteMapper.toDomain<Doctor>(data);
+    } else {
+      console.error('Estructura de datos inesperada:', data);
+      return { 
+        message: 'Estructura de datos inesperada', 
+        data: [], 
+        total: 0 
+      };
+    }
   } catch (error) {
     console.error('Error al obtener doctores de paciente:', error);
-    return { success: false, error };
+    throw error;
   }
 }
 

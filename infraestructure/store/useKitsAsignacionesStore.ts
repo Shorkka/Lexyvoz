@@ -32,11 +32,11 @@ export const useKitsAsignacionesStore = () => {
     });
 
   // 🔹 Obtener kits asignados a un paciente
-  const useKitsAsignadosAPacientesQuery = (paciente_id?: string, page?: number, limit?: number) =>
+  const useKitsAsignadosAPacientesQuery = (pacienteId: number, page?: number, limit?: number) =>
     useQuery({
-      queryKey: ["kits-asignados", "paciente", paciente_id, { page, limit }],
-      queryFn: () => obtenerKitsAsignadosAPacientesPorID(paciente_id as string, page, limit),
-      enabled: !!paciente_id,
+      queryKey: ["kits-asignados", "paciente", pacienteId, { page, limit }],
+      queryFn: () => obtenerKitsAsignadosAPacientesPorID(pacienteId, page, limit),
+      enabled: !!pacienteId,
       staleTime: 1000 * 60 * 5,
     });
 

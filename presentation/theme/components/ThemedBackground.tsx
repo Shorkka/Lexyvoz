@@ -8,7 +8,8 @@ type Props = {
   align?: 'center' | 'left' | 'right';
   color?: string;
   style?: object;
-  fullHeight?: boolean; 
+  height?: number | `${number}%`;
+  fullHeight?: boolean;
   justifyContent?: 'center' | 'flex-start' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly';
 
 };
@@ -17,6 +18,7 @@ const ThemedBackground = ({
   children,
   backgroundColor = 'white',
   width = '80%',
+  height,
   align = 'center',
   style = {},
   fullHeight = false,
@@ -44,7 +46,7 @@ const ThemedBackground = ({
                     default: Math.min(400, windowWidth * 0.95),
                   }),
             alignSelf,
-            height: fullHeight ? windowHeight * 0.8 : undefined, // <- CLAVE
+            height: fullHeight ? windowHeight * 0.8 : height, // <- CLAVE
             justifyContent
           },
         ]}
@@ -76,7 +78,10 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
       web: {
-        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.08)',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.6,
+          shadowRadius: 5,
       },
     }),
   },

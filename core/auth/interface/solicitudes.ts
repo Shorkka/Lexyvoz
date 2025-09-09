@@ -11,10 +11,13 @@ export interface Estadisticas {
 }
 
 export interface Solicitudes<T> {
-    message:     string;
+    message: string;
     solicitudes: T[];
-    total:       number;
+    total: number;
+    success?: boolean; // Para respuestas de error
+    error?: any; // Para respuestas de error
 }
+
 
 export interface Pendientes{
     usuario_id:      number;

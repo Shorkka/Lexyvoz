@@ -1,77 +1,76 @@
+// En RenderizarPaciente.tsx
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { ThemedText } from './ThemedText';
+import { View, FlatList, Pressable, StyleSheet } from 'react-native';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { Paciente } from '@/core/auth/interface/doctor-paciente';
 
-interface Paciente {
-  usuario_id: string;
-  nombre: string;
-  correo: string;
-  imagen_url?: string;
-  escolaridad?: string;
-}
+
 
 interface RenderizarPacienteProps {
   pacientes: Paciente[];
   searchText: string;
+  onPacientePress?: (pacienteId: number) => void; // Nueva prop
 }
 
-const RenderizarPaciente: React.FC<RenderizarPacienteProps> = ({ pacientes, searchText }) => {
-  const normalizedSearch = searchText.toLowerCase();
-
-  const filteredPacientes = pacientes.filter((p) =>
-    (p.nombre ?? "").toLowerCase().includes(normalizedSearch) ||
-    (p.correo ?? "").toLowerCase().includes(normalizedSearch)
+const RenderizarPaciente: React.FC<RenderizarPacienteProps> = ({ 
+  pacientes, 
+  searchText, 
+  onPacientePress 
+}) => {
+  // Filtrar pacientes según el texto de búsqueda
+  const filteredPacientes = pacientes.filter(paciente =>
+    paciente.nombre.toLowerCase().includes(searchText.toLowerCase()) ||
+    paciente.correo.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  if (filteredPacientes.length === 0) {
-    return <ThemedText style={{ marginTop: 10 }}>No se encontraron pacientes</ThemedText>;
-  }
-
   return (
-    <View style={styles.container}>
-      {filteredPacientes.map((paciente) => (
-        <View key={paciente.usuario_id} style={styles.card}>
-          {paciente.imagen_url ? (
-            <Image source={{ uri: paciente.imagen_url }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]} />
-          )}
-          <View style={{ flex: 1 }}>
-            <ThemedText style={styles.name}>{paciente.nombre}</ThemedText>
-            <ThemedText>{paciente.correo}</ThemedText>
-            {paciente.escolaridad && <ThemedText>Escolaridad: {paciente.escolaridad}</ThemedText>}
+    <FlatList
+      data={filteredPacientes}
+      keyExtractor={(item) => item.usuario_id.toString()}
+      renderItem={({ item }) => (
+        <Pressable 
+          style={styles.pacienteItem}
+          onPress={() => onPacientePress && onPacientePress(Number(item.usuario_id))}
+        >
+          <View style={styles.pacienteInfo}>
+            <ThemedText style={styles.pacienteNombre}>
+              {item.nombre}
+            </ThemedText>
+            <ThemedText style={styles.pacienteEmail}>
+              {item.correo}
+            </ThemedText>
           </View>
-        </View>
-      ))}
-    </View>
+        </Pressable>
+      )}
+      contentContainerStyle={styles.listContainer}
+    />
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    marginTop: 10,
+  listContainer: {
+    paddingBottom: 16,
   },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    padding: 12,
+  pacienteItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderRadius: 8,
-    marginBottom: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+  pacienteInfo: {
+    flex: 1,
   },
-  avatarPlaceholder: {
-    backgroundColor: '#ccc',
-  },
-  name: {
-    fontWeight: 'bold',
+  pacienteNombre: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  pacienteEmail: {
+    fontSize: 14,
+    color: '#666',
   },
 });
 

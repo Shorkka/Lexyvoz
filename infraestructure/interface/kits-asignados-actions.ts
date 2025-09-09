@@ -65,12 +65,12 @@ export const eliminarKitAsignado = async (kitAsignadoId: string) => {
 };
 
 // Obtener kits asignados a pacientes
-export const obtenerKitsAsignadosAPacientesPorID = async (paciente_id: string, 
+export const obtenerKitsAsignadosAPacientesPorID = async (pacienteId: number, 
   page?: number,
   limit?: number
   ) => {
   try {
-    const { data } = await productsApi.get(`/kits-asignados/pacientes/${paciente_id}`, {
+    const { data } = await productsApi.get(`/kits-asignados/paciente/${pacienteId}`, {
       params: { page, limit }
     });
     return KitsAsignadosAPacientesPorIDMapper.toResponse(data);

@@ -1,5 +1,5 @@
 import { productsApi } from "@/core/auth/api/productsApi";
-import { EjercicioResponseMapper, EjerciciosDeLosKitsMapper, EjerciciosDisponiblesParaUnKitMapper, EjercicioUsuarioActualMapper, EstadisticasEjerciciosMapper, ReactivoMapper, VerificarCompatibilidadMapper } from "../mappers/ejercicios.mapper";
+import { EjercicioResponseMapper,  EjerciciosDisponiblesParaUnKitMapper, EjercicioUsuarioActualMapper, EstadisticasEjerciciosMapper, ReactivoMapper, TiposEjerciciosMapper, VerificarCompatibilidadMapper } from "../mappers/ejercicios.mapper";
 
 export interface EjercicioData{
     titulo: string;
@@ -133,14 +133,20 @@ export const obtenerEjerciciosPorTipo = async (
     activo?: boolean
 ) => {
     try {
-        const { data } = await productsApi.get(`/ejercicios/tipo/${tipo_id}`, {
+        const response = await productsApi.get(`/ejercicios/tipo/${tipo_id}`, {
             params: {
                 page,
                 limit,
                 activo
             }
         });
-        return EjercicioResponseMapper.toObtenerTodosLosEjercicios(data);
+        
+        
+        
+        return {
+            data: TiposEjerciciosMapper.toTiposEjercicios(response.data), // Pass the whole response.data
+            pagination: response.data.pagination, // This might be at the root level
+        };  
     } catch (error) {
         console.error("Error fetching exercises by type:", error);
         throw error;
@@ -293,7 +299,7 @@ export const obtenerEjerciciosDeKitPorID = async (
                 limit
             }
         });
-        return EjerciciosDeLosKitsMapper.toEjerciciosDeLosKits(data);
+        return EjerciciosDisponiblesParaUnKitMapper.toEjerciciosDisponiblesParaUnKit(data);
     } catch (error) {
         console.error("Error fetching exercises from kit:", error);
         throw error;

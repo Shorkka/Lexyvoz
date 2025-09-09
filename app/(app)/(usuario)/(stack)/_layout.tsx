@@ -44,8 +44,8 @@ const StackLayout = () => {
               marginRight: 5
             })}
           >
-            {pathname === 'home' ? (
-              <Ionicons name="arrow-back-outline" size={24} color={'white'} />
+            {pathname !== '/home' ? (
+              <Ionicons name="arrow-back-outline" size={24} color={'#ffa500'} />
             ) : (
               <Image 
                 source={avatar} 
@@ -86,9 +86,44 @@ const StackLayout = () => {
       <Stack.Screen 
         name="busqueda-doctores/index" 
         options={{ 
-          title: 'Buscar Doctores',
+          title: ' ',
+          headerBackVisible: false
+        }}
+      />
+      <Stack.Screen 
+        name="juegos/[kitId]/index" 
+        options={{ 
+          title: '',
           headerBackVisible: true
         }}
+      />
+        <Stack.Screen 
+        name="juegos/escrito/index" 
+        options={{ 
+          title: '',
+          headerBackVisible: true
+        }}
+      />
+        <Stack.Screen 
+        name="juegos/lectura/index" 
+        options={{ 
+          title: '',
+          headerBackVisible: true
+        }}
+      />
+        <Stack.Screen 
+        name="juegos/visual/index" 
+        options={{ 
+          title: '',
+          headerBackVisible: true
+        }}
+      />
+    <Stack.Screen 
+        name="perfil/index" 
+        options={{ 
+          title: 'Perfil',
+          headerBackVisible: false
+        }} 
       />
     </Stack>
   );

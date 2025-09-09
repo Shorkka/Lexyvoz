@@ -1,4 +1,4 @@
-import { EjerciciosDeLosKits, EjerciciosDisponiblesParaUnKit, EstadisticasEjercicios, ObtenerEjercicioID, ObtenerEjericiosUsuarioActual, ObtenerReactivoDeEjercicio, ObtenerTodosLosEjercicios, VerificarCompatibilidad } from "@/core/auth/interface/ejercicios";
+import { EjerciciosDeLosKits, EjerciciosDisponiblesParaUnKit, EstadisticasEjercicios, ObtenerEjercicioID, ObtenerEjericiosUsuarioActual, ObtenerReactivoDeEjercicio, ObtenerEjercicioPorTipo, ObtenerTodosLosEjercicios, VerificarCompatibilidad } from "@/core/auth/interface/ejercicios";
 
 
 // Mapeo de la respuesta de obtenerEjercicioPor
@@ -15,9 +15,10 @@ export class EjercicioResponseMapper {
                 activo: ejercicio.activo
             })),
             pagination: {
-                totalItems: data.pagination.totalItems,
-                totalPages: data.pagination.totalPages,
-                currentPage: data.pagination.currentPage
+                current_page: data.pagination.current_page,
+                total_pages: data.pagination.total_pages,
+                total_items: data.pagination.total_items,
+                items_per_page: data.pagination.items_per_page
             }
         };
     };
@@ -52,10 +53,8 @@ export class EstadisticasEjerciciosMapper {
                 total_ejercicios: data.estadisticas.total_ejercicios,
                 ejercicios_activos: data.estadisticas.ejercicios_activos,
                 ejercicios_inactivos: data.estadisticas.ejercicios_inactivos,
-                por_tipo: data.estadisticas.por_tipo.map((item: any) => ({
-                    tipo: item.tipo,
-                    cantidad: item.cantidad
-                }))
+                total_creados: data.estadisticas.total_creados,
+                tipos_diferentes: data.estadisticas.tipos_diferentes,
             }
         };
     };
@@ -111,6 +110,32 @@ export class ReactivoMapper {
                 activo: ejercicio.activo
             })),
             total_reactivos: data.total_reactivos
+        };
+    };
+}
+
+// tipos de ejercicios
+export class TiposEjerciciosMapper {
+    static toTiposEjercicios = (data: any): ObtenerEjercicioPorTipo => {
+        return {
+            message: data.message,
+            data: data.data?.map((item: any) => ({
+                ejercicio_id: item.ejercicio_id,
+                titulo: item.titulo,
+                descripcion: item.descripcion,
+                creado_por: item.creado_por,    
+                tipo_ejercicio: item.tipo_ejercicio,
+                created_at: item.created_at,
+                activo: item.activo,
+                creado_nombre: item.creado_nombre,
+                tipo_nombre: item.tipo_nombre
+            })) || [],
+            pagination: {
+                  total_items: data.pagination.total_items,
+                total_pages: data.pagination.total_pages,
+                current_page: data.pagination.current_page,
+                items_per_page: data.pagination.items_per_page
+            || {}} 
         };
     };
 }

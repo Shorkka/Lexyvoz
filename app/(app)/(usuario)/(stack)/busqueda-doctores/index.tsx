@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { 
   View, SafeAreaView, StyleSheet, KeyboardAvoidingView, 
-  ScrollView, Pressable, Modal, Alert 
+  ScrollView, Pressable, Modal 
 } from 'react-native';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
@@ -12,45 +12,107 @@ import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { RenderizarDoctores } from '@/presentation/theme/components/RenderizarDoctores';
 import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
 import { useAuthKitsStore } from '@/infraestructure/store/useAuthKitsStore ';
+import { useAlert } from '@/presentation/hooks/useAlert';
+import Filtro from '@/presentation/theme/components/Filtro';
+
 interface Doctor {
-  usuario_id: string;
+  doctor_id: string;
   nombre: string;
   especialidad?: string;
   correo: string;
   numero_telefono: string;
+  ubicacion?: string;
 }
 
 const Search = () => {
   const [form, setForm] = useState({ busqueda: '' });
   const [page, setPage] = useState(1);
+  const [filtro, setFiltro] = useState('ninguno'); // 'nombre', 'especialidad', 'ubicacion', 'ninguno'
+  const [orden, setOrden] = useState<'asc' | 'desc'>('asc');
   const limit = 5; 
   const backgroundColor = useThemeColor({}, 'background');
   const [canGoNext, setCanGoNext] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [mensajeSolicitud, setMensajeSolicitud] = useState('');
-  // Obtener la mutación
-  const {enviarSolicitudMutation} = useSolicitudesVinculacionStore();
-
+  const { showAlert } = useAlert();
+  
+  const { enviarSolicitudMutation } = useSolicitudesVinculacionStore();
   const { useObtenerDoctoresQuery } = useAuthKitsStore();
-  const { data: doctorsData, isLoading, isError } = useObtenerDoctoresQuery(page, limit, form.busqueda);
+  
+  // Obtenemos todos los doctores sin paginación para poder filtrar
+  const { data: doctorsData, isLoading, isError } = useObtenerDoctoresQuery(
+    1, // Siempre página 1
+    100, 
+    form.busqueda // Término de búsqueda
+  );
+
+  // Función para ordenar los doctores
+  const doctoresOrdenados = useMemo(() => {
+    if (!doctorsData?.doctors) return [];
+    
+    let doctores = [...doctorsData.doctors];
+    
+    // Aplicar filtro según la selección
+    if (filtro !== 'ninguno') {
+      doctores.sort((a, b) => {
+        let valueA = '';
+        let valueB = '';
+        
+        switch (filtro) {
+          case 'nombre':
+            valueA = a.nombre || '';
+            valueB = b.nombre || '';
+            break;
+          case 'especialidad':
+            valueA = a.especialidad || '';
+            valueB = b.especialidad || '';
+            break;
+          case 'ubicacion':
+            valueA = a.ubicacion || '';
+            valueB = b.ubicacion || '';
+            break;
+          default:
+            return 0;
+        }
+        
+        // Ordenar ascendente o descendente
+        if (orden === 'asc') {
+          return valueA.localeCompare(valueB);
+        } else {
+          return valueB.localeCompare(valueA);
+        }
+      });
+    }
+    
+    return doctores;
+  }, [doctorsData, filtro, orden]);
+
+  // Paginación manual
+  const doctoresPaginados = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return doctoresOrdenados.slice(startIndex, startIndex + limit);
+  }, [doctoresOrdenados, page, limit]);
 
   const handleSearch = (text: string) => {
     setForm({ busqueda: text });
-    setPage(1);
+    setPage(1); // Reiniciar a primera página al buscar
+  };
+
+  const handleFilterChange = (nuevoFiltro: string, nuevoOrden: 'asc' | 'desc') => {
+    setFiltro(nuevoFiltro);
+    setOrden(nuevoOrden);
+    setPage(1); // Reiniciar a primera página al cambiar filtro
   };
 
   useEffect(() => {
+    console.log('Doctores ordenados:', doctoresOrdenados);
+    const totalDoctores = doctoresOrdenados.length;
     setCanGoBack(page > 1);
-    setCanGoNext(!!doctorsData && (page * limit) < doctorsData.total);
-  }, [page, doctorsData]);
+    setCanGoNext(page * limit < totalDoctores);
+  }, [page, doctoresOrdenados, limit]);
 
   const vincularPaciente = (doctorId: string) => {
-    if (!mensajeSolicitud.trim()) {
-      Alert.alert('Error', 'Por favor, escribe un mensaje para el doctor');
-      return;
-    }
-
     enviarSolicitudMutation.mutate(
       { 
         doctor_id: parseInt(doctorId), 
@@ -59,15 +121,15 @@ const Search = () => {
       {
         onSuccess: (result) => {
           if (result.success) {
-            Alert.alert('Éxito', 'Solicitud enviada correctamente');
+            showAlert('Éxito', 'Solicitud enviada correctamente');
             setSelectedDoctor(null);
             setMensajeSolicitud('');
           } else {
-            Alert.alert('Error al enviar la solicitud');
+            showAlert('Éxito', 'Solicitud enviada correctamente');
           }
         },
         onError: (error) => {
-          Alert.alert('Error', 'Error de conexión');
+          showAlert('Error', 'Error de conexión');
           console.error('Error en mutación:', error);
         }
       }
@@ -85,18 +147,31 @@ const Search = () => {
                 <ThemedText type='title' style={{ color: 'black', marginBottom: 15 }}>
                   Encuentra a un doctor
                 </ThemedText>
-
-                <ThemedTextInput
-                  placeholder="Buscar doctor"
-                  autoCapitalize="words"
-                  icon="search"
-                  style={styles.searchInput}
-                  value={form.busqueda}
-                  onChangeText={handleSearch}
-                />
+                
+                {/* Contenedor flexible para búsqueda y filtro */}
+                <View style={styles.busquedaContainer}>
+                  <View style={styles.busquedaInput}>
+                    <ThemedTextInput
+                      placeholder="Buscar doctor"
+                      color="#fff"
+                      autoCapitalize="words"
+                      icon="search"
+                      value={form.busqueda}
+                      onChangeText={handleSearch}
+                    />
+                  </View>
+                  
+                  <View style={styles.filtroContainer}>
+                    <Filtro 
+                      onFilterChange={handleFilterChange}
+                      filtroActual={filtro}
+                      ordenActual={orden}
+                    />
+                  </View>
+                </View>
               </View>
 
-              {/* Contenido principal con scroll */}
+              {/* Contenido principal */}
               <View style={styles.content}>
                 {isLoading ? (
                   <ThemedText style={{ color: 'white', textAlign: 'center', marginVertical: 20 }}>
@@ -108,9 +183,13 @@ const Search = () => {
                   </ThemedText>
                 ) : (
                   <View style={styles.doctorsContainer}>
+                    <ThemedText style={{ color: 'white', marginBottom: 10 }}>
+                      {doctoresOrdenados.length} doctores encontrados
+                    </ThemedText>
+                    
                     <ScrollView style={styles.doctorsScroll}>
-                      {doctorsData?.doctors?.length ? (
-                        doctorsData.doctors.map((doctor: any) => (
+                      {doctoresPaginados.length ? (
+                        doctoresPaginados.map((doctor: any) => (
                           <Pressable 
                             key={doctor.usuario_id} 
                             style={{ opacity: 1}} 
@@ -127,83 +206,85 @@ const Search = () => {
                     </ScrollView>
 
                     {/* Pagination controls */}
-                    <View style={styles.paginationContainer}>
-                      <ThemedButton 
-                        icon='caret-back-outline'
-                        backgroundColor={canGoBack ? '#ee7200' : 'grey'}
-                        onPress={() => setPage(p => Math.max(1, p - 1))}
-                        disabled={!canGoBack}
-                      />
-                      <ThemedText style={{ color: 'white' }}>Página {page}</ThemedText>
-                      <ThemedButton 
-                        icon='caret-forward-outline'
-                        onPress={() => setPage(p => p + 1)} 
-                        disabled={!canGoNext}
-                        backgroundColor={canGoNext ? '#ee7200' : 'grey'}
-                      />
-                    </View>
+                    {doctoresOrdenados.length > 0 && (
+                      <View style={styles.paginationContainer}>
+                        <ThemedButton 
+                          icon='caret-back-outline'
+                          backgroundColor={canGoBack ? '#ee7200' : 'grey'}
+                          onPress={() => setPage(p => Math.max(1, p - 1))}
+                          disabled={!canGoBack}
+                        />
+                        <ThemedText style={{ color: 'white' }}>
+                          Página {page} de {Math.ceil(doctoresOrdenados.length / limit)}
+                        </ThemedText>
+                        <ThemedButton 
+                          icon='caret-forward-outline'
+                          onPress={() => setPage(p => p + 1)} 
+                          disabled={!canGoNext}
+                          backgroundColor={canGoNext ? '#ee7200' : 'grey'}
+                        />
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
             </View>
           </ThemedBackground>
+
+          {/* Modal para mostrar info del doctor */}
+          <Modal
+            visible={!!selectedDoctor}
+            animationType="slide"
+            transparent={true}
+            onRequestClose={() => {
+              setSelectedDoctor(null);
+              setMensajeSolicitud('');
+            }}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <ThemedText type="title">{selectedDoctor?.nombre}</ThemedText>
+                <ThemedText>Especialidad: {selectedDoctor?.especialidad || "N/A"}</ThemedText>
+                <ThemedText>Email: {selectedDoctor?.correo}</ThemedText>
+                <ThemedText>Teléfono: {selectedDoctor?.numero_telefono}</ThemedText>
+
+                {/* Campo para el mensaje */}
+                <ThemedTextInput
+                  placeholder="Escribe un mensaje para el doctor"
+                  multiline
+                  numberOfLines={3}
+                  style={styles.mensajeInput}
+                  value={mensajeSolicitud}
+                  onChangeText={setMensajeSolicitud}
+                />
+
+                <View style={styles.modalButtons}>
+                  <ThemedButton 
+                    backgroundColor="grey"
+                    onPress={() => {
+                      setSelectedDoctor(null);
+                      setMensajeSolicitud('');
+                    }}
+                    disabled={enviarSolicitudMutation.isPending}
+                  >
+                    Cancelar
+                  </ThemedButton>
+                  <ThemedButton 
+                    backgroundColor="#ee7200"
+                    onPress={() => vincularPaciente(selectedDoctor!.doctor_id)}
+                    disabled={enviarSolicitudMutation.isPending}
+                  >
+                    {enviarSolicitudMutation.isPending ? 'Enviando...' : 'Enviar Solicitud'}
+                  </ThemedButton>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
-      {/* Modal para mostrar info del doctor */}
-      <Modal
-        visible={!!selectedDoctor}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => {
-          setSelectedDoctor(null);
-          setMensajeSolicitud('');
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <ThemedText type="title">{selectedDoctor?.nombre}</ThemedText>
-            <ThemedText>Especialidad: {selectedDoctor?.especialidad || "N/A"}</ThemedText>
-            <ThemedText>Email: {selectedDoctor?.correo}</ThemedText>
-            <ThemedText>Teléfono: {selectedDoctor?.numero_telefono}</ThemedText>
-
-            {/* Campo para el mensaje */}
-            <ThemedTextInput
-              placeholder="Escribe un mensaje para el doctor"
-              multiline
-              numberOfLines={3}
-              style={styles.mensajeInput}
-              value={mensajeSolicitud}
-              onChangeText={setMensajeSolicitud}
-            />
-
-            <View style={styles.modalButtons}>
-              <ThemedButton 
-                backgroundColor="grey"
-                onPress={() => {
-                  setSelectedDoctor(null);
-                  setMensajeSolicitud('');
-                }}
-                disabled={enviarSolicitudMutation.isPending}
-              >
-                Cancelar
-              </ThemedButton>
-              <ThemedButton 
-                backgroundColor="#ee7200"
-                onPress={() => vincularPaciente(selectedDoctor!.usuario_id)}
-                disabled={enviarSolicitudMutation.isPending}
-              >
-                {enviarSolicitudMutation.isPending ? 'Enviando...' : 'Enviar Solicitud'}
-              </ThemedButton>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </AuthGuard>
   );
 };
-
-export default Search;
 
 const styles = StyleSheet.create({
   container: {
@@ -215,12 +296,17 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingTop: 20,
   },
-  searchInput: {
-    borderBottomWidth: 1,
-    borderColor: 'grey',
-    paddingVertical: 10,
-    fontSize: 16,
+  busquedaContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     width: '100%',
+  },
+  busquedaInput: {
+    flex: 6, // 60% del espacio
+    marginRight: 10,
+  },
+  filtroContainer: {
+    flex: 4, // 40% del espacio
   },
   content: {
     flex: 1,
@@ -271,3 +357,5 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 });
+
+export default Search;

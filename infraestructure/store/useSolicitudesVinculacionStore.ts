@@ -46,7 +46,7 @@ export const useSolicitudesVinculacionStore = () => {
       mensaje
     }: {
       doctor_id: number;
-      mensaje: string;
+      mensaje?: string;
     })=> enviarSolicitudAlDoctor(doctor_id, mensaje),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["solicitudesEnviadasUsuario"] });
