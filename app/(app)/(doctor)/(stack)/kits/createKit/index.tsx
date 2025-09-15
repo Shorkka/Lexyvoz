@@ -24,7 +24,7 @@ const CreateKits = () => {
   const [modality, setModality] = useState<Modality>(null);
   const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
   const [selectedExercises, setSelectedExercises] = useState<Data[]>([]);
-  
+
 const handleCreateKit = () => {
   const modalityId = modality ? tipoMap[modality] : null;
   const exerciseIds = selectedExercises.map(e => e.ejercicio_id);

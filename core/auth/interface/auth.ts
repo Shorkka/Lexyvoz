@@ -44,6 +44,8 @@ export interface UsuarioResponse {
 }
 
 export interface User {
+    doctor_id?:            string;
+    paciente_id?:          string;
     usuario_id:            string;
     nombre:                string;
     correo:                string;

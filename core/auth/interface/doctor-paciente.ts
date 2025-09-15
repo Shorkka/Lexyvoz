@@ -14,7 +14,7 @@ export interface UsuarioBase {
 
 // Paciente extiende de UsuarioBase
 export interface Paciente extends UsuarioBase {
-  escolaridad: string;
+  escolaridad?: string;
   domicilio:   string;
   paciente_id: number;
 }
@@ -50,6 +50,6 @@ export interface Vinculacione {
     doctor_nombre:     string;
     especialidad:      string;
     paciente_nombre:   string;
-    escolaridad:       string;
+    escolaridad?:       string;
     domicilio:         string;
 }

@@ -23,7 +23,6 @@ export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje?: strin
       doctor_id, 
       mensaje 
     });
-    console.log('Respuesta exitosa:', data);
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error };
@@ -32,16 +31,13 @@ export const enviarSolicitudAlDoctor = async (doctor_id: number, mensaje?: strin
 export const obtenerSolicitudesDoctorPaciente = async (doctor_id: number) => {
     try {
         const { data } = await productsApi.get(`/solicitudes/doctor/${doctor_id}/pendientes`);
-        console.log('Respuesta cruda del backend:', data);
         
         // Verificar directamente la respuesta antes de mapear
         if (data && data.solicitudes && Array.isArray(data.solicitudes)) {
-            console.log('Solicitudes encontradas en respuesta:', data.solicitudes);
         }
         
         return SolicitudesPendientesMapper.toDomain<Pendientes>(data);
     } catch (error) {
-        console.error('Error al obtener solicitudes del doctor:', error);
         return { 
             success: false, 
             error,

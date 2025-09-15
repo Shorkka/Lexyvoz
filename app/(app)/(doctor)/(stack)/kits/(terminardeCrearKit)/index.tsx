@@ -11,6 +11,7 @@ import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useLocalSearchParams, router } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, View, StyleSheet, Platform, Alert } from 'react-native';
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
 // Mapeo de modalidades
 const modalidadMap: Record<number, string> = {
@@ -20,9 +21,9 @@ const modalidadMap: Record<number, string> = {
 };
 
 const TerminarDeCrearKit = () => {
-  const { exerciseIds, exerciseData, modality } = useLocalSearchParams();
+  const { exerciseIds, exerciseData, modality, } = useLocalSearchParams();
   const cardColor = useThemeColor({}, 'primary');
-
+  const {user} = useAuthStore();
   const [nombreKit, setNombreKit] = useState('');
   const [descripcion, setDescripcion] = useState('');
   
@@ -61,10 +62,14 @@ const TerminarDeCrearKit = () => {
       const kitData: CrearKitsConEjercicioResponse = {
         name: nombreKit.trim(),
         descripcion: descripcion.trim(),
-        creado_por: modalityId,
-        ejercicios: parsedIds,
+        creado_por: user?.doctor_id || 0,
+        ejercicios: parsedIds.map((id: number, index: number) => ({
+        ejercicio_id: id,
+        orden: index + 1,
+      })),
+        activo: true,
       };
-
+      console.log('Datos del kit a crear:', kitData);
       // Llamar a la mutación
       await crearKit(kitData);
 
