@@ -8,6 +8,7 @@ export class DoctorMapper {
       total: apiUser.total,
       count: apiUser.count,
       doctors: apiUser.doctors.map((doctor: any) => ({
+        doctor_id: doctor.doctor_id,
         usuario_id: doctor.usuario_id,
         nombre: doctor.nombre,
         correo: doctor.correo,

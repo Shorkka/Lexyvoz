@@ -84,7 +84,7 @@ const Search = () => {
         }
       });
     }
-    
+    console.log('Doctores después de ordenar:', doctores);
     return doctores;
   }, [doctorsData, filtro, orden]);
 
@@ -112,20 +112,23 @@ const Search = () => {
     setCanGoNext(page * limit < totalDoctores);
   }, [page, doctoresOrdenados, limit]);
 
-  const vincularPaciente = (doctorId: string) => {
+  const vincularPaciente = (doctorId: string | number) => {
+    
     enviarSolicitudMutation.mutate(
       { 
-        doctor_id: parseInt(doctorId), 
-        mensaje: mensajeSolicitud,
+        doctor_id: Number(doctorId), 
+        mensaje: mensajeSolicitud.trim()
+        
       },
       {
+        
         onSuccess: (result) => {
           if (result.success) {
             showAlert('Éxito', 'Solicitud enviada correctamente');
             setSelectedDoctor(null);
             setMensajeSolicitud('');
           } else {
-            showAlert('Éxito', 'Solicitud enviada correctamente');
+            showAlert('Error', 'Error al enviar la solicitud');
           }
         },
         onError: (error) => {
@@ -133,6 +136,7 @@ const Search = () => {
           console.error('Error en mutación:', error);
         }
       }
+      
     );
   };
 

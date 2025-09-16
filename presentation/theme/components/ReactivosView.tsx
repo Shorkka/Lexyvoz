@@ -24,8 +24,7 @@ const ReactivosView = ({ tipo_id, setSelectedExercises }: Props) => {
     const paginationData = data?.data?.pagination || data?.pagination;
 
     // Actualizar estado de los botones de paginación
-    useEffect(() => {
-        
+    useEffect(() => {        
         if (paginationData) {
             setCanGoBack(page > 1);
             setCanGoNext(page < paginationData.totalPages);

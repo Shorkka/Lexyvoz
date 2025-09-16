@@ -1,4 +1,4 @@
-import { View, KeyboardAvoidingView, SafeAreaView, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, useWindowDimensions, KeyboardAvoidingView, SafeAreaView, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import React from 'react';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -12,14 +12,14 @@ import { GlobalStyles } from '@/assets/styles/GlobalStyles';
 import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
 import { router } from 'expo-router';
 import { useDoctorPacienteStore } from '@/infraestructure/store/useDoctorPacienteStore';
-
 const DoctorScreen = () => {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const { user } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
   const [searchText, setSearchText] = React.useState('');
   
   const { usePacientesDeDoctorQuery } = useDoctorPacienteStore();
-  console.log('Paciente ID en DoctorScreen:', user);
   const { 
     data: pacientesData, 
     isLoading, 
@@ -112,7 +112,7 @@ const DoctorScreen = () => {
               </View>
 
               {/* Columna derecha: Kits */}
-              <View style={styles.rightColumn}>
+              <View style={[styles.rightColumn, isMobile && { marginTop: 20 }]}>
                 <View style={styles.sectionTitle}>
                   <ThemedText style={styles.sectionTitleText}>Kits</ThemedText>
                 </View>

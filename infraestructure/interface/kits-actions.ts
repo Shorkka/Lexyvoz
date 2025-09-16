@@ -12,6 +12,7 @@ export interface CrearKitsConEjercicioResponse {
   descripcion: string;
   creado_por:  number;
   ejercicios:  Ejercicio[];
+  activo:      boolean;
 }
 
 export interface Ejercicio {

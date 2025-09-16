@@ -15,7 +15,6 @@ import { useAlert } from '@/presentation/hooks/useAlert';
 // Definimos las interfaces basadas en la respuesta real de la API
 interface solicitudes {
   id: number; // Agregamos id basado en la respuesta de la API
-  usuario_id: number;
   mensaje: string; // Agregamos mensaje basado en la respuesta de la API
   fecha_solicitud: string; 
   usuario_nombre: string;

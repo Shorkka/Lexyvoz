@@ -36,7 +36,7 @@ const AsignarKitsScreen = () => {
     error
   } = usePacientesDeDoctorQuery(user?.doctor_id);
   
-  console.log('User en AsignarKitsScreen:', paciente_id);
+  console.log('User en AsignarKitsScreen:', pacientesData);
   console.log('Domicilio del paciente:', pacientesData?.data?.map(p => p.domicilio));
   // Ajusta esto según la estructura real de tu respuesta API
   const pacientes = pacientesData?.data || [];
@@ -108,7 +108,7 @@ const AsignarKitsScreen = () => {
                         <ThemedText style={styles.pacienteId}>
                         </ThemedText>
                         <RenderizarKitsAsignadosVistaDoctor 
-                          pacienteId={Number(item?.usuario_id) || 0}
+                          pacienteId={(item?.paciente_id) || 0}
                         />
                         <RenderizarHistorialKitsAsignados/>
            
