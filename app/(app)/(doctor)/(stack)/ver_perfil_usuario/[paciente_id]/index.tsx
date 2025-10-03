@@ -20,115 +20,120 @@ import { useDoctorPacienteStore } from '@/infraestructure/store/useDoctorPacient
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import RenderizarHistorialKitsAsignados from '@/presentation/theme/components/RenderizarHistorialKitsAsignados';
 import RenderizarKitsAsignadosVistaDoctor from '@/presentation/theme/components/RenderizarKitsAsignadosVistaDoctor';
+import Hashids from "hashids";
 
 const AsignarKitsScreen = () => {
   const { paciente_id } = useLocalSearchParams();
+  const hashids = new Hashids("mi-secreto", 10);
+  const decoded = hashids.decode(paciente_id as string);
+  const realPacienteId = decoded[0]; // ID real numérico del paciente
+
   const backgroundColor = useThemeColor({}, 'background');
   const { usePacientesDeDoctorQuery } = useDoctorPacienteStore();
-  const {user} = useAuthStore();
+  const { user } = useAuthStore();
 
-
-  // Obtener pacientes
+  // Obtener pacientes del doctor
   const {
     data: pacientesData,
     isLoading,
     isError,
     error
   } = usePacientesDeDoctorQuery(user?.doctor_id);
-  
-  console.log('User en AsignarKitsScreen:', pacientesData);
-  console.log('Domicilio del paciente:', pacientesData?.data?.map(p => p.domicilio));
-  // Ajusta esto según la estructura real de tu respuesta API
+
   const pacientes = pacientesData?.data || [];
   const pacienteFiltrado = pacientes.filter(
-    (p) => String(p.usuario_id) === String(paciente_id)
+    (p) => String(p.usuario_id) === String(realPacienteId)
   );
+
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ScrollView>
-          <ThemedBackground
-            justifyContent="space-between"
-            fullHeight
-            backgroundColor="#fba557"
-            style={[GlobalStyles.orangeBackground, { padding: 16 }]}
-          >
-            {/* Título */}
-            <ThemedText type="title" style={styles.title}>
-              Perfil del Paciente
-            </ThemedText>
-            
-            {/* Contenedor Principla de las dos columnas */}
-            <View style={styles.mainContainer}>
+            <ThemedBackground
+              justifyContent="space-between"
+              fullHeight
+              backgroundColor="#fba557"
+              style={[GlobalStyles.orangeBackground, { padding: 16 }]}
+            >
+              {/* Título */}
+              <ThemedText type="title" style={styles.title}>
+                Perfil del Paciente
+              </ThemedText>
+              
+              {/* Contenedor principal de las dos columnas */}
+              <View style={styles.mainContainer}>
 
-            {/* Lista de pacientes */}
-            <View style={styles.leftColumn}>
-                <View style={styles.sectionTitle}>
-                  <ThemedText style={styles.sectionTitleText}>Datos del paciente</ThemedText>
+                {/* Columna izquierda: Datos del paciente */}
+                <View style={styles.leftColumn}>
+                  <View style={styles.sectionTitle}>
+                    <ThemedText style={styles.sectionTitleText}>
+                      Datos del paciente
+                    </ThemedText>
+                  </View>
+                  <View style={styles.pacientesContainer}>
+                    {isLoading ? (
+                      <View style={styles.centerContainer}>
+                        <ActivityIndicator size="large" color="#fff" />
+                        <ThemedText style={styles.loadingText}>
+                          Cargando pacientes...
+                        </ThemedText>
+                      </View>
+                    ) : isError ? (
+                      <View style={styles.centerContainer}>
+                        <ThemedText style={styles.errorText}>
+                          Error al cargar pacientes
+                        </ThemedText>
+                        <ThemedText style={styles.errorSubText}>
+                          {error?.message || 'Intenta nuevamente'}
+                        </ThemedText>
+                      </View>
+                    ) : (
+                      <FlatList
+                        data={pacienteFiltrado}
+                        keyExtractor={(item) => item.usuario_id?.toString() ?? "0"}
+                        contentContainerStyle={styles.listContainer}
+                        renderItem={({ item }) => (
+                          <View style={styles.pacienteCard}>
+                            <View style={styles.pacienteInfo}>
+                              <ThemedText style={styles.pacienteNombre}>
+                                {item.imagen_url || 'No disponible'} Nombre: {item.nombre || 'No disponible'}
+                              </ThemedText>
+                              <ThemedText style={styles.pacienteEmail}>
+                                📧 Email: {item.correo || 'No disponible'}
+                              </ThemedText>
+                              <ThemedText style={styles.pacienteDomicilio}>
+                                🏠 Domicilio: {item.domicilio || 'No disponible'}
+                              </ThemedText>
+                              <ThemedText style={styles.pacienteTelefono}>
+                                📞 Teléfono: {item.numero_telefono || 'No disponible'}
+                              </ThemedText>
+
+                              {/* Renderizar kits actuales e historial */}
+                              <RenderizarKitsAsignadosVistaDoctor 
+                                pacienteId={item?.paciente_id || 0}
+                              />
+                              <RenderizarHistorialKitsAsignados />
+                            </View>  
+                          </View>
+                        )}
+                      />
+                    )}
+                  </View>
                 </View>
-              <View style = {styles.pacientesContainer}>
-              {isLoading ? (
-                <View style={styles.centerContainer}>
-                  <ActivityIndicator size="large" color="#fff" />
-                  <ThemedText style={styles.loadingText}>
-                    Cargando pacientes...
-                  </ThemedText>
-                </View>
-              ) : isError ? (
-                <View style={styles.centerContainer}>
-                  <ThemedText style={styles.errorText}>
-                    Error al cargar pacientes
-                  </ThemedText>
-                  <ThemedText style={styles.errorSubText}>
-                    {error?.message || 'Intenta nuevamente'}
-                  </ThemedText>
-                </View>
-              ) : (
-    
-                <FlatList
-                  data={pacienteFiltrado}
-                  keyExtractor={(item) => item.usuario_id?.toString() ?? 0}
-                  contentContainerStyle={styles.listContainer}
-                  renderItem={({ item }) => (
-                    <View style={styles.pacienteCard}>
-                      <View style={styles.pacienteInfo}>
-                        <ThemedText style={styles.pacienteNombre}>
-                          {item.imagen_url || 'No disponible'} Nombre: {item.nombre || 'No disponible'}
-                        </ThemedText>
-                        <ThemedText style={styles.pacienteEmail}>
-                          📧 Email: {item.correo || item.correo || 'No disponible'}
-                        </ThemedText>
-                        <ThemedText style={styles.pacienteDomicilio}>
-                          🏠 Domicilio: {item.domicilio || 'No disponible'}
-                        </ThemedText>
-                        <ThemedText style={styles.pacienteTelefono}>
-                          📞 Teléfono: {item.numero_telefono || item.numero_telefono || 'No disponible'}
-                        </ThemedText>
-                        <ThemedText style={styles.pacienteId}>
-                        </ThemedText>
-                        <RenderizarKitsAsignadosVistaDoctor 
-                          pacienteId={(item?.paciente_id) || 0}
-                        />
-                        <RenderizarHistorialKitsAsignados/>
-           
-                      </View>  
-                      
-                    </View>
-                  )}
-                />
-              )}
-            </View>
-            </View>
+
+                {/* Columna derecha: Asignar kits */}
                 <View style={styles.rightColumn}>
                   <View style={styles.sectionTitle}>
-                  <ThemedText style={styles.sectionTitleText}>Asignar Kits</ThemedText>
+                    <ThemedText style={styles.sectionTitleText}>
+                      Asignar Kits
+                    </ThemedText>
+                  </View>
+                  <CardViewEditkits />
                 </View>
-                <CardViewEditkits />
               </View>
-            </View>
-          </ThemedBackground>
-           </ScrollView>
+            </ThemedBackground>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </AuthGuard>
@@ -143,13 +148,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  debugText: {
-    color: 'white',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 10,
-    fontStyle: 'italic',
-  },
   pacienteId: {
     fontSize: 12,
     color: '#007AFF',
@@ -163,7 +161,7 @@ const styles = StyleSheet.create({
   listContainer: {
     paddingBottom: 16,
   },
-    leftColumn: {
+  leftColumn: {
     width: '58%',
     flexDirection: 'column',
   },
@@ -184,7 +182,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-    sectionTitle: {
+  sectionTitle: {
     marginBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 0, 0, 0.2)',
@@ -193,7 +191,7 @@ const styles = StyleSheet.create({
   pacienteInfo: {
     marginBottom: 12,
   },
-    sectionTitleText: {
+  sectionTitleText: {
     fontSize: 20,
     fontWeight: '600',
     color: '#000',
@@ -251,7 +249,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
-    mainContainer: {
+  mainContainer: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',

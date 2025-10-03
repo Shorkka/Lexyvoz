@@ -13,7 +13,7 @@ import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
 const KitList = () => {
   const { kitId } = useLocalSearchParams();
-  const {user } = useAuthStore();
+  const { user } = useAuthStore();
   const{ useKitsQuery } = useKitsStore();
   const backgroundColor = useThemeColor({}, 'background');
   const { data: kitsData, isLoading, isError, error } = useKitsQuery();

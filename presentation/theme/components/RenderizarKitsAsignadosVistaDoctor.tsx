@@ -1,102 +1,212 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from "react";
 import {
   ActivityIndicator,
-  Platform,
   StyleSheet,
   View,
   Alert,
-  Modal,
-} from 'react-native';
-import { useKitsAsignacionesStore } from '@/infraestructure/store/useKitsAsignacionesStore';
-import { FlatList, Pressable } from 'react-native-gesture-handler';
-import { router } from 'expo-router';
-import ThemedBackground from './ThemedBackground';
-import { ThemedText } from './ThemedText';
-import ThemedButton from './ThemedButton';
+  Text,
+  Pressable,
+  FlatList,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+  Dimensions,
+} from "react-native";
+import { useKitsAsignacionesStore } from "@/infraestructure/store/useKitsAsignacionesStore";
+import { router } from "expo-router";
+import ThemedBackground from "./ThemedBackground";
+import { ThemedText } from "./ThemedText";
+import { Ionicons } from "@expo/vector-icons";
 
+// Habilitar animaciones en Android
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+interface KitAsignado {
+  id: number;
+  kit_nombre: string;
+  kit_descripcion: string;
+  fecha_asignacion: string;
+  estado: "Activo" | "Finalizado" | string;
+}
 
 interface RenderizarKitsAsignadosVistaDoctorProps {
   pacienteId: number;
   onRefresh?: () => void;
 }
 
-const RenderizarKitsAsignadosVistaDoctor: React.FC<RenderizarKitsAsignadosVistaDoctorProps> = ({ 
-  pacienteId, 
-  onRefresh 
-}) => {
-  const [selectedKit, setSelectedKit] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  
-  const { 
-    useKitsAsignadosAPacientesQuery, 
-    eliminarKitAsignadoMutation 
-  } = useKitsAsignacionesStore();
-  
-  const { data, isLoading, error, refetch } = useKitsAsignadosAPacientesQuery(pacienteId);
-  const { mutate: eliminarKit, isPending: isDeleting } = eliminarKitAsignadoMutation;
+const RenderizarKitsAsignadosVistaDoctor: React.FC<
+  RenderizarKitsAsignadosVistaDoctorProps
+> = ({ pacienteId, onRefresh }) => {
+  const [selectedKit, setSelectedKit] = useState<KitAsignado | null>(null);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [anchorLayout, setAnchorLayout] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const [expandedKitId, setExpandedKitId] = useState<number | null>(null);
 
-  const handleKitPress = (kit: any) => {
-    setSelectedKit(kit);
-    setModalVisible(true);
-  };
+  const buttonRefs = useRef<{ [key: string]: View | null }>({});
 
-  const handleEditKit = () => {
-    if (selectedKit) {
-      setModalVisible(false);
-      router.push({
-        pathname: '/(app)/(doctor)/(stack)/kits/editKit/[kitId]',
-        params: { kitId: selectedKit.id }
+  const { useKitsAsignadosAPacientesQuery, eliminarKitAsignadoMutation } =
+    useKitsAsignacionesStore();
+
+  const { data, isLoading, error, refetch } =
+    useKitsAsignadosAPacientesQuery(pacienteId);
+  const { mutate: eliminarKit } = eliminarKitAsignadoMutation;
+
+  const toggleKit = useCallback((kitId: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedKitId((prevExpandedKitId) => prevExpandedKitId === kitId ? null : kitId);
+  }, []);
+
+  const handleKitOptionsPress = useCallback((kit: KitAsignado, event: any) => {
+    event.stopPropagation();
+    const buttonRef = buttonRefs.current[kit.id];
+    if (buttonRef) {
+      buttonRef.measureInWindow((x: number, y: number, width: number, height: number) => {
+        setSelectedKit(kit);
+        setAnchorLayout({ x, y, width, height });
+        setDropdownVisible(true);
       });
     }
-  };
+  }, []);
 
-  const handleDeleteKit = () => {
+  const handleEditKit = useCallback(() => {
+    if (selectedKit) {
+      setDropdownVisible(false);
+      router.push({
+        pathname: "/(app)/(doctor)/(stack)/kits/editKit/[kitId]",
+        params: { kitId: selectedKit.id.toString() },
+      });
+    }
+  }, [selectedKit]);
+
+  const handleDeleteKit = useCallback(() => {
     if (selectedKit) {
       Alert.alert(
         "Confirmar eliminación",
-        `¿Estás seguro de que quieres eliminar el kit "${selectedKit.kit_nombre}"?`,
+        `¿Eliminar kit "${selectedKit.kit_nombre}"?`,
         [
+          { text: "Cancelar", style: "cancel" },
           {
-            text: "Cancelar",
-            style: "cancel"
-          },
-          { 
-            text: "Eliminar", 
+            text: "Eliminar",
+            style: "destructive",
             onPress: () => {
               eliminarKit(selectedKit.id.toString(), {
                 onSuccess: () => {
-                  setModalVisible(false);
+                  setDropdownVisible(false);
                   refetch();
-                  if (onRefresh) onRefresh();
+                  onRefresh?.();
                   Alert.alert("Éxito", "Kit eliminado correctamente");
                 },
-                onError: () => {
-                  Alert.alert("Error", "No se pudo eliminar el kit");
-                }
+                onError: (error) => {
+                  Alert.alert(
+                    "Error",
+                    error.message || "No se pudo eliminar el kit"
+                  );
+                },
               });
-            }
-          }
+            },
+          },
         ]
       );
     }
-  };
+  }, [selectedKit, eliminarKit, refetch, onRefresh]);
 
-  const handleOpenTray = () => {
+  const handleOpenTray = useCallback(() => {
     if (selectedKit) {
-      setModalVisible(false);
+      setDropdownVisible(false);
       router.push({
-        pathname: '/(app)/(doctor)/(stack)/kits/kits-list',
-        params: { 
-          kitId: selectedKit.id,
-          pacienteId: pacienteId
-        }
+        pathname: "/(app)/(doctor)/(stack)/kits/kits-list",
+        params: {
+          kitId: selectedKit.id.toString(),
+          pacienteId: pacienteId.toString(),
+        },
       });
     }
-  };
+  }, [selectedKit, pacienteId]);
 
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedKit(null);
+  const renderKitItem = useCallback(
+    ({ item }: { item: KitAsignado }) => (
+      <View>
+        <Pressable
+          onPress={() => toggleKit(item.id)}
+          style={styles.kitHeader}
+          android_ripple={{ color: "#f0f0f0" }}
+        >
+          <View style={styles.kitHeaderContent}>
+            <ThemedText style={styles.kitTitle} numberOfLines={1}>
+              {item.kit_nombre}
+            </ThemedText>
+            <ThemedText
+              style={[
+                styles.kitStatus,
+                item.estado === "Activo"
+                  ? styles.statusActive
+                  : item.estado === "Finalizado"
+                  ? styles.statusCompleted
+                  : styles.statusInactive,
+              ]}
+            >
+              {item.estado}
+            </ThemedText>
+          </View>
+          <View style={styles.kitHeaderIcons}>
+            <Ionicons
+              name={expandedKitId === item.id ? "chevron-up" : "chevron-down"}
+              size={20}
+              color="#606060"
+              style={styles.chevronIcon}
+            />
+            <Pressable
+              ref={(ref) => {
+                buttonRefs.current[item.id] = ref;
+              }}
+              onPress={(e) => handleKitOptionsPress(item, e)}
+              style={styles.optionsButton}
+              accessibilityLabel={`Opciones para kit ${item.kit_nombre}`}
+              accessibilityHint="Abre menú de opciones para este kit"
+            >
+              <Ionicons name="ellipsis-vertical-outline" size={20} color="black" />
+            </Pressable>
+          </View>
+        </Pressable>
+
+        {expandedKitId === item.id && (
+          <View style={styles.expandedContent}>
+            <ThemedText style={styles.kitDescription} numberOfLines={3}>
+              {item.kit_descripcion}
+            </ThemedText>
+            <ThemedText style={styles.kitDate}>
+              Asignado: {new Date(item.fecha_asignacion).toLocaleDateString()}
+            </ThemedText>
+          </View>
+        )}
+      </View>
+    ),[handleKitOptionsPress, expandedKitId, toggleKit]
+  );
+
+  // Cálculo de la posición del dropdown (ajustado para que aparezca al lado del ícono)
+  const calculateDropdownPosition = () => {
+    if (!anchorLayout) return {};
+
+    const { x, y, width } = anchorLayout;
+    const screenWidth = Dimensions.get("window").width;
+    const dropdownWidth = 200;
+
+    let left = x + width + 8;
+    if (left + dropdownWidth > screenWidth) {
+      left = screenWidth - dropdownWidth - 8;
+    }
+
+    return {
+      top: y,
+      left,
+    };
   };
 
   if (isLoading) {
@@ -110,7 +220,12 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<RenderizarKitsAsignadosVistaD
   if (error) {
     return (
       <ThemedBackground style={styles.centerContent}>
-        <ThemedText style={styles.errorText}>Error al cargar los kits</ThemedText>
+        <ThemedText style={styles.errorText}>
+          Error al cargar los kits.{"\n"}
+          <Text style={styles.retryText} onPress={() => refetch()}>
+            Toque para reintentar
+          </Text>
+        </ThemedText>
       </ThemedBackground>
     );
   }
@@ -118,7 +233,9 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<RenderizarKitsAsignadosVistaD
   if (!data?.data || data.data.length === 0) {
     return (
       <ThemedBackground style={styles.centerContent}>
-        <ThemedText style={styles.emptyText}>No hay kits asignados a este paciente</ThemedText>
+        <ThemedText style={styles.emptyText}>
+          No hay kits asignados a este paciente
+        </ThemedText>
       </ThemedBackground>
     );
   }
@@ -126,204 +243,201 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<RenderizarKitsAsignadosVistaD
   return (
     <ThemedBackground style={styles.container}>
       <FlatList
-        data={data.data}
+        data={data.data.map((kit: any) => ({
+          ...kit,
+          fecha_asignacion:
+            typeof kit.fecha_asignacion === "string"
+              ? kit.fecha_asignacion
+              : kit.fecha_asignacion?.toISOString?.() ?? "",
+        }))}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <Pressable 
-            style={styles.kitCard} 
-            onPress={() => handleKitPress(item)}
-          >
-            <View style={styles.kitHeader}>
-              <ThemedText style={styles.kitTitle}>{item.kit_nombre}</ThemedText>
-              <ThemedText style={[
-                styles.kitStatus,
-                item.estado === 'Activo' ? styles.statusActive : 
-                item.estado === 'Finalizado' ? styles.statusCompleted : 
-                styles.statusInactive
-              ]}>
-                {item.estado}
-              </ThemedText>
-            </View>
-            <ThemedText style={styles.kitDescription}>{item.kit_descripcion}</ThemedText>
-            <ThemedText style={styles.kitDate}>
-              Asignado: {new Date(item.fecha_asignacion).toLocaleDateString()}
-            </ThemedText>
-          </Pressable>
-        )}
+        renderItem={renderKitItem}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* Modal de opciones */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={styles.modalContainer}>
-          <ThemedBackground style={styles.modalContent}>
-            <ThemedText style={styles.modalTitle}>{selectedKit?.kit_nombre}</ThemedText>
-            
-            <ThemedButton
-              
-              onPress={handleEditKit}
-              style={styles.modalOption}
-            >
-              <ThemedText style={styles.modalOptionText}>✏️ Editar Kit</ThemedText>
-            </ThemedButton>
+      {dropdownVisible && anchorLayout && (
+        <>
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setDropdownVisible(false)}
+            accessibilityLabel="Cerrar menú"
+          />
+          <View
+            style={[
+              styles.dropdownContainer,
+              calculateDropdownPosition(),
+            ]}
+            accessibilityViewIsModal={true}
+          >
+            <View style={styles.dropdown}>
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={handleEditKit}
+                accessibilityLabel="Editar kit"
+              >
+                <Ionicons name="create-outline" size={20} color="#606060" />
+                <Text style={styles.dropdownText}>Editar Kit</Text>
+              </Pressable>
 
-            <ThemedButton
-              onPress={handleOpenTray}
-            >
-              <ThemedText style={styles.modalOption}>📂 Abrir Bandeja de Ejercicios</ThemedText>
-            </ThemedButton>
+              <View style={styles.divider} />
 
-            <ThemedButton
-              onPress={handleDeleteKit}
-              disabled={isDeleting}
-              style={[styles.modalOption, styles.deleteOption]}
-            >
-              <ThemedText style={[styles.modalOptionText, styles.deleteOptionText]}>
-                {isDeleting ? 'Eliminando...' : '🗑️ Eliminar Kit'}
-              </ThemedText>
-            </ThemedButton>
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={handleOpenTray}
+                accessibilityLabel="Abrir bandeja del kit"
+              >
+                <Ionicons name="folder-open-outline" size={20} color="#606060" />
+                <Text style={styles.dropdownText}>Abrir Bandeja</Text>
+              </Pressable>
 
-            <ThemedButton
-              onPress={handleCloseModal}
-              style={styles.cancelButton}
-            >
-              <ThemedText style={styles.cancelButtonText}>Cancelar</ThemedText>
-            </ThemedButton>
-          </ThemedBackground>
-        </View>
-      </Modal>
+              <View style={styles.divider} />
+
+              <Pressable
+                style={styles.dropdownItem}
+                onPress={handleDeleteKit}
+                accessibilityLabel="Eliminar kit"
+              >
+                <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                <Text style={[styles.dropdownText, { color: "#ff3b30" }]}>
+                  Eliminar Kit
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </>
+      )}
     </ThemedBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
+  container: { flex: 1 },
   centerContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
-  kitCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+  listContent: {
     padding: 16,
-    marginBottom: 12,
-    ...Platform.select({
-      android: {
-        elevation: 3,
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      web: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-    }),
+    gap: 16,
   },
   kitHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  kitHeaderContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  kitHeaderIcons: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   kitTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     flex: 1,
+    marginRight: 8,
   },
   kitStatus: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
   statusActive: {
-    backgroundColor: '#e6f7ee',
+    backgroundColor: "#e6f7ee",
+    color: "green",
   },
   statusCompleted: {
-    backgroundColor: '#e6f0ff',
+    backgroundColor: "#e6f0ff",
+    color: "#339af0",
   },
   statusInactive: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
+    color: "#868e96",
+  },
+  expandedContent: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    marginTop: 8,
   },
   kitDescription: {
     fontSize: 14,
     marginBottom: 8,
     opacity: 0.7,
+    flexShrink: 1,
   },
   kitDate: {
     fontSize: 12,
     opacity: 0.6,
   },
+  chevronIcon: {
+    marginRight: 8,
+  },
+  optionsButton: {
+    padding: 4,
+  },
   errorText: {
-    color: 'red',
-    textAlign: 'center',
+    color: "red",
+    textAlign: "center",
     fontSize: 16,
+  },
+  retryText: {
+    color: "#ee7200",
+    textDecorationLine: "underline",
   },
   emptyText: {
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     opacity: 0.7,
   },
-  modalContainer: {
+  dropdownContainer: {
+    position: "absolute",
+    zIndex: 2000,
+  },
+  dropdown: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    paddingVertical: 8,
+    width: 200,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  dropdownText: {
+    color: "#0f0f0f",
+    fontSize: 14,
+    fontWeight: "500",
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  modalContent: {
-    borderRadius: 16,
-    padding: 20,
-    width: '80%',
-    maxWidth: 400,
+  divider: {
+    height: 1,
+    backgroundColor: "#f0f0f0",
+    marginHorizontal: 8,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalOption: {
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalOptionText: {
-    fontSize: 16,
-  },
-  deleteOption: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#dc3545',
-  },
-  deleteOptionText: {
-    color: '#dc3545',
-  },
-  cancelButton: {
-    marginTop: 8,
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  cancelButtonText: {
-    fontSize: 16,
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999,
   },
 });
 

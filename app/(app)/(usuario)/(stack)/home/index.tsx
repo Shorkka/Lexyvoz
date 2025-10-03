@@ -14,10 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Definir interfaz para el kit
 interface Kit {
-  kit_id: number;
-  name: string;
-  descripcion: string;
-  imagen_url?: string;
+  kitId: number;
+  tipoEjercicio: number;
+  tipoReactivo: string;
+  name?: string;
+  descripcion?: string;
   ejercicios_count?: number;
   dificultad?: string;
   duracion_estimada?: string;
@@ -26,22 +27,23 @@ interface Kit {
 const HomePacienteScreen = () => {
   const { userType, userName } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
-  
+
   // Estado para el modal y kit seleccionado
   const [selectedKit, setSelectedKit] = useState<Kit | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [playingKitId, setPlayingKitId] = useState<number | null>(null);
-
+  console.log(selectedKit?.tipoEjercicio);
+  const imagenesPorTipo: Record<string, any> = {
+    visual: require('@/assets/images/modalVisual.jpg'),
+    lectura: require('@/assets/images/modalLectura.jpg'),
+    escritura: require('@/assets/images/modalEscrito.jpg'),
+  };
   // Manejar pulsación larga (abrir modal de vista previa)
   const handleLongPress = (kit: any) => {
     const formattedKit: Kit = {
-      kit_id: kit.id,
-      name: kit.kit_nombre,
-      descripcion: kit.kit_descripcion,
-      imagen_url: kit.imagen_url,
-      ejercicios_count: kit.ejercicios_count,
-      dificultad: kit.dificultad,
-      duracion_estimada: kit.duracion_estimada
+    kitId: kit.id,
+    tipoEjercicio: kit.tipo_ejercicio,   
+    tipoReactivo: kit.tipo_reactivo 
     };
     setSelectedKit(formattedKit);
     setModalVisible(true);
@@ -52,14 +54,29 @@ const HomePacienteScreen = () => {
     setPlayingKitId(kit.id);
   };
 
-  // Ir a la pantalla de juegos
-  const handlePlay = () => {
-    if (!playingKitId) return;
+const handlePlay = () => {
+  if (!selectedKit) return;
+
+  const { kitId, tipoEjercicio, tipoReactivo } = selectedKit;
+
+  // Ejemplo de ruteo dinámico
+  if (tipoReactivo === "visual") {
     router.push({
-      pathname: "/juegos/[kitId]",
-      params: { kitId: playingKitId.toString() }
+      pathname: "/juegos/visual",
+      params: { kitId: kitId.toString(), tipoEjercicio: tipoEjercicio.toString() }
     });
-  };
+  } else if (tipoReactivo === "lectura") {
+    router.push({
+      pathname: "/juegos/lectura",
+      params: { kitId: kitId.toString(), tipoEjercicio: tipoEjercicio.toString() }
+    });
+  } else if (tipoReactivo === "escritura") {
+    router.push({
+      pathname: "/juegos/escrito",
+      params: { kitId: kitId.toString(), tipoEjercicio: tipoEjercicio.toString() }
+    });
+  }
+};
 
   // Cerrar modal
   const handleCloseModal = () => {
@@ -201,8 +218,12 @@ const HomePacienteScreen = () => {
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
                 <View style={styles.previewContainer}>
-                  {selectedKit?.imagen_url ? (
-                    <Image source={{ uri: selectedKit.imagen_url }} style={styles.previewImage} resizeMode="cover" />
+                  {selectedKit?.tipoReactivo ? (
+                    <Image
+                      source={imagenesPorTipo[selectedKit.tipoReactivo]}
+                      style={styles.previewImage}
+                      resizeMode="cover"
+                    />
                   ) : (
                     <View style={styles.imagePlaceholder}>
                       <Ionicons name="game-controller-outline" size={50} color="#ccc" />

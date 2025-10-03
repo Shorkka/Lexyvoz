@@ -27,7 +27,6 @@ export const useAuthKitsStore = () => {
     useQuery<DoctorResponse, Error>({
       queryKey: ["doctores", page, limit, searchTerm],
       queryFn: () => obtenerDoctores(page, limit, searchTerm),
-      staleTime: 1000 * 60 * 5,
       placeholderData: undefined,
     });
 
@@ -40,7 +39,6 @@ export const useAuthKitsStore = () => {
     useQuery<PacienteResponse, Error>({
       queryKey: ["pacientes", page, limit, searchTerm],
       queryFn: () => obtenerPacientes(page, limit, searchTerm),
-      staleTime: 1000 * 60 * 5,
       placeholderData: undefined, 
     });
 
@@ -52,7 +50,6 @@ export const useAuthKitsStore = () => {
     useQuery<VinculacionResponse, Error>({
       queryKey: ["vinculosDoctorPaciente", page, limit],
       queryFn: () => obtenerVinculosDoctorPaciente(page, limit),
-      staleTime: 1000 * 60 * 5,
     placeholderData: undefined,
     });
 
@@ -65,7 +62,6 @@ export const useAuthKitsStore = () => {
     useQuery<UsuarioResponse, Error>({
       queryKey: ["usuarios", page, limit, searchTerm],
       queryFn: () => obtenerUsuarios(page, limit, searchTerm),
-      staleTime: 1000 * 60 * 5,
       placeholderData: undefined,
     });
 

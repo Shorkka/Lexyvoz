@@ -1,4 +1,12 @@
-import { View, useWindowDimensions, KeyboardAvoidingView, SafeAreaView, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { 
+  View, 
+  useWindowDimensions, 
+  KeyboardAvoidingView, 
+  SafeAreaView, 
+  ScrollView, 
+  StyleSheet, 
+  ActivityIndicator 
+} from 'react-native';
 import React from 'react';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -12,9 +20,11 @@ import { GlobalStyles } from '@/assets/styles/GlobalStyles';
 import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
 import { router } from 'expo-router';
 import { useDoctorPacienteStore } from '@/infraestructure/store/useDoctorPacienteStore';
+import Hashids from "hashids";
 const DoctorScreen = () => {
-  const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const hashids = new Hashids("mi-secreto", 10);
+  const { width, height } = useWindowDimensions();
+  const isMobile = width < 768; // breakpoint simple
   const { user } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
   const [searchText, setSearchText] = React.useState('');
@@ -27,42 +37,39 @@ const DoctorScreen = () => {
     error
   } = usePacientesDeDoctorQuery(user?.doctor_id || 0);
 
-  React.useEffect(() => {
-    console.log('Datos de pacientes:', pacientesData);
-    console.log('Error:', error);
-  }, [pacientesData, error]);
-  
   const pacientes = pacientesData?.data || [];
 
-  // Función para navegar al perfil de un paciente específico
   const navigateToProfile = (pacienteId: number) => {
+    const encodedId = hashids.encode(pacienteId);
     router.push({
       pathname: '/(app)/(doctor)/(stack)/ver_perfil_usuario/[paciente_id]',
-      params: { paciente_id: pacienteId.toString() }
+      params: { paciente_id: encodedId  }
     });
   };
 
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
+        <ScrollView 
+          contentContainerStyle={{ flexGrow: 1 }} 
+          keyboardShouldPersistTaps="handled"
+        >
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-          <ScrollView>
           <ThemedBackground
-            justifyContent="space-between"
             fullHeight
             backgroundColor="#fba557"
-            style={[GlobalStyles.orangeBackground, { padding: 16 }]}
+            style={[GlobalStyles.orangeBackground, { padding: 16, flex: 1, justifyContent: "space-between" }]}
           >
-            {/* Título de bienvenida */}
+            {/* Título */}
             <ThemedText type="welcome" style={styles.welcomeText}>
               Bienvenido {user?.sexo === 'Masculino' ? 'Doctor' : 'Doctora'} {user?.nombre}
             </ThemedText>
 
-            {/* Contenedor principal de dos columnas */}
-            <View style={styles.mainContainer}>
+            {/* Contenedor principal */}
+            <View style={[styles.mainContainer, isMobile && { flexDirection: 'column' }]}>
               
-              {/* Columna izquierda: Búsqueda y pacientes */}
-              <View style={styles.leftColumn}>
+              {/* Columna izquierda: Pacientes */}
+              <View style={[styles.leftColumn, isMobile && { width: '100%' }]}>
                 <View style={styles.searchContainer}>
                   <ThemedTextInput
                     placeholder="Buscar paciente"
@@ -78,28 +85,24 @@ const DoctorScreen = () => {
                   <ThemedText style={styles.sectionTitleText}>Pacientes</ThemedText>
                 </View>
 
-                <View style={styles.pacientesContainer}>
+                {/* Scroll interno para pacientes */}
+                <ScrollView 
+                  style={{ maxHeight: isMobile ? height * 0.25 : height * 0.4 }}
+                  nestedScrollEnabled
+                >
                   {isLoading ? (
                     <View style={styles.centerContainer}>
                       <ActivityIndicator size="large" color="#fff" />
-                      <ThemedText style={styles.loadingText}>
-                        Cargando pacientes...
-                      </ThemedText>
+                      <ThemedText style={styles.loadingText}>Cargando pacientes...</ThemedText>
                     </View>
                   ) : isError ? (
                     <View style={styles.centerContainer}>
-                      <ThemedText style={styles.errorText}>
-                        Error al cargar pacientes
-                      </ThemedText>
-                      <ThemedText style={styles.errorSubText}>
-                        {error?.message || 'Intenta nuevamente'}
-                      </ThemedText>
+                      <ThemedText style={styles.errorText}>Error al cargar pacientes</ThemedText>
+                      <ThemedText style={styles.errorSubText}>{error?.message || 'Intenta nuevamente'}</ThemedText>
                     </View>
                   ) : pacientes.length === 0 ? (
                     <View style={styles.centerContainer}>
-                      <ThemedText style={styles.noPatientsText}>
-                        No hay pacientes registrados
-                      </ThemedText>
+                      <ThemedText style={styles.noPatientsText}>No hay pacientes registrados</ThemedText>
                     </View>
                   ) : (
                     <RenderizarPaciente
@@ -108,19 +111,23 @@ const DoctorScreen = () => {
                       onPacientePress={navigateToProfile} 
                     />
                   )}
-                </View>
+                </ScrollView>
               </View>
 
               {/* Columna derecha: Kits */}
-              <View style={[styles.rightColumn, isMobile && { marginTop: 20 }]}>
+              <View style={[styles.rightColumn, isMobile && { width: '100%', marginTop: 20 }]}>
                 <View style={styles.sectionTitle}>
                   <ThemedText style={styles.sectionTitleText}>Kits</ThemedText>
                 </View>
-                <CardViewEditkits />
+
+                {/* Scroll interno para Kits */}
+                <View style={[styles.kitsContainer, { maxHeight: isMobile ? height * 0.3 : height * 0.45 }]}>
+                  <CardViewEditkits/>
+                </View>
               </View>
             </View>
 
-            {/* Botón fijo en la parte inferior */}
+            {/* Botón global fijo */}
             <View style={styles.buttonContainer}>
               <ThemedButton
                 onPress={() => router.push('/(app)/(doctor)/(stack)/add_paciente')}
@@ -129,8 +136,8 @@ const DoctorScreen = () => {
               </ThemedButton>
             </View>
           </ThemedBackground>
-          </ScrollView>
         </KeyboardAvoidingView>
+        </ScrollView>
       </SafeAreaView>
     </AuthGuard>
   );
@@ -193,10 +200,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
-  },
-  addButton: {
-    width: '100%',
-    borderRadius: 10,
+    marginBottom: 10,
   },
   buttonText: {
     color: '#fff',
@@ -232,6 +236,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     textAlign: 'center',
+  },
+  kitsContainer: {
+    flex: 1,
   },
 });
 

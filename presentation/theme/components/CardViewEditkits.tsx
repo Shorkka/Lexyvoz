@@ -1,35 +1,40 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, useWindowDimensions } from 'react-native';
 import ThemedBackground from './ThemedBackground';
 import ThemedButton from './ThemedButton';
 import { router } from 'expo-router';
 import KitScrollView from './KitScrollView';
 
-interface Props{
+interface Props {
   isAsigning?: boolean;
   paciente_id?: number;
-  kitId?: number
+  kitId?: number;
 }
 
-const CardViewEditkits = ({isAsigning= false}: Props) => {
- 
-    const handleAddPress = () => {
-      if(!isAsigning){
-          
-        }
-      router.push('/(app)/(doctor)/(stack)/kits/createKit');
-    };
+const CardViewEditkits = ({ isAsigning = false }: Props) => {
+  const { height } = useWindowDimensions();
+
+  const handleAddPress = () => {
+    if (!isAsigning) {
+      // lógica extra si se requiere
+    }
+    router.push('/(app)/(doctor)/(stack)/kits/createKit');
+  };
 
   return (
     <View style={styles.container}>
-      <ThemedBackground
-        justifyContent="center"
-        height={'100%'}
-      >
-          <KitScrollView/>
+      <ThemedBackground style={styles.background}>
+        {/* Lista scrolleable con altura limitada */}
+        <View style={[styles.listContainer, { maxHeight: height * 0.3 }]}>
+          <KitScrollView />
+        </View>
+
+        {/* Botón fijo al fondo */}
+        <View style={styles.fixedButtonContainer}>
           <ThemedButton style={styles.buttonContainer} onPress={handleAddPress}>
             +
           </ThemedButton>
+        </View>
       </ThemedBackground>
     </View>
   );
@@ -38,18 +43,22 @@ const CardViewEditkits = ({isAsigning= false}: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    minHeight: '100%', 
-    width: '100%',
   },
   background: {
     flex: 1,
     borderRadius: 12,
     padding: 10,
-    bottom: 10,
   },
-    buttonContainer: {
+  listContainer: {
+    flexGrow: 0, // 👈 evita que se expanda infinito
+    marginBottom: 10,
+  },
+  fixedButtonContainer: {
+    marginTop: 10,
+  },
+  buttonContainer: {
     width: '100%',
-    backgroundColor: '#ee7200', 
+    backgroundColor: '#ee7200',
     borderRadius: 10,
     padding: 12,
     justifyContent: 'center',
@@ -59,14 +68,13 @@ const styles = StyleSheet.create({
         elevation: 4,
       },
       web: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.6,
-          shadowRadius: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.6,
+        shadowRadius: 5,
       },
     }),
   },
-  
 });
 
 export default CardViewEditkits;

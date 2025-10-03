@@ -19,7 +19,6 @@ const RenderizarKitsAsignados = () => {
   }
     const kitsFinalizados = data?.data?.filter(item => item.estado === 'Finalizado') || [];
     
-    // Si no hay kits finalizados, mostrar mensaje
     if (kitsFinalizados.length === 0) {
         return (
             <View style={styles.emptyContainer}>
