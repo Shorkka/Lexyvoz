@@ -200,6 +200,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
             userType: undefined,
             userName: undefined
         });
+        await AsyncStorage.removeItem('lastRoute');
+
     },
 
     updateUser: async (updatedFields: Partial<User>) => {

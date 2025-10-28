@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View, Text} from 'react-native';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
@@ -9,6 +9,7 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Lista única de dominios permitidos
 const validDomains = [
@@ -146,7 +147,7 @@ const Step1Screen = () => {
                 onPress={onRegister}
                 disabled={isLoginDisabled}
                 backgroundColor={
-                  form.password.length < 6 || form.email.length < 1
+                  form.password.length < 6 || form.email.length < 1 || form.nombre.length < 3
                     ? '#974525ff'
                     : undefined
                 }
@@ -158,7 +159,7 @@ const Step1Screen = () => {
             <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
               <ThemedText style={{ color: secondaryColor }}>¿Ya tienes una cuenta?</ThemedText>
               <ThemedLink href="/login" style={{ marginLeft: 6 }}>
-                Iniciar sesión
+                <Text>Iniciar sesión</Text>
               </ThemedLink>
             </View>
           </ThemedBackground>

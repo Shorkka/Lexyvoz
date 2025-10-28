@@ -1,4 +1,4 @@
-import { SafeAreaView, KeyboardAvoidingView, ScrollView } from 'react-native'
+import {KeyboardAvoidingView, ScrollView } from 'react-native'
 import { useLocalSearchParams } from "expo-router";
 import React from 'react'
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
@@ -7,13 +7,12 @@ import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useKitsStore } from '@/infraestructure/store/useKitsStore';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 
 const KitList = () => {
   const { kitId } = useLocalSearchParams();
-  const { user } = useAuthStore();
   const{ useKitsQuery } = useKitsStore();
   const backgroundColor = useThemeColor({}, 'background');
   const { data: kitsData, isLoading, isError, error } = useKitsQuery();

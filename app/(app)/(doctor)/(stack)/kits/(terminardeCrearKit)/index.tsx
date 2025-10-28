@@ -1,48 +1,41 @@
-import { GlobalStyles } from '@/assets/styles/GlobalStyles';
 import { CrearKitsConEjercicioResponse } from '@/infraestructure/interface/kits-actions';
-import { Data } from '@/core/auth/interface/ejercicios'; // Importar la interfaz
+import { Data } from '@/core/auth/interface/ejercicios';
 import { useKitsStore } from '@/infraestructure/store/useKitsStore';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useLocalSearchParams, router } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, View, StyleSheet, Platform, Alert } from 'react-native';
+import { ScrollView, View, StyleSheet, Alert } from 'react-native';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Mapeo de modalidades
 const modalidadMap: Record<number, string> = {
   1: 'Lectura',
-  2: 'Escritura', 
-  3: 'Visual'
+  2: 'Escritura',
+  3: 'Visual',
 };
 
 const TerminarDeCrearKit = () => {
-  const { exerciseIds, exerciseData, modality, } = useLocalSearchParams();
-  const cardColor = useThemeColor({}, 'primary');
-  const {user} = useAuthStore();
+  const { exerciseIds, exerciseData, modality } = useLocalSearchParams();
+  const { user } = useAuthStore();
   const [nombreKit, setNombreKit] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  
+
   const { crearKitConEjerciciosMutation } = useKitsStore();
   const { mutateAsync: crearKit, isPending: isLoading } = crearKitConEjerciciosMutation;
 
   const parsedIds = exerciseIds ? JSON.parse(exerciseIds as string) : [];
-  
-  // Obtener los datos reales de los ejercicios en lugar de los de ejemplo
-  const ejerciciosSeleccionados: Data[] = exerciseData 
-    ? JSON.parse(exerciseData as string) 
-    : [];
+  const ejerciciosSeleccionados: Data[] = exerciseData ? JSON.parse(exerciseData as string) : [];
 
   const modalityId = Number(modality);
   const modalidadNombre = modalidadMap[modalityId] || 'Desconocida';
 
   const calcularDuracionTotal = () => {
     return ejerciciosSeleccionados.reduce((total, ejercicio) => {
-      return total + ((ejercicio as any).duration || 5); // 5 minutos por defecto
+      return total + ((ejercicio as any).duration || 5);
     }, 0);
   };
 
@@ -51,339 +44,236 @@ const TerminarDeCrearKit = () => {
       Alert.alert('Error', 'Por favor ingresa un nombre para el kit');
       return;
     }
-
     if (ejerciciosSeleccionados.length === 0) {
       Alert.alert('Error', 'Selecciona al menos un ejercicio');
       return;
     }
 
     try {
-      // Preparar datos para la mutación
       const kitData: CrearKitsConEjercicioResponse = {
         name: nombreKit.trim(),
         descripcion: descripcion.trim(),
         creado_por: user?.doctor_id || 0,
         ejercicios: parsedIds.map((id: number, index: number) => ({
-        ejercicio_id: id,
-        orden: index + 1,
-      })),
+          ejercicio_id: id,
+          orden: index + 1,
+        })),
         activo: true,
       };
-      console.log('Datos del kit a crear:', kitData);
-      // Llamar a la mutación
       await crearKit(kitData);
-
       Alert.alert('Éxito', 'Kit creado correctamente', [
-        { 
-          text: 'OK', 
-          onPress: () => router.replace('/(app)/(doctor)/(stack)/main')
-        }
+        { text: 'OK', onPress: () => router.replace('/(app)/(doctor)/(stack)/main') },
       ]);
-
     } catch (error: any) {
-      console.error('Error creando kit:', error);
       Alert.alert('Error', error.response?.data?.message || 'No se pudo crear el kit');
     }
   };
 
   return (
     <AuthGuard>
+      <SafeAreaView style={{ flex: 1 , backgroundColor: '#fffcc3'}}>
       <ThemedBackground
-        justifyContent="space-between"
+        justifyContent="flex-start"
         fullHeight
-        backgroundColor="#fba557"
-        style={[GlobalStyles.orangeBackground, { padding: 16 }]}
+        backgroundColor="#e1944e"
+        style={{ paddingVertical: 30, paddingHorizontal: 20 }}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <ThemedText type="title" style={styles.title}>
-              Terminar de Crear Kit
-            </ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Completa la información del kit
-            </ThemedText>
-          </View>
 
-          {/* Contenedor principal de dos columnas */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.mainContainer}>
-            
-            {/* Columna izquierda: Información del kit y resumen */}
+            {/* COLUMNA 1: Edición */}
             <View style={styles.leftColumn}>
-              {/* Información del kit */}
-              <View style={[styles.card, { backgroundColor: cardColor }]}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Información del Kit
+              <ThemedText style={styles.label}>Nombre del kit</ThemedText>
+              <ThemedTextInput
+                placeholder="Escribe el nombre del kit"
+                value={nombreKit}
+                onChangeText={setNombreKit}
+                style={styles.input}
+              />
+
+              <ThemedText style={styles.label}>Descripción</ThemedText>
+              <ThemedTextInput
+                placeholder="Agrega una descripción (opcional)"
+                value={descripcion}
+                onChangeText={setDescripcion}
+                multiline
+                numberOfLines={4}
+                style={[styles.input, styles.textArea]}
+              />
+
+              <ThemedText style={styles.summaryText}>
+                Ejercicios seleccionados: {ejerciciosSeleccionados.length}
+              </ThemedText>
+              <ThemedText style={styles.summaryText}>
+                Duración: {calcularDuracionTotal()} min
+              </ThemedText>
+
+              <ThemedButton
+                onPress={handleCrearKit}
+                disabled={isLoading || !nombreKit.trim() || ejerciciosSeleccionados.length === 0}
+                style={[
+                  styles.saveButton,
+                  {
+                    backgroundColor:
+                      !nombreKit.trim() || ejerciciosSeleccionados.length === 0
+                        ? '#b1b1b1'
+                        : '#ee7200',
+                  },
+                ]}
+              >
+                <ThemedText style={styles.saveButtonText}>
+                  {isLoading ? 'Guardando...' : 'Guardar'}
                 </ThemedText>
-                
-                <ThemedTextInput
-                  placeholder="Nombre del kit *"
-                  value={nombreKit}
-                  onChangeText={setNombreKit}
-                  style={styles.input}
-                />
-                
-                <ThemedTextInput
-                  placeholder="Descripción (opcional)"
-                  value={descripcion}
-                  onChangeText={setDescripcion}
-                  multiline
-                  numberOfLines={3}
-                  style={[styles.input, styles.textArea]}
-                />
-              </View>
+              </ThemedButton>
+            </View>
 
-              {/* Resumen de selección */}
-              <View style={[styles.card, { backgroundColor: cardColor }]}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  Resumen de Selección
-                </ThemedText>
-
-                <View style={styles.infoRow}>
-                  <ThemedText style={styles.infoLabel}>Modalidad:</ThemedText>
-                  <ThemedText style={styles.infoValue}>{modalidadNombre}</ThemedText>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <ThemedText style={styles.infoLabel}>Ejercicios seleccionados:</ThemedText>
-                  <ThemedText style={styles.infoValue}>{ejerciciosSeleccionados.length}</ThemedText>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <ThemedText style={styles.infoLabel}>Duración estimada:</ThemedText>
-                  <ThemedText style={styles.infoValue}>{calcularDuracionTotal()} minutos</ThemedText>
-                </View>
-              </View>
-
-              {/* Botones de acción */}
-              <View style={styles.actionsContainer}>
-                <ThemedButton
-                  onPress={() => router.back()}
-                  style={[styles.button, styles.cancelButton]}
-                  disabled={isLoading}
-                >
-                  <ThemedText style={styles.cancelButtonText}>
-                    Cancelar
-                  </ThemedText>
-                </ThemedButton>
-
-                <ThemedButton
-                  onPress={handleCrearKit}
-                  disabled={isLoading || !nombreKit.trim() || ejerciciosSeleccionados.length === 0}
-                  style={[
-                    styles.button,
-                    styles.createButton,
-                    (isLoading || !nombreKit.trim() || ejerciciosSeleccionados.length === 0) && styles.createButtonDisabled
-                  ]}
-                >
-                  <ThemedText style={styles.createButtonText}>
-                    {isLoading ? 'Creando...' : 'Crear Kit'}
-                  </ThemedText>
-                </ThemedButton>
+            {/* COLUMNA 2: Lista personalizada */}
+            <View style={styles.centerColumn}>
+              <ThemedText style={styles.columnTitle}>Lista personalizada</ThemedText>
+              <View style={styles.cardContainer}>
+                {ejerciciosSeleccionados.map((ejercicio, index) => (
+                  <View key={ejercicio.ejercicio_id} style={styles.exerciseCard}>
+                    <ThemedText style={styles.exerciseText}>
+                      Ejercicio {index + 1} · Tipo: {modalidadNombre}
+                    </ThemedText>
+                  </View>
+                ))}
               </View>
             </View>
 
-            {/* Columna derecha: Lista de ejercicios seleccionados */}
+            {/* COLUMNA 3: Tipos de ejercicios */}
             <View style={styles.rightColumn}>
-              {ejerciciosSeleccionados.length > 0 && (
-                <View style={[styles.card, { backgroundColor: cardColor }]}>
-                  <ThemedText type="subtitle" style={styles.sectionTitle}>
-                    Ejercicios Incluidos
-                  </ThemedText>
-                  
-                  <View style={styles.listaEjercicios}>
-                    {ejerciciosSeleccionados.map((ejercicio, index) => (
-          <View key={ejercicio.ejercicio_id} style={styles.ejercicioItem}>
-                        <View style={styles.ejercicioHeader}>
-                          <ThemedText style={styles.ejercicioTitulo}>
-                            {index + 1}. {ejercicio.titulo}
-                          </ThemedText>
-                        </View>
-                        <View style={styles.ejercicioDetalles}>
-                          <ThemedText style={styles.ejercicioTipo}>
-                            {modalidadNombre}
-                          </ThemedText>
-                          <ThemedText style={styles.ejercicioDuracion}>
-                            {((ejercicio as any).duracion || 5)} min
-                          </ThemedText>
-                        </View>
-                      </View>
-                    ))}
+              <ThemedText style={styles.columnTitle}>Ejercicios disponibles</ThemedText>
+              <View style={styles.cardContainer}>
+                {['Lectura', 'Escritura', 'Visual'].map((tipo) => (
+                  <View key={tipo} style={styles.exerciseCard}>
+                    <ThemedText style={styles.exerciseText}>{tipo}</ThemedText>
                   </View>
-                </View>
-              )}
+                ))}
+              </View>
             </View>
           </View>
         </ScrollView>
       </ThemedBackground>
+      </SafeAreaView>
     </AuthGuard>
   );
 };
+
 const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
+    justifyContent: 'flex-end',
+    marginBottom: 10,
+    paddingRight: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-    color: '#000',
+  logo: {
+    width: 28,
+    height: 28,
+    marginRight: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.8,
-    textAlign: 'center',
-    color: '#000',
+  scrollContainer: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
   },
   mainContainer: {
-    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    height: '100%',
+    maxWidth: 1200,
     gap: 20,
   },
   leftColumn: {
-    width: '48%',
-    flexDirection: 'column',
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#ffa500',
+  },
+  centerColumn: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#ffa500',
   },
   rightColumn: {
-    width: '48%',
-    flexDirection: 'column',
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    borderWidth: 2,
+    borderColor: '#ffa500',
   },
-  card: {
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    ...Platform.select({
-      android: {
-        elevation: 3,
-      },
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      web: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-    }),
-  },
-  sectionTitle: {
-    marginBottom: 16,
-    fontSize: 18,
-    fontWeight: '600',
+  label: {
     color: '#000',
+    fontWeight: '600',
+    marginBottom: 6,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 10,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  infoLabel: {
+  summaryText: {
+    marginTop: 4,
+    color: '#333',
     fontWeight: '500',
-    color: '#000',
   },
-  infoValue: {
-    fontWeight: '600',
-    color: '#000',
-  },
-  listaEjercicios: {
-    gap: 12,
-    maxHeight: 400,
-  },ejercicioItem: {
-  padding: 16,
-  borderRadius: 10,
-  backgroundColor: '#fff',
-  borderWidth: 2,
-  borderColor: '#ee7200', // borde naranja
-  marginBottom: 12,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 3,
-  elevation: 2,
-},
-
-ejercicioHeader: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  marginBottom: 8,
-},
-
-ejercicioTitulo: {
-  fontWeight: '600',
-  fontSize: 14,
-  color: '#333',
-  flex: 1,
-},
-
-ejercicioDetalles: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-},
-
-ejercicioTipo: {
-  fontSize: 12,
-  color: '#ee7200', // mismo naranja que el borde
-  fontWeight: '500',
-},
-
-ejercicioDuracion: {
-  fontSize: 12,
-  color: '#666',
-  fontWeight: '500',
-},
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
-  },
-  button: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 10,
+  saveButton: {
+    marginTop: 14,
+    borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
   },
-  cancelButton: {
-    backgroundColor: '#f8f9fa',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-  },
-  cancelButtonText: {
-    color: '#6c757d',
-    fontWeight: '600',
-  },
-  createButton: {
-    backgroundColor: '#ee7200',
-  },
-  createButtonDisabled: {
-    backgroundColor: '#b1b1b1',
-  },
-  createButtonText: {
+  saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 15,
+  },
+  columnTitle: {
     fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#000',
+    marginBottom: 10,
+  },
+  cardContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    padding: 10,
+  },
+  exerciseCard: {
+    backgroundColor: '#f0780a',
+    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginBottom: 8,
+  },
+  exerciseText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 

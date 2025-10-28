@@ -8,11 +8,13 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Slot } from 'expo-router';
 
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';                                                     
+import { useRoutePersistence } from '@/presentation/hooks/useRoutePersistence';
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
+   useRoutePersistence();
    const backgroundColor = useThemeColor({}, 'background');
   
   const colorScheme = useColorScheme();
@@ -25,7 +27,7 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
-
+  
   return (
     <QueryClientProvider client={queryClient}>
     <SafeAreaProvider style={{ flex: 1, backgroundColor }}>

@@ -1,5 +1,5 @@
 import { 
-  View, SafeAreaView, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator 
+  View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator 
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
@@ -10,6 +10,7 @@ import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
 import { useCitasStore } from '@/infraestructure/store/useCitaStore';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Interfaces para las notificaciones
 interface SolicitudNotification {

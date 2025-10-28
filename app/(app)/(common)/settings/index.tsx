@@ -1,4 +1,4 @@
-import { View, KeyboardAvoidingView, SafeAreaView, ScrollView, StyleSheet, Alert, TouchableOpacity, Image} from 'react-native';
+import { View, KeyboardAvoidingView, ScrollView, StyleSheet, Alert, TouchableOpacity, Image} from 'react-native';
 import React, { useState } from 'react';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import styleImage from '@/constants/GlobalStyles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProfileScreen = () => {
   const avatar = require('../../../../assets/images/perfil.png');

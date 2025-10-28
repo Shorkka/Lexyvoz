@@ -5,7 +5,8 @@ import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, SafeAreaView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CodigoRecuperacionScreen = () => {
   const { height } = useWindowDimensions();

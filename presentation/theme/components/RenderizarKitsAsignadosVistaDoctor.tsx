@@ -8,20 +8,14 @@ import {
   Pressable,
   FlatList,
   LayoutAnimation,
-  Platform,
-  UIManager,
   Dimensions,
+  Platform,
 } from "react-native";
 import { useKitsAsignacionesStore } from "@/infraestructure/store/useKitsAsignacionesStore";
 import { router } from "expo-router";
 import ThemedBackground from "./ThemedBackground";
 import { ThemedText } from "./ThemedText";
 import { Ionicons } from "@expo/vector-icons";
-
-// Habilitar animaciones en Android
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface KitAsignado {
   id: number;
@@ -50,6 +44,7 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<
   const [expandedKitId, setExpandedKitId] = useState<number | null>(null);
 
   const buttonRefs = useRef<{ [key: string]: View | null }>({});
+  const containerRef = useRef<View>(null);
 
   const { useKitsAsignadosAPacientesQuery, eliminarKitAsignadoMutation } =
     useKitsAsignacionesStore();
@@ -60,18 +55,41 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<
 
   const toggleKit = useCallback((kitId: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedKitId((prevExpandedKitId) => prevExpandedKitId === kitId ? null : kitId);
+    setExpandedKitId((prevExpandedKitId) =>
+      prevExpandedKitId === kitId ? null : kitId
+    );
   }, []);
 
   const handleKitOptionsPress = useCallback((kit: KitAsignado, event: any) => {
     event.stopPropagation();
     const buttonRef = buttonRefs.current[kit.id];
-    if (buttonRef) {
-      buttonRef.measureInWindow((x: number, y: number, width: number, height: number) => {
+
+    if (!buttonRef) return;
+
+    // Para móvil (Android/iOS)
+    if (Platform.OS !== "web") {
+      buttonRef.measureLayout(
+        containerRef.current as any,
+        (x: number, y: number, width: number, height: number) => {
+          setSelectedKit(kit);
+          setAnchorLayout({ x: x - 190, y: y - 5, width, height });
+          setDropdownVisible(true);
+        },
+        () => console.warn("Error al medir layout")
+      );
+    } else {
+      // Para web: usar getBoundingClientRect
+      const rect = (buttonRef as any)?._node?.getBoundingClientRect?.();
+      if (rect) {
         setSelectedKit(kit);
-        setAnchorLayout({ x, y, width, height });
+        setAnchorLayout({
+          x: rect.left - 180,
+          y: rect.top + window.scrollY - 5,
+          width: rect.width,
+          height: rect.height,
+        });
         setDropdownVisible(true);
-      });
+      }
     }
   }, []);
 
@@ -187,25 +205,23 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<
           </View>
         )}
       </View>
-    ),[handleKitOptionsPress, expandedKitId, toggleKit]
+    ),
+    [handleKitOptionsPress, expandedKitId, toggleKit]
   );
 
-  // Cálculo de la posición del dropdown (ajustado para que aparezca al lado del ícono)
+  const screenWidth = Dimensions.get("window").width;
+  const screenHeight = Dimensions.get("window").height;
+
   const calculateDropdownPosition = () => {
     if (!anchorLayout) return {};
-
-    const { x, y, width } = anchorLayout;
-    const screenWidth = Dimensions.get("window").width;
-    const dropdownWidth = 200;
-
-    let left = x + width + 8;
-    if (left + dropdownWidth > screenWidth) {
-      left = screenWidth - dropdownWidth - 8;
+    const { x, y } = anchorLayout;
+    let adjustedY = y;
+    if (y + 180 > screenHeight) {
+      adjustedY = screenHeight - 190;
     }
-
     return {
-      top: y,
-      left,
+      top: adjustedY,
+      left: Math.max(10, Math.min(screenWidth - 210, x)),
     };
   };
 
@@ -242,71 +258,55 @@ const RenderizarKitsAsignadosVistaDoctor: React.FC<
 
   return (
     <ThemedBackground style={styles.container}>
-      <FlatList
-        data={data.data.map((kit: any) => ({
-          ...kit,
-          fecha_asignacion:
-            typeof kit.fecha_asignacion === "string"
-              ? kit.fecha_asignacion
-              : kit.fecha_asignacion?.toISOString?.() ?? "",
-        }))}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderKitItem}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      <View ref={containerRef} style={{ flex: 1 }}>
+        <FlatList
+          data={data.data.map((kit: any) => ({
+            ...kit,
+            fecha_asignacion:
+              typeof kit.fecha_asignacion === "string"
+                ? kit.fecha_asignacion
+                : kit.fecha_asignacion?.toISOString?.() ?? "",
+          }))}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderKitItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
 
-      {dropdownVisible && anchorLayout && (
-        <>
-          <Pressable
-            style={styles.overlay}
-            onPress={() => setDropdownVisible(false)}
-            accessibilityLabel="Cerrar menú"
-          />
-          <View
-            style={[
-              styles.dropdownContainer,
-              calculateDropdownPosition(),
-            ]}
-            accessibilityViewIsModal={true}
-          >
-            <View style={styles.dropdown}>
-              <Pressable
-                style={styles.dropdownItem}
-                onPress={handleEditKit}
-                accessibilityLabel="Editar kit"
-              >
-                <Ionicons name="create-outline" size={20} color="#606060" />
-                <Text style={styles.dropdownText}>Editar Kit</Text>
-              </Pressable>
+        {dropdownVisible && anchorLayout && (
+          <>
+            <Pressable
+              style={styles.overlay}
+              onPress={() => setDropdownVisible(false)}
+              accessibilityLabel="Cerrar menú"
+            />
+            <View style={[styles.dropdownContainer, calculateDropdownPosition()]}>
+              <View style={styles.dropdown}>
+                <Pressable style={styles.dropdownItem} onPress={handleEditKit}>
+                  <Ionicons name="create-outline" size={20} color="#606060" />
+                  <Text style={styles.dropdownText}>Editar Kit</Text>
+                </Pressable>
 
-              <View style={styles.divider} />
+                <View style={styles.divider} />
 
-              <Pressable
-                style={styles.dropdownItem}
-                onPress={handleOpenTray}
-                accessibilityLabel="Abrir bandeja del kit"
-              >
-                <Ionicons name="folder-open-outline" size={20} color="#606060" />
-                <Text style={styles.dropdownText}>Abrir Bandeja</Text>
-              </Pressable>
+                <Pressable style={styles.dropdownItem} onPress={handleOpenTray}>
+                  <Ionicons name="folder-open-outline" size={20} color="#606060" />
+                  <Text style={styles.dropdownText}>Abrir Bandeja</Text>
+                </Pressable>
 
-              <View style={styles.divider} />
+                <View style={styles.divider} />
 
-              <Pressable
-                style={styles.dropdownItem}
-                onPress={handleDeleteKit}
-                accessibilityLabel="Eliminar kit"
-              >
-                <Ionicons name="trash-outline" size={20} color="#ff3b30" />
-                <Text style={[styles.dropdownText, { color: "#ff3b30" }]}>
-                  Eliminar Kit
-                </Text>
-              </Pressable>
+                <Pressable style={styles.dropdownItem} onPress={handleDeleteKit}>
+                  <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                  <Text style={[styles.dropdownText, { color: "#ff3b30" }]}>
+                    Eliminar Kit
+                  </Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
-        </>
-      )}
+          </>
+        )}
+      </View>
     </ThemedBackground>
   );
 };
@@ -319,10 +319,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  listContent: {
-    padding: 16,
-    gap: 16,
-  },
+  listContent: { padding: 16, gap: 16 },
   kitHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -333,16 +330,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
   },
-  kitHeaderIcons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  kitTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    flex: 1,
-    marginRight: 8,
-  },
+  kitHeaderIcons: { flexDirection: "row", alignItems: "center" },
+  kitTitle: { fontSize: 16, fontWeight: "bold", flex: 1, marginRight: 8 },
   kitStatus: {
     fontSize: 12,
     fontWeight: "600",
@@ -350,58 +339,23 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  statusActive: {
-    backgroundColor: "#e6f7ee",
-    color: "green",
-  },
-  statusCompleted: {
-    backgroundColor: "#e6f0ff",
-    color: "#339af0",
-  },
-  statusInactive: {
-    backgroundColor: "#f8f9fa",
-    color: "#868e96",
-  },
+  statusActive: { backgroundColor: "#e6f7ee", color: "green" },
+  statusCompleted: { backgroundColor: "#e6f0ff", color: "#339af0" },
+  statusInactive: { backgroundColor: "#f8f9fa", color: "#868e96" },
   expandedContent: {
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: "#f0f0f0",
     marginTop: 8,
   },
-  kitDescription: {
-    fontSize: 14,
-    marginBottom: 8,
-    opacity: 0.7,
-    flexShrink: 1,
-  },
-  kitDate: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-  chevronIcon: {
-    marginRight: 8,
-  },
-  optionsButton: {
-    padding: 4,
-  },
-  errorText: {
-    color: "red",
-    textAlign: "center",
-    fontSize: 16,
-  },
-  retryText: {
-    color: "#ee7200",
-    textDecorationLine: "underline",
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: "center",
-    opacity: 0.7,
-  },
-  dropdownContainer: {
-    position: "absolute",
-    zIndex: 2000,
-  },
+  kitDescription: { fontSize: 14, marginBottom: 8, opacity: 0.7 },
+  kitDate: { fontSize: 12, opacity: 0.6 },
+  chevronIcon: { marginRight: 8 },
+  optionsButton: { padding: 4 },
+  errorText: { color: "red", textAlign: "center", fontSize: 16 },
+  retryText: { color: "#ee7200", textDecorationLine: "underline" },
+  emptyText: { fontSize: 16, textAlign: "center", opacity: 0.7 },
+  dropdownContainer: { position: "absolute", zIndex: 2000 },
   dropdown: {
     backgroundColor: "white",
     borderRadius: 12,
@@ -420,17 +374,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     gap: 12,
   },
-  dropdownText: {
-    color: "#0f0f0f",
-    fontSize: 14,
-    fontWeight: "500",
-    flex: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#f0f0f0",
-    marginHorizontal: 8,
-  },
+  dropdownText: { color: "#0f0f0f", fontSize: 14, fontWeight: "500", flex: 1 },
+  divider: { height: 1, backgroundColor: "#f0f0f0", marginHorizontal: 8 },
   overlay: {
     position: "absolute",
     top: 0,

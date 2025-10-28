@@ -1,0 +1,7 @@
+{
+  "plugins": ["react-native"],
+  "extends": ["plugin:react-native/all"],
+  "rules": {
+    "react-native/no-raw-text": "error"
+  }
+}

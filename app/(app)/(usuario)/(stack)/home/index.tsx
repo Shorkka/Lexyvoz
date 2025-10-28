@@ -9,8 +9,9 @@ import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, Modal, StyleSheet, Pressable, Image } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View, Modal, StyleSheet, Pressable, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Definir interfaz para el kit
 interface Kit {

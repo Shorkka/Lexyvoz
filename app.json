@@ -5,29 +5,30 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "LexyVoz",
+    "scheme": "lexyvoz",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "config": {},
       "bundleIdentifier": "com.lexyvoz.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "package": "com.lexyvoz.app",
       "config": {
         "googleMaps": {
-          "apiKey": "$EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID"
+          "apiKey": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID}"
         }
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -54,11 +55,15 @@
     },
     "extra": {
       "router": {},
-      "googlePlacesApiKeyAndroid": "$EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID",
-      "googlePlacesApiKeyWeb": "$EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB",
+      "googlePlacesApiKeyAndroid": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID}",
+      "googlePlacesApiKeyWeb": "${EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB}",
       "eas": {
         "projectId": "ecf70396-2b4b-4884-8b08-dc8033cd051f"
       }
-    }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ecf70396-2b4b-4884-8b08-dc8033cd051f"
+    },
+    "runtimeVersion": "1.0.0"
   }
 }

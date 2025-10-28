@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   View,
   ScrollView,
@@ -14,6 +13,7 @@ import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { Ionicons } from '@expo/vector-icons';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface WritingExercise {
   id: number;

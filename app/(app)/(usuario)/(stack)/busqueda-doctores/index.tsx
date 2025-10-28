@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { 
-  View, SafeAreaView, StyleSheet, KeyboardAvoidingView, 
+  View, StyleSheet, KeyboardAvoidingView, 
   ScrollView, Pressable, Modal 
 } from 'react-native';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
@@ -14,6 +14,7 @@ import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolic
 import { useAuthKitsStore } from '@/infraestructure/store/useAuthKitsStore ';
 import { useAlert } from '@/presentation/hooks/useAlert';
 import Filtro from '@/presentation/theme/components/Filtro';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Doctor {
   doctor_id: string;

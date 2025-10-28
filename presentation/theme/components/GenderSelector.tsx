@@ -1,15 +1,16 @@
+// GenderSelector.tsx
 import React from 'react';
 import { View, Platform, useWindowDimensions } from 'react-native';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
 import { ThemedText } from './ThemedText';
 
 interface Props {
-  selected: string;
+  selected: string;                 // ← string (no boolean)
   onSelect: (value: string) => void;
-  showError?: boolean; // ← ahora es opcional
+  showError?: boolean;
 }
 
-const GenderSelector: React.FC<Props> = ({ selected, onSelect, showError }) => {
+const GenderSelector: React.FC<Props> = ({ selected, onSelect }) => {
   const { width } = useWindowDimensions();
 
   return (
@@ -31,7 +32,7 @@ const GenderSelector: React.FC<Props> = ({ selected, onSelect, showError }) => {
             key={gender}
             label={gender}
             value={gender}
-            selected={selected === gender}
+            selected={selected === gender} // ← aquí sí es boolean
             onPress={onSelect}
           />
         ))}

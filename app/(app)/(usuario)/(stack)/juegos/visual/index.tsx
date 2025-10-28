@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  SafeAreaView,
   StyleSheet,
   View,
   ScrollView,
@@ -13,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import { Audio } from 'expo-av';
 import ThemedVozButton from '@/presentation/theme/components/ThemedVozButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface AudioExercise {
   id: number;
@@ -81,7 +81,6 @@ const AudioGameScreen = () => {
 
     try {
       await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
       setIsRecording(false);
       setHasRecorded(true);
       setRecording(null);

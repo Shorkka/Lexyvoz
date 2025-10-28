@@ -22,7 +22,7 @@ const CardViewEditkits = ({ isAsigning = false }: Props) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View>
       <ThemedBackground style={styles.background}>
         {/* Lista scrolleable con altura limitada */}
         <View style={[styles.listContainer, { maxHeight: height * 0.3 }]}>
@@ -41,16 +41,11 @@ const CardViewEditkits = ({ isAsigning = false }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   background: {
-    flex: 1,
     borderRadius: 12,
     padding: 10,
   },
   listContainer: {
-    flexGrow: 0, // 👈 evita que se expanda infinito
     marginBottom: 10,
   },
   fixedButtonContainer: {

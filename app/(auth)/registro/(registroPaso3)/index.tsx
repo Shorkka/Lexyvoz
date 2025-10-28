@@ -3,132 +3,101 @@ import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useAlert } from '@/presentation/hooks/useAlert';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
+import TermsAndConditions from '@/presentation/theme/components/TermsAndConditions';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedDatePicker from '@/presentation/theme/components/ThemedDatePicker';
-import ThemedDropdown from '@/presentation/theme/components/ThemedDropdown';
 import ThemedInput from '@/presentation/theme/components/ThemedInput';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+
+
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
+  Pressable,
   ScrollView,
   useWindowDimensions,
   View,
+  Text,
+  StyleSheet,
 } from 'react-native';
-
-const escolaridadData = [
-  { label: 'Primaria', value: 'primaria' },
-  { label: 'Secundaria', value: 'secundaria' },
-  { label: 'Preparatoria', value: 'preparatoria' },
-  { label: 'Técnico', value: 'tecnico' },
-  { label: 'Licenciatura', value: 'licenciatura' },
-  { label: 'Maestría', value: 'maestria' },
-  { label: 'Doctorado', value: 'doctorado' },
-  { label: 'Sin estudios', value: 'sin_estudios' },
-];
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Step3Screen = () => {
-  const data = useRegisterStore((s) => s);    
+  const data = useRegisterStore((s) => s);
   const register = useAuthStore((s) => s.register);
   const { width } = useWindowDimensions();
   const backgroundColor = useThemeColor({}, 'background');
-  const { showAlert } = useAlert(); 
+  const linkColor = useThemeColor({}, 'primary');
+  const { showAlert } = useAlert();
   const [fechaTocada, setFechaTocada] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [consentVoiceTraining, setConsentVoiceTraining] = useState(false); // opcional
+  const avatar = require('@/assets/images/perfil.png');
 
   const [form, setForm] = useState({
     tipo: '',
     escolaridad: '',
     fecha_de_nacimiento: new Date(),
     especialidad: '',
+    acepta_terminos: false,
   });
-  
-  const [errors, setErrors] = useState({
-    escolaridad: '',
-    fecha_de_nacimiento: '',
-    especialidad: '',
-    tipo: '',
-  });
-  const completarRegistro = async () => {
-    const newErrors = {
-      escolaridad: '',
-      fecha_de_nacimiento: '',
-      especialidad: '',
-      titulo: '',
-      tipo: '',
-    };
-    
-    let hasError = false;
-    if ((form.tipo === 'Paciente') && !form.escolaridad) {
-      newErrors.escolaridad = 'Selecciona tu nivel de escolaridad';
-      hasError = true;
-    }
-    
-    if (!fechaTocada) {
-      newErrors.fecha_de_nacimiento = 'Selecciona tu fecha de nacimiento';
-      hasError = true;
-    }
-    
-    if (!form.fecha_de_nacimiento) {
-      newErrors.fecha_de_nacimiento = 'Selecciona tu fecha de nacimiento';
-      hasError = true;
-    }
-    
+
+  const isFormValid = useMemo(() => {
+    const tipoOk = form.tipo !== '';
+    const fechaOk = fechaTocada && !!form.fecha_de_nacimiento;
+    const terminosOk = form.acepta_terminos === true;
+
     if (form.tipo === 'Doctor') {
-      if (!form.especialidad) {
-        newErrors.especialidad = 'Ingresa tu especialidad';
-        hasError = true;
+      return tipoOk && fechaOk && form.especialidad.trim() !== '' && terminosOk;
+    }
+
+    if (form.tipo === 'Usuario') {
+      return tipoOk && fechaOk && (form.escolaridad.trim() !== '' || form.escolaridad === 'N/A') && terminosOk;
+    }
+
+    return false;
+  }, [form, fechaTocada]);
+
+  const completarRegistro = async () => {
+    if (!isFormValid) return;
+
+    try {
+      const payload: any = {
+        nombre: data.nombre!,
+        correo: data.correo!.toLowerCase(),
+        contrasenia: data.contrasenia!,
+        fecha_de_nacimiento: form.fecha_de_nacimiento.toISOString().split('T')[0],
+        numero_telefono: data.numero_telefono!,
+        sexo: data.sexo!,
+        tipo: form.tipo!,
+        domicilio: `${data.domicilio}`,
+        codigo_postal: data.codigo_postal!,
+        avatar,
+        acepta_terminos: form.acepta_terminos,
+        consent_voice_training: consentVoiceTraining, // si lo quieres enviar al backend
+      };
+
+      if (form.tipo === 'Usuario') {
+        payload.escolaridad = form.escolaridad || 'N/A';
+      } else if (form.tipo === 'Doctor') {
+        payload.especialidad = form.especialidad;
       }
 
-    }
-    
-    if (!form.tipo) {
-      newErrors.tipo = 'Selecciona el tipo de usuario';
-      hasError = true;
-    }
-    
-    if (hasError) {
-      setErrors(newErrors);
-      alert('Por favor completa los campos obligatorios.');
-      return;
-    }
-    try {
-      const payload = {
-        nombre:              data.nombre!,
-        correo:              data.correo!,
-        contrasenia:          data.contrasenia!,
-        fecha_de_nacimiento: form.fecha_de_nacimiento.toISOString().split('T')[0],
-        numero_telefono:     data.numero_telefono!,
-        sexo:                data.sexo!,
-        tipo:                form.tipo!,
-        domicilio:           `${data.domicilio}`,
-        codigo_postal:       data.codigo_postal!,
-        ...(form.tipo === 'Paciente' && { escolaridad: form.escolaridad }),
-        ...(form.tipo === 'Doctor' && {
-          especialidad: form.especialidad,
-        }),
-      };
-      
       const success = await register(payload);
-      
+
       if (success) {
-        showAlert(
-          'Registro exitoso',
-          'Tu cuenta ha sido creada. Ahora puedes iniciar sesión.',
-          [{ text: 'OK', onPress: () => router.replace('/login') }]
-        );
+        showAlert('Registro exitoso', 'Tu cuenta ha sido creada correctamente.', [
+          { text: 'OK', onPress: () => router.replace('/login') },
+        ]);
       } else {
-        showAlert('Error', 'No se pudo completar el registro');
+        showAlert('Error', 'No se pudo completar el registro.');
       }
     } catch (error: any) {
-      showAlert(
-        'Error en registro',
-        error.message || 'Ocurrió un error al registrar. Por favor intente nuevamente.'
-      );
+      showAlert('Error en registro', error.message || 'Ocurrió un error al registrar. Inténtalo de nuevo.');
     }
   };
 
@@ -136,17 +105,19 @@ const Step3Screen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor }}>
       <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
         <ScrollView
-          style={{ flex: 1, backgroundColor: backgroundColor }}
+          style={{ flex: 1, backgroundColor }}
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 20,  
+            paddingHorizontal: 20,
           }}
         >
           <ProgressHeader step={3} />
           <ThemedBackground backgroundColor="#fff" align="center">
             <ThemedText type="subtitle">Registro de usuario</ThemedText>
+
+            {/* --- Tipo de usuario --- */}
             <View style={{ width: '100%', marginTop: 12 }}>
               <ThemedText style={{ fontSize: 14, top: 15 }}>Tipo de usuario</ThemedText>
               <View
@@ -164,7 +135,7 @@ const Step3Screen = () => {
                   gap: 12,
                 }}
               >
-                {[ 'Doctor', 'Usuario'].map((tipo) => (
+                {['Doctor', 'Usuario'].map((tipo) => (
                   <RadioButton
                     key={tipo}
                     label={tipo}
@@ -174,11 +145,8 @@ const Step3Screen = () => {
                   />
                 ))}
               </View>
-              {errors.tipo ? (
-                <ThemedText type="error" style={{ marginTop: 4 }}>
-                  {errors.tipo}
-                </ThemedText>
-              ) : null}
+
+              {/* Fecha */}
               <ThemedDatePicker
                 label="Fecha de Nacimiento"
                 value={form.fecha_de_nacimiento}
@@ -188,59 +156,72 @@ const Step3Screen = () => {
                 }}
                 style={{ width: '100%' }}
               />
-              {errors.fecha_de_nacimiento ? (
-                <ThemedText type="error" style={{ marginTop: 4, marginBottom: 8 }}>
-                  {errors.fecha_de_nacimiento}
-                </ThemedText>
-              ) : null}
-              {(form.tipo === 'Paciente') && (
-                <>
-                  <ThemedText style={{ fontSize: 14, marginBottom: 5 }}>
-                    Escolaridad
-                  </ThemedText>
-                  <ThemedDropdown
-                    data={escolaridadData}
-                    value={form.escolaridad}
-                    onChangeValue={(value) => setForm({ ...form, escolaridad: value })}
-                    placeholder="Selecciona tu nivel de escolaridad"
-                    search={true}
-                    searchPlaceholder="Buscar nivel..."
-                    icon="book"
-                    error={!!errors.escolaridad}
-                  />
-                  {errors.escolaridad ? (
-                    <ThemedText type="error" style={{ marginTop: 4 }}>
-                      {errors.escolaridad}
-                    </ThemedText>
-                  ) : null}
-                </>
-              )}
+
+              {/* Escolaridad / Especialidad */}
+
               {form.tipo === 'Doctor' && (
-                <>
-                  <ThemedInput
-                    label="Especialidad *"
-                    placeholder="Ingresa tu especialidad"
-                    value={form.especialidad}
-                    onChangeText={(text) => setForm({ ...form, especialidad: text })}
-                    icon="stethoscope"
-                    error={!!errors.especialidad}
-                    errorMessage={errors.especialidad}
-                  />
-                </>
+                <ThemedInput
+                  label="Especialidad *"
+                  placeholder="Ingresa tu especialidad"
+                  value={form.especialidad}
+                  onChangeText={(text) => setForm({ ...form, especialidad: text })}
+                  icon="stethoscope"
+                />
               )}
 
+              {/* Aceptar términos */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16, flexWrap: 'wrap' }}>
+                <Pressable
+                  onPress={() => setForm({ ...form, acepta_terminos: !form.acepta_terminos })}
+                  style={[styles.checkbox, form.acepta_terminos && styles.checkboxOn]}
+                  hitSlop={8}
+                >
+                  {form.acepta_terminos ? <Text style={styles.checkMark}>✓</Text> : null}
+                </Pressable>
+
+                <Text style={{ fontSize: 13, color: '#333' }}>Acepto los </Text>
+
+                <Pressable
+                  onPress={() => setShowTerms(true)}
+                  accessibilityRole="link"
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  style={Platform.select({ web: { cursor: 'pointer' } as any, default: undefined })}
+                >
+                  <Text style={{ fontSize: 13, color: linkColor, textDecorationLine: 'underline' }}>
+                    Términos y Condiciones
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* --- Botones --- */}
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   paddingHorizontal: 16,
-                  marginTop: 20,
+                  marginTop: 25,
                 }}
               >
                 <ThemedButton widthAndroid={0.2} widthWeb={0.1} onPress={() => router.back()}>
                   Regresar
                 </ThemedButton>
-                <ThemedButton widthAndroid={0.25} widthWeb={0.15} onPress={completarRegistro}>
+
+                <ThemedButton
+                  widthAndroid={0.25}
+                  widthWeb={0.15}
+                  onPress={isFormValid ? completarRegistro : undefined}
+                  style={{
+                    opacity: isFormValid ? 1 : 0.5,
+                    backgroundColor: isFormValid ? '#ff9900' : '#bdbdbd',
+                    padding: 15,
+                    borderRadius: 5,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 5,
+                  }}
+                >
                   Completar Registro
                 </ThemedButton>
               </View>
@@ -248,8 +229,39 @@ const Step3Screen = () => {
           </ThemedBackground>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* MODAL de T&C con consentimientos */}
+      <TermsAndConditions
+        visible={showTerms}
+        onClose={() => setShowTerms(false)}
+        onConfirm={({ accepted, consentVoiceProcessing, consentVoiceTraining }) => {
+          if (accepted && consentVoiceProcessing) {
+            setForm({ ...form, acepta_terminos: true });
+            setConsentVoiceTraining(consentVoiceTraining);
+            setShowTerms(false);
+          }
+        }}
+        appName="LexyVoz"
+      />
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#ff9900',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  checkboxOn: { backgroundColor: '#ff9900' },
+  checkMark: { color: '#fff', fontWeight: '700' },
+  sectionTitle: { fontWeight: '700', marginTop: 8, marginBottom: 6, color: '#333' },
+  p: { marginBottom: 10, color: '#444' },
+});
 
 export default Step3Screen;

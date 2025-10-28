@@ -5,7 +5,8 @@ import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ConfirmarAccion = () => {
   const { height } = useWindowDimensions();

@@ -1,156 +1,122 @@
-// AddressAutocompleteMovilMapbox.tsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   TextInput,
-  Text,
+  FlatList,
   TouchableOpacity,
+  Text,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
-  Platform
 } from 'react-native';
-import debounce from 'lodash.debounce';
-
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || '';
 
 type Address = {
   direccion: string;
-  colonia: string;
-  codigoPostal: string;
-  ciudad: string;
-  estado: string;
-  pais: string;
-  lat: number;
-  lng: number;
-};
-
-type Prediction = {
-  id: string;
-  place_name: string;
-  place_type: string[];
-  text: string;
-  context?: any[];
-  center: [number, number];
+  colonia?: string;
+  codigoPostal?: string;
+  ciudad?: string;
+  estado?: string;
+  pais?: string;
+  lat?: number;
+  lng?: number;
 };
 
 type Props = {
   onAddressSelect: (address: Address) => void;
-  limit?: number;
+  value?: string;
 };
 
-export default function AddressAutocompleteMovilMapbox({ onAddressSelect, limit = 5 }: Props) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Prediction[]>([]);
+const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID || '';
+
+export default function AddressAutocompleteUniversal({ onAddressSelect, value }: Props) {
+  const [query, setQuery] = useState(value || '');
+  const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const searchPlaces = async (text: string) => {
-    setQuery(text);
-    setError(null);
-
-    if (text.length < 3) {
+  const fetchPredictions = useCallback(async (text: string) => {
+    if (!text) {
       setResults([]);
       return;
     }
-
     setLoading(true);
     try {
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
         text
-      )}.json?autocomplete=true&country=mx&language=es&limit=${limit}&access_token=${MAPBOX_TOKEN}`;
-
+      )}&key=${API_KEY}&language=es&components=country:mx`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-
-      const features: Prediction[] = data.features || [];
-      setResults(features);
+      const json = await res.json();
+      setResults(json.predictions || []);
     } catch (err) {
-      console.error('Mapbox search error', err);
-      setError('Error buscando direcciones.');
-      setResults([]);
+      console.error('Error fetching predictions', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const debouncedSearch = debounce(searchPlaces, 400);
+  const fetchDetails = async (placeId: string, description: string) => {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}&language=es`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const details = json.result;
 
-  const buildAddressFromFeature = (f: any): Address => {
-    // Mapbox returns center [lng, lat] and place_name; context has city/state/country sometimes.
-    const getFromContext = (ctx: any[], key: string) => {
-      if (!ctx) return '';
-      const found = ctx.find((c: any) => c.id && c.id.startsWith(key));
-      return found ? found.text : '';
-    };
+      if (!details) return;
 
-    const postal = (f.context || []).find((c: any) => c.id && c.id.startsWith('postcode'));
-    return {
-      direccion: f.place_name || f.text || '',
-      colonia: getFromContext(f.context, 'neighborhood') || '',
-      codigoPostal: postal ? postal.text : '',
-      ciudad: getFromContext(f.context, 'place') || getFromContext(f.context, 'locality') || '',
-      estado: getFromContext(f.context, 'region') || '',
-      pais: getFromContext(f.context, 'country') || 'México',
-      lat: (f.center && f.center[1]) || 0,
-      lng: (f.center && f.center[0]) || 0,
-    };
-  };
+      const components = details.address_components || [];
+      const getComp = (type: string) =>
+        components.find((c: any) => c.types.includes(type))?.long_name || '';
 
-  const handleSelect = (item: Prediction) => {
-    const address = buildAddressFromFeature(item);
-    onAddressSelect(address);
-    setQuery(address.direccion);
-    setResults([]);
+      const address: Address = {
+        direccion: details.formatted_address || description,
+        colonia: getComp('sublocality') || getComp('neighborhood'),
+        codigoPostal: getComp('postal_code'),
+        ciudad: getComp('locality'),
+        estado: getComp('administrative_area_level_1'),
+        pais: getComp('country'),
+        lat: details.geometry?.location?.lat || 0,
+        lng: details.geometry?.location?.lng || 0,
+      };
+
+      onAddressSelect(address);
+      setQuery(address.direccion);
+      setResults([]);
+    } catch (err) {
+      console.error('Error fetching details', err);
+    }
   };
 
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.input}
-        placeholder="Escribe tu dirección..."
-        placeholderTextColor="#aaa"
         value={query}
         onChangeText={(text) => {
           setQuery(text);
-          debouncedSearch(text);
+          fetchPredictions(text);
         }}
-        autoCorrect={false}
-        autoCapitalize="none"
+        placeholder="Escribe tu dirección..."
+        style={styles.input}
       />
 
-      {loading && (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="small" color="#ff9900" />
-        </View>
-      )}
+      {loading && <ActivityIndicator size="small" color="#ff9900" />}
 
-      {error && <Text style={styles.errorText}>{error}</Text>}
-
-      {results.length > 0 && (
-        <ScrollView
-          nestedScrollEnabled
-          style={styles.resultsContainer}
-          keyboardShouldPersistTaps="always"
-        >
-          {results.map((r) => (
-            <TouchableOpacity key={r.id} style={styles.itemContainer} onPress={() => handleSelect(r)}>
-              <Text style={styles.itemMainText} numberOfLines={1}>{r.place_name}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+      <FlatList
+        data={results}
+        keyExtractor={(item) => item.place_id}
+        style={styles.results}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.item}
+            onPress={() => fetchDetails(item.place_id, item.description)}
+          >
+            <Text style={styles.itemText}>{item.description}</Text>
+          </TouchableOpacity>
+        )}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 8,
-    width: '100%',
-    zIndex: 10,
-  },
+  container: { marginTop: 8, width: '100%' },
   input: {
     height: 48,
     borderColor: '#ff9900',
@@ -160,47 +126,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff3e7',
     fontSize: 16,
     color: '#333',
-    width: '100%',
-    paddingRight: 40,
   },
-  loaderContainer: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-  },
-  errorText: {
-    color: '#d32f2f',
-    marginTop: 4,
-    fontSize: 14,
-  },
-  resultsContainer: {
-    maxHeight: 220,
-    backgroundColor: 'white',
+  results: {
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
     marginTop: 5,
-    width: '100%',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+    maxHeight: 200,
   },
-  itemContainer: {
-    padding: 12,
+  item: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  itemMainText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
-  },
+  itemText: { fontSize: 15, fontWeight: '500', color: '#333' },
 });

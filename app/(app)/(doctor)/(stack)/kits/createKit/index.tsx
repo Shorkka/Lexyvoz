@@ -7,11 +7,18 @@ import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, SafeAreaView, ScrollView, View, StyleSheet, Platform} from 'react-native';
+import {
+  KeyboardAvoidingView,
+  ScrollView,
+  View,
+  StyleSheet,
+  Platform,
+  useWindowDimensions,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Modality = 'lectura' | 'escrito' | 'visual' | null;
 
-// 🔹 Mapear modalities con IDs del backend
 const tipoMap: Record<Exclude<Modality, null>, number> = {
   lectura: 1,
   escrito: 2,
@@ -19,80 +26,114 @@ const tipoMap: Record<Exclude<Modality, null>, number> = {
 };
 
 const CreateKits = () => {
+  const { width, height } = useWindowDimensions();
+  const isHorizontal = width > height;
   const press = useThemeColor({}, 'primary');
   const backgroundColor = useThemeColor({}, 'background');
+
   const [modality, setModality] = useState<Modality>(null);
-  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
   const [selectedExercises, setSelectedExercises] = useState<Data[]>([]);
 
-const handleCreateKit = () => {
-  const modalityId = modality ? tipoMap[modality] : null;
-  const exerciseIds = selectedExercises.map(e => e.ejercicio_id);
+  const capitalize = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1);
 
-  router.push({
-    pathname: '/(app)/(doctor)/(stack)/kits/(terminardeCrearKit)',
-    params: { 
-      exerciseIds: JSON.stringify(exerciseIds),
-      exerciseData: JSON.stringify(selectedExercises),
-      modality: modalityId
-    }
-  });
-};
+  const handleCreateKit = () => {
+    const modalityId = modality ? tipoMap[modality] : null;
+    const exerciseIds = selectedExercises.map((e) => e.ejercicio_id);
 
-  // Obtener el ID numérico para pasar al componente EjercicioTipoView
+    router.push({
+      pathname: '/(app)/(doctor)/(stack)/kits/(terminardeCrearKit)',
+      params: {
+        exerciseIds: JSON.stringify(exerciseIds),
+        exerciseData: JSON.stringify(selectedExercises),
+        modality: modalityId,
+      },
+    });
+  };
+
   const tipoEjercicioId = modality ? tipoMap[modality] : null;
 
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
-          <ScrollView contentContainerStyle={[GlobalStyles.scrollContent, { flex: 1 }]}>
-            <View style={styles.container}>
-              {/* Primer ThemedBackground (30%) */}
-              <View style={{...styles.leftPanel, justifyContent: "flex-start"}}>
-                <ThemedText type="title" style={{ color: "white", alignItems: "center"}}>
-                  Ejercicios
-                </ThemedText>
-                <View>
+          <ScrollView
+            contentContainerStyle={[
+              GlobalStyles.scrollContent,
+              { flexGrow: 1, justifyContent: 'center' },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <View
+              style={[
+                styles.container,
+                {
+                  flexDirection: isHorizontal ? 'row' : 'column',
+                  alignItems: isHorizontal ? 'stretch' : 'center',
+                },
+              ]}
+            >
+              {/* PANEL IZQUIERDO */}
+              <View
+                style={[
+                  styles.leftPanel,
+                  {
+                    width: isHorizontal ? '25%' : '90%',
+                    marginBottom: isHorizontal ? 0 : 20,
+                    height: isHorizontal ? 'auto' : undefined,
+                  },
+                ]}
+              >
+                <ThemedText style={styles.title}>Ejercicios</ThemedText>
+
+                <View style={styles.modalityContainer}>
                   {(['lectura', 'escrito', 'visual'] as Modality[]).map((m) => (
                     <ThemedButton
                       key={m}
-                      style={{
-                        backgroundColor: modality === m ? press : '#b1b1b1',
-                        ...styles.button, 
-                        top: '50%'
-                      }}
+                      style={[
+                        styles.modalityButton,
+                        {
+                          backgroundColor: modality === m ? press : '#b1b1b1',
+                        },
+                      ]}
                       onPress={() => setModality(m)}
                     >
-                      <ThemedText style={{ color: '#fff', fontWeight: 'bold' }}>
+                      <ThemedText style={styles.modalityText}>
                         {capitalize(m || '')}
                       </ThemedText>
                     </ThemedButton>
                   ))}
                 </View>
               </View>
-              
-              {/* Columna derecha: Contenido dividido en dos subcolumnas */}
-              <View style={styles.rightPanel}>
-                <ThemedText type="title" style={{color: 'white'}}>
+
+              {/* PANEL DERECHO FIJO */}
+              <View
+                style={[
+                  styles.rightPanel,
+                  {
+                    width: isHorizontal ? '70%' : '95%',
+                    minHeight: isHorizontal ? 500 : 450, // 🔹 altura fija consistente
+                    maxHeight: isHorizontal ? 520 : 480,
+                    alignSelf: 'center',
+                  },
+                ]}
+              >
+                <ThemedText style={styles.subtitle}>
                   Vista Previa del Kit
                 </ThemedText>
-                <ThemedText style={{color: 'white'}}>
-                  Selecciona diferentes reactivos para crear un kit, Manten presionado para ver una vista previa.
+
+                <ThemedText style={styles.infoText}>
+                  Selecciona diferentes reactivos para crear un kit.
                 </ThemedText>
-                <ThemedText style={{color: 'white'}}>
-                  Modalidad seleccionada: {modality ? capitalize(modality) : 'Ninguna'}
-                </ThemedText>
-                
-                <View style={styles.navigationContainer}>
+                <View style={styles.reactivosContainer}>
                   {tipoEjercicioId ? (
-                    <ReactivosView 
-                       tipo_id={tipoEjercicioId}
-                       setSelectedExercises={setSelectedExercises}
+                    <ReactivosView
+                      tipo_id={tipoEjercicioId}
+                      setSelectedExercises={setSelectedExercises}
                     />
                   ) : (
                     <View style={styles.centerContainer}>
-                      <ThemedText style={{color: 'white'}}>
+                      <ThemedText style={{ color: 'white' }}>
                         Selecciona una modalidad para ver los ejercicios
                       </ThemedText>
                     </View>
@@ -100,190 +141,151 @@ const handleCreateKit = () => {
                 </View>
               </View>
             </View>
-            
-            <ThemedButton 
-              style={{
-                ...styles.navButton, 
-                backgroundColor: selectedExercises.length > 0 && modality ? '#ee7200' : '#b1b1b1',
-                alignSelf: 'flex-end', 
-                padding: 20, 
-                width: '20%', 
-                marginRight: 20
-              }}
-              onPress={handleCreateKit}
-              disabled={selectedExercises.length === 0 || !modality}
+
+            {/* BOTÓN CREAR KIT */}
+            <View
+              style={[
+                styles.createKitWrapper,
+                {
+                  alignItems: isHorizontal ? 'flex-end' : 'center',
+                  marginRight: isHorizontal ? 40 : 0,
+                },
+              ]}
             >
-              <ThemedText style={{ color: '#fff', fontWeight: 'bold', textAlign: 'center'}}>
-                Crear Kit
-              </ThemedText>
-            </ThemedButton>
+              <ThemedButton
+                style={[
+                  styles.createKitBtn,
+                  {
+                    backgroundColor:
+                      selectedExercises.length > 0 && modality
+                        ? '#ee7200'
+                        : '#b1b1b1',
+                    width: isHorizontal ? 220 : '100%',
+                  },
+                ]}
+                onPress={handleCreateKit}
+                disabled={selectedExercises.length === 0 || !modality}
+              >
+                <ThemedText style={styles.createKitText}>Crear Kit</ThemedText>
+              </ThemedButton>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </AuthGuard>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "row", // divide izquierda / derecha
-    backgroundColor: "#fefcc3", // fondo general (amarillo claro)
-    padding: 20,
-  },
-    centerContainer: {
-    flex: 1,
+    backgroundColor: '#fffcc3',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    gap: 20,
+  },
+  title: {
+    color: 'white',
+    marginBottom: 30,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 22,
   },
   leftPanel: {
-    flex: 3, // 30%
-    backgroundColor: "#FFA500", // naranja
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 10,
+    backgroundColor: '#FFA500',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 12,
     borderRadius: 12,
-    marginRight: 8,
-        ...Platform.select({
-          android: {
-            elevation: 4,
-          },
-          web: {
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.6,
-              shadowRadius: 5,
-          },
-        }),
-  },
-  rightPanel: {
-    flex: 7, // 70%
-    backgroundColor: "#FFA500", // naranja
-    borderRadius: 12,
-    padding: 12,
-    justifyContent: "flex-start",
-    marginBottom: '10%',
-        ...Platform.select({
-      android: {
-        elevation: 4,
-      },
+    minHeight: 350,
+    ...Platform.select({
+      android: { elevation: 4 },
       web: {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.6,
-          shadowRadius: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
       },
     }),
   },
-  buttonActive: {
-    backgroundColor: "darkorange",
-    padding: 12,
-    marginVertical: 10,
-    borderRadius: 8,
-    width: "80%",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    backgroundColor: "gray",
-    padding: 12,
-    marginVertical: 10,
-    borderRadius: 8,
-    width: "80%",
-    alignItems: "center",
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  exerciseCard: {
-    backgroundColor: "white",
+  rightPanel: {
+    backgroundColor: '#FFA500',
+    borderRadius: 12,
     paddingVertical: 20,
-    marginVertical: 8,
+    paddingHorizontal: 16,
+    justifyContent: 'flex-start',
+    overflow: 'hidden',
+    ...Platform.select({
+      android: { elevation: 4 },
+      web: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+    }),
+  },
+  modalityContainer: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+    margin: 20,
+  },
+  modalityButton: {
+    width: '100%',
+    height: 50, 
     borderRadius: 10,
-    minWidth: "30%", // 3 por fila
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  exerciseText: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#333",
-  },
-  pagination: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginVertical: 12,
-  },
-  paginationBtn: {
-    backgroundColor: "darkorange",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    marginHorizontal: 6,
-    borderRadius: 8,
-  },
-  paginationText: {
-    color: "white",
-    fontWeight: "bold",
+  modalityText: {
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
+  },
+  subtitle: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 10,
+    fontWeight: 'bold',
+    fontSize: 22,
+  },
+  infoText: {
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  reactivosContainer: {
+    flex: 1,
+    marginTop: 10,
+    width: '100%',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  createKitWrapper: {
+    marginTop: 30,
   },
   createKitBtn: {
-    backgroundColor: "darkorange",
-    padding: 15,
     borderRadius: 10,
-    alignSelf: "center",
-    marginTop: 8,
-    width: "60%",
-    alignItems: "center",
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    bottom: 20,
+    alignItems: 'center',
   },
   createKitText: {
-    color: "white",
-    fontWeight: "bold",
+    color: '#fff',
+    fontWeight: 'bold',
     fontSize: 16,
-  },
-    mainContainer: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  button: {
-    marginBottom: 20, 
-    padding: 20, 
-    borderRadius: 10,
-    borderColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    
-  },
-    navigationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 20,
-    gap: 20,
-  },
-  navButton: {
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    borderRadius: 10, 
-    padding: 20,
-    width: 60,
-    height: 60,
+    padding: 10,
   },
 });
-
 
 export default CreateKits;
