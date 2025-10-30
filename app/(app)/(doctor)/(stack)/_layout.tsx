@@ -120,10 +120,10 @@ const StackLayout = () => {
         }}
       />
           <Stack.Screen 
-        name="(common)/notificaciones/index" 
+        name="notifications/index" 
         options={{ 
           title: 'Notificaciones',
-          headerBackVisible: true
+          headerShown: true,
         }} 
       />
             <Stack.Screen 

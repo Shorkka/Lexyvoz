@@ -121,7 +121,7 @@ const DoctorScreen = () => {
                 </View>
 
                 {/* Scroll interno para Kits */}
-                <View style={[styles.kitsContainer, { maxHeight: isMobile ? height * 0.3 : height * 0.45 }]}>
+                <View style={[{ maxHeight: isMobile ? height * 0.3 : height * 0.4, flexGrow: 0 }]}>
                   <CardViewEditkits/>
                 </View>
               </View>
@@ -207,6 +207,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
+    position: 'relative'
   },
   centerContainer: {
     flex: 1,
@@ -236,9 +237,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     textAlign: 'center',
-  },
-  kitsContainer: {
-    flex: 1,
   },
 });
 

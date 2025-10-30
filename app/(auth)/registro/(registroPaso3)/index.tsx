@@ -35,7 +35,7 @@ const Step3Screen = () => {
   const { showAlert } = useAlert();
   const [fechaTocada, setFechaTocada] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [consentVoiceTraining, setConsentVoiceTraining] = useState(false); // opcional
+  const [consentVoiceTraining, setConsentVoiceTraining] = useState(false); 
   const avatar = require('@/assets/images/perfil.png');
 
   const [form, setForm] = useState({
@@ -76,13 +76,13 @@ const Step3Screen = () => {
         tipo: form.tipo!,
         domicilio: `${data.domicilio}`,
         codigo_postal: data.codigo_postal!,
-        avatar,
-        acepta_terminos: form.acepta_terminos,
-        consent_voice_training: consentVoiceTraining, // si lo quieres enviar al backend
+        imagen: avatar,
+        //acepta_terminos: form.acepta_terminos,
+        //consent_voice_training: consentVoiceTraining,
       };
 
       if (form.tipo === 'Usuario') {
-        payload.escolaridad = form.escolaridad || 'N/A';
+        payload.escolaridad = 'N/A';
       } else if (form.tipo === 'Doctor') {
         payload.especialidad = form.especialidad;
       }
