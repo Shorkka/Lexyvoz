@@ -14,6 +14,9 @@ export interface User {
 tipo_id:                number;
     doctor_id?:          number;    
     paciente_id?:        number;
+    imagen_id?: number | null;
+    imagen_url?: string | null;
+
 }
 export interface Enlace{
     usuario_id: number;

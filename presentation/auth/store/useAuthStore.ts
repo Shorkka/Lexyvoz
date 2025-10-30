@@ -1,9 +1,9 @@
-import { authLogin, authRegister, authCheckStatus, authUpdateUser, recoveryPasswordResponse } from "@/core/auth/actions/auth-actions";
+import { authLogin, authRegister, authCheckStatus, authUpdateUser, recoveryPasswordResponse, uploadUserAvatar } from "@/core/auth/actions/auth-actions";
 import { User } from "@/core/auth/interface/user";
 import { SecureStorageAdapter } from "@/helper/adapters/secure-storage.adapter";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from 'zustand';
-
+import type { FileLike } from "@/presentation/utils/defaultAvatar";
 export type AuthStatus = 'authenticated' | 'unauthenticated' | 'checking';
 
 export interface AuthState {
@@ -16,7 +16,8 @@ export interface AuthState {
     login: (correo: string, contrasenia: string) => Promise<boolean>;
     checkStatus: () => Promise<void>;
     logout: () => Promise<void>;
-    register: (registerData: any) => Promise<boolean>;
+    updateAvatar: (file: FileLike) => Promise<void>;
+    register: (registerData: any, withDefaultAvatar: boolean) => Promise<boolean>;
     loadSession: () => Promise<boolean>;
     updateUser: (updatedFields: Partial<User>) => Promise<void>;
     resetPassword: (correo: string) => Promise<boolean>;
@@ -78,6 +79,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
                 }
             }
             
+           
             const resp = await authCheckStatus();
             if (resp?.user) {
                 await SecureStorageAdapter.setItem('authSession', JSON.stringify({
@@ -160,37 +162,66 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         }
     },
 
-    register: async (registerData: any) => {
-        try {
-            const resp = await authRegister(registerData);
+    register: async (registerData: any, withDefaultAvatar: boolean = false) => {
+    try {
+        const resp = await authRegister(registerData, { withDefaultAvatar });
 
-            if (!resp?.user) {
-                console.error('Registro fallido - Respuesta incompleta:', resp);
-                set({ status: 'unauthenticated', user: undefined, userType: undefined, userName: undefined });
-                return false;
-            }
-
-            await SecureStorageAdapter.setItem('authSession', JSON.stringify({
-                user: resp.user,
-                userType: resp.user.tipo,
-                userName: resp.user.nombre
-            }));
-
-            set({
-                status: 'authenticated',
-                user: resp.user,
-                userType: resp.user.tipo,
-                userName: resp.user.nombre
-            });
-            
-            return true;
-        } catch (error) {
-            console.error('Error en registro:', error);
-            set({ status: 'unauthenticated' });
-            throw error;
+        if (!resp?.user) {
+        console.error('Registro fallido - Respuesta incompleta:', resp);
+        set({
+            status: 'unauthenticated',
+            user: undefined,
+            userType: undefined,
+            userName: undefined,
+        });
+        return false;
         }
-    },
 
+        await SecureStorageAdapter.setItem(
+        'authSession',
+        JSON.stringify({
+            user: resp.user,
+            userType: resp.user.tipo,
+            userName: resp.user.nombre,
+        })
+        );
+
+        set({
+        status: 'authenticated',
+        user: resp.user,
+        userType: resp.user.tipo,
+        userName: resp.user.nombre,
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error en registro:', error);
+        set({ status: 'unauthenticated' });
+        throw error;
+    }
+    },
+     updateAvatar: async (file: FileLike) => {
+                const currentUser = get().user;
+                if (!currentUser) return;
+
+                try {
+                const updated = await uploadUserAvatar(currentUser.usuario_id, file);
+
+                await SecureStorageAdapter.setItem('authSession', JSON.stringify({
+                    user: updated,
+                    userType: updated.tipo,
+                    userName: updated.nombre
+                }));
+
+                set({
+                    user: updated,
+                    userType: updated.tipo,
+                    userName: updated.nombre
+                });
+                } catch (e) {
+                console.error('Error actualizando avatar:', e);
+                }
+            },
     logout: async () => {
         await SecureStorageAdapter.deleteItem('authSession');
         AsyncStorage.clear();

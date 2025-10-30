@@ -11,7 +11,6 @@ import ThemedInput from '@/presentation/theme/components/ThemedInput';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 
-
 import { router } from 'expo-router';
 import React, { useState, useMemo } from 'react';
 import {
@@ -33,14 +32,14 @@ const Step3Screen = () => {
   const backgroundColor = useThemeColor({}, 'background');
   const linkColor = useThemeColor({}, 'primary');
   const { showAlert } = useAlert();
+
   const [fechaTocada, setFechaTocada] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
-  const [consentVoiceTraining, setConsentVoiceTraining] = useState(false); 
-  const avatar = require('@/assets/images/perfil.png');
+  const [consentVoiceTraining, setConsentVoiceTraining] = useState(false);
 
   const [form, setForm] = useState({
     tipo: '',
-    escolaridad: '',
+    escolaridad: 'N/A',
     fecha_de_nacimiento: new Date(),
     especialidad: '',
     acepta_terminos: false,
@@ -56,7 +55,7 @@ const Step3Screen = () => {
     }
 
     if (form.tipo === 'Usuario') {
-      return tipoOk && fechaOk && (form.escolaridad.trim() !== '' || form.escolaridad === 'N/A') && terminosOk;
+      return tipoOk && fechaOk && terminosOk;
     }
 
     return false;
@@ -74,20 +73,17 @@ const Step3Screen = () => {
         numero_telefono: data.numero_telefono!,
         sexo: data.sexo!,
         tipo: form.tipo!,
-        domicilio: `${data.domicilio}`,
+        domicilio: data.domicilio ?? null, 
         codigo_postal: data.codigo_postal!,
-        imagen: avatar,
-        //acepta_terminos: form.acepta_terminos,
-        //consent_voice_training: consentVoiceTraining,
       };
 
       if (form.tipo === 'Usuario') {
         payload.escolaridad = 'N/A';
       } else if (form.tipo === 'Doctor') {
-        payload.especialidad = form.especialidad;
+        payload.especialidad = form.especialidad?.trim() ?? '';
       }
 
-      const success = await register(payload);
+      const success = await register(payload, true);
 
       if (success) {
         showAlert('Registro exitoso', 'Tu cuenta ha sido creada correctamente.', [
@@ -157,8 +153,7 @@ const Step3Screen = () => {
                 style={{ width: '100%' }}
               />
 
-              {/* Escolaridad / Especialidad */}
-
+              {/* Especialidad (solo Doctor) */}
               {form.tipo === 'Doctor' && (
                 <ThemedInput
                   label="Especialidad *"
@@ -230,14 +225,14 @@ const Step3Screen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* MODAL de T&C con consentimientos */}
+      {/* MODAL de T&C con consentimientos (solo estado local, no backend) */}
       <TermsAndConditions
         visible={showTerms}
         onClose={() => setShowTerms(false)}
         onConfirm={({ accepted, consentVoiceProcessing, consentVoiceTraining }) => {
           if (accepted && consentVoiceProcessing) {
             setForm({ ...form, acepta_terminos: true });
-            setConsentVoiceTraining(consentVoiceTraining);
+            setConsentVoiceTraining(!!consentVoiceTraining);
             setShowTerms(false);
           }
         }}

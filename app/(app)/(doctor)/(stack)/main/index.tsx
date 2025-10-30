@@ -38,7 +38,7 @@ const DoctorScreen = () => {
   } = usePacientesDeDoctorQuery(user?.doctor_id || 0);
 
   const pacientes = pacientesData?.data || [];
-
+  console.log(user)
   const navigateToProfile = (pacienteId: number) => {
     const encodedId = hashids.encode(pacienteId);
     router.push({

@@ -2,6 +2,9 @@ import { isAxiosError } from 'axios';
 import { productsApi } from '../api/productsApi';
 import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
 
+import { getDefaultAvatarFile } from '@/presentation/utils/defaultAvatar';
+import { appendImageToFormData } from '@/utils/formdata-helpers';
+
 export interface LoginResponse {
   success: boolean;
   message: string;
@@ -10,29 +13,30 @@ export interface LoginResponse {
 }
 
 export interface AuthResponse {
-    usuario_id:           number;
-    nombre:              string;
-    correo:              string;
-    contrasenia:          string;
-    fecha_de_nacimiento: Date;
-    numero_telefono:     string;
-    sexo:                string;
-    tipo:                string;
-    escolaridad?:         string;
-    especialidad?:        string;
-    domicilio:           string;
-    codigo_postal:        string;
-    tipo_id:              number;
-    doctor_id?:          number;
-    paciente_id?:        number;
+  usuario_id: number;
+  nombre: string;
+  correo: string;
+  contrasenia: string;
+  fecha_de_nacimiento: Date;
+  numero_telefono: string;
+  sexo: string;
+  tipo: string;
+  escolaridad?: string;
+  especialidad?: string;
+  domicilio: string;
+  codigo_postal: string;
+  tipo_id: number;
+  doctor_id?: number;
+  paciente_id?: number;
 }
 
 export interface RecoveryResponse {
-    success: boolean;
-    message: string;
-    correo: string;
+  success: boolean;
+  message: string;
+  correo: string;
 }
 
+// 🔹 LOGIN
 export const authLogin = async (correo: string, contrasenia: string) => {
   correo = correo.toLowerCase();
 
@@ -41,71 +45,105 @@ export const authLogin = async (correo: string, contrasenia: string) => {
       correo,
       contrasenia,
     });
-    
-    // Guardar token para el interceptor
+
     if (data.token) {
       await SecureStorageAdapter.setItem('token', data.token);
     }
 
     return {
       user: { ...data.user, tipo: data.user.tipo },
-      token: data.token
+      token: data.token,
     };
-
   } catch (error: any) {
     throw error;
   }
 };
+
+// 🔹 CHECK STATUS
 export const authCheckStatus = async () => {
   try {
     const session = await SecureStorageAdapter.getItem('authSession');
-    if (!session) {
-      return null;
-    }
+    if (!session) return null;
 
     const { credentials } = JSON.parse(session);
+    if (!credentials?.correo || !credentials?.contrasenia) return null;
 
-    if (!credentials?.correo || !credentials?.contrasenia) {
-      return null;
-    }
-
-    // Login automático silencioso
     const resp = await authLogin(credentials.correo, credentials.contrasenia);
 
-    // Opcionalmente vuelve a guardar por si el user cambió
-    await SecureStorageAdapter.setItem('authSession', JSON.stringify({
-      user: resp.user,
-      userType: resp.user.tipo,
-      credentials,
-    }));
+    await SecureStorageAdapter.setItem(
+      'authSession',
+      JSON.stringify({
+        user: resp.user,
+        userType: resp.user.tipo,
+        credentials,
+      })
+    );
 
     return { user: { ...resp.user } };
-
   } catch (error) {
     console.error('Falló checkStatus (login automático):', error);
     return null;
   }
 };
 
-
-export const authRegister = async (registerData: any) => {
+// 🔹 REGISTER
+export const authRegister = async (
+  registerData: any,
+  options?: { withDefaultAvatar?: boolean }
+) => {
   try {
-    console.log('Datos enviados al registrar:', registerData); // Debug
-    const { data } = await productsApi.post('/auth/register', registerData);
-  return { user: data };
+    console.log('Datos enviados al registrar:', registerData);
+
+    const body = {
+      ...registerData,
+      ...(registerData?.tipo === 'Paciente' ? { escolaridad: 'N/A' } : {}),
+    };
+
+    const form = new FormData();
+    Object.entries(body).forEach(([k, v]) => {
+      if (v === undefined || v === null) return;
+      if (v instanceof Date) form.append(k, v.toISOString());
+      else form.append(k, String(v));
+    });
+
+    // 🔸 Adjunta imagen SOLO si está activado y usa el campo correcto
+    if (options?.withDefaultAvatar) {
+      const defaultAvatar = await getDefaultAvatarFile();
+      if (defaultAvatar) {
+        await appendImageToFormData(form, 'imagen', defaultAvatar);
+      }
+    }
+
+    const { data } = await productsApi.post('/auth/register', form, {
+      // ❗ No definas manualmente Content-Type en multipart,
+      // axios/fetch lo hace automáticamente con boundary correcto.
+    });
+
+    return { user: data?.user ?? data };
   } catch (error) {
     if (isAxiosError(error)) {
-      throw new Error(error.response?.data?.message || 'Error en el registro');
+      console.error('Error backend:', error.response?.data);
+      throw new Error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          'Error en el registro'
+      );
     }
     throw error;
   }
 };
 
-export const authUpdateUser = async (usuario_id: number, updatedFields: Partial<AuthResponse>) => {
+// 🔹 UPDATE USER
+export const authUpdateUser = async (
+  usuario_id: number,
+  updatedFields: Partial<AuthResponse>
+) => {
   try {
-    const { data } = await productsApi.put<AuthResponse>(`/auth/usuario/${usuario_id}`, updatedFields);
+    const { data } = await productsApi.put<AuthResponse>(
+      `/auth/usuario/${usuario_id}`,
+      updatedFields
+    );
 
-    // Actualiza storage con nuevo usuario
     const session = await SecureStorageAdapter.getItem('authSession');
     if (session) {
       const parsed = JSON.parse(session);
@@ -119,13 +157,35 @@ export const authUpdateUser = async (usuario_id: number, updatedFields: Partial<
     throw new Error('No se pudo actualizar el perfil');
   }
 };
-export const recoveryPasswordResponse = async (correo: string): Promise<{ success: boolean; message: string }> => {
+
+// 🔹 UPLOAD AVATAR (usa imagen)
+export const uploadUserAvatar = async (
+  usuario_id: number,
+  file: { uri: string; name: string; type: string }
+) => {
+  const form = new FormData();
+  await appendImageToFormData(form, 'imagen', file);
+
+  const { data } = await productsApi.post(
+    `/auth/usuario/${usuario_id}/imagen`,
+    form
+  );
+
+  return data?.user ?? data;
+};
+
+// 🔹 RECOVERY
+export const recoveryPasswordResponse = async (
+  correo: string
+): Promise<{ success: boolean; message: string }> => {
   try {
-    const resp = await productsApi.post<RecoveryResponse>('/auth/forgot-password', { correo });
+    const resp = await productsApi.post<RecoveryResponse>(
+      '/auth/forgot-password',
+      { correo }
+    );
     return resp.data;
   } catch (error) {
     console.error('Error en recoveryPasswordResponse:', error);
     return { success: false, message: 'Error en el servidor' };
   }
-}
-
+};
