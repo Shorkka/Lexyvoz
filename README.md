@@ -19,6 +19,7 @@ Android Studio / Xcode si vas a emular
   # 1.- Copia el template y editalo: 
         cp .env.template .env
   # 2.- Completa los varolres necesarios.
-        El archivo .env.template existe en el repo como referencia.
+   El archivo .env.template existe en el repo como referencia.
 # Corre en desarrollo 
   npm run start  
+
