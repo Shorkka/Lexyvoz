@@ -22,6 +22,9 @@ import {
   EjercicioConReactivoResponse,
   Reactivo,
   NuevosOrdene,
+  ObtenerMisEjercicios, 
+  ObtenerEjerciciosConReactivosRespuestas,
+
 } from "../interface/ejercicios-actions";
 
 export const useEjerciciosStore = () => {
@@ -87,7 +90,7 @@ export const useEjerciciosStore = () => {
       enabled: !!id,
     });
 
-  const useReactivosDeEjercicioQuery = (ejercicioId?: number) =>
+  const useReactivosDeEjercicioQuery = (ejercicioId: number) =>
     useQuery({
       queryKey: ["reactivos", ejercicioId],
       queryFn: () => obtenerReactivosDeEjercicio(ejercicioId as number),
@@ -99,6 +102,19 @@ export const useEjerciciosStore = () => {
       queryKey: ["ejerciciosDeKit", id, page, limit],
       queryFn: () => obtenerEjerciciosDeKitPorID(id as number, page, limit),
       enabled: !!id,
+    });
+      const useEjerciciosConReactivosRespuestasQuery = (ejercicioId?: number) =>
+    useQuery({
+      queryKey: ["ejercicioConReactivosRespuestas", ejercicioId],
+      queryFn: () => ObtenerEjerciciosConReactivosRespuestas(ejercicioId as number),
+      enabled: !!ejercicioId,
+      staleTime: 1000 * 60 * 5,
+    });
+      const useMisEjerciciosQuery = () =>
+    useQuery({
+      queryKey: ["misEjercicios"],
+      queryFn: () => ObtenerMisEjercicios(),
+      staleTime: 1000 * 60 * 5,
     });
 
   // ----------------- MUTATIONS -----------------
@@ -193,6 +209,8 @@ export const useEjerciciosStore = () => {
     }) => verificarCompatibilidadReactivos(ejercicioId, tipoId),
   });
 
+
+
   return {
     // 🔹 Queries
     useEjerciciosQuery,
@@ -203,7 +221,8 @@ export const useEjerciciosStore = () => {
     useEjercicioPorIdQuery,
     useReactivosDeEjercicioQuery,
     useEjerciciosDeKitQuery,
-
+    useMisEjerciciosQuery,
+    useEjerciciosConReactivosRespuestasQuery,
     // 🔹 Mutations
     crearEjercicioMutation,
     editarEjercicioMutation,

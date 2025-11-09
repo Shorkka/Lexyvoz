@@ -14,7 +14,6 @@ const TermsContent: React.FC<Props> = ({
 
   return (
     <View>
-      <Text style={styles.h1}>Términos y Condiciones</Text>
       <Text style={styles.meta}>Última actualización: {updated}</Text>
 
       <Text style={styles.h2}>1. Aceptación</Text>

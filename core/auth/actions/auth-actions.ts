@@ -1,10 +1,6 @@
 import { isAxiosError } from 'axios';
 import { productsApi } from '../api/productsApi';
 import { SecureStorageAdapter } from '@/helper/adapters/secure-storage.adapter';
-
-import { getDefaultAvatarFile } from '@/presentation/utils/defaultAvatar';
-import { appendImageToFormData } from '@/utils/formdata-helpers';
-
 export interface LoginResponse {
   success: boolean;
   message: string;
@@ -92,7 +88,6 @@ export const authRegister = async (
   options?: { withDefaultAvatar?: boolean }
 ) => {
   try {
-    console.log('Datos enviados al registrar:', registerData);
 
     const body = {
       ...registerData,
@@ -105,14 +100,6 @@ export const authRegister = async (
       if (v instanceof Date) form.append(k, v.toISOString());
       else form.append(k, String(v));
     });
-
-    // 🔸 Adjunta imagen SOLO si está activado y usa el campo correcto
-    if (options?.withDefaultAvatar) {
-      const defaultAvatar = await getDefaultAvatarFile();
-      if (defaultAvatar) {
-        await appendImageToFormData(form, 'imagen', defaultAvatar);
-      }
-    }
 
     const { data } = await productsApi.post('/auth/register', form, {
       // ❗ No definas manualmente Content-Type en multipart,
@@ -164,7 +151,6 @@ export const uploadUserAvatar = async (
   file: { uri: string; name: string; type: string }
 ) => {
   const form = new FormData();
-  await appendImageToFormData(form, 'imagen', file);
 
   const { data } = await productsApi.post(
     `/auth/usuario/${usuario_id}/imagen`,

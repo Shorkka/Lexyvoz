@@ -6,10 +6,10 @@ import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, useWindowDimensions,View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 

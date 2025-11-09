@@ -2,7 +2,7 @@ import { useAlert } from '@/presentation/hooks/useAlert';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React from 'react';
 import { KeyboardAvoidingView, ScrollView, useWindowDimensions, View } from 'react-native';

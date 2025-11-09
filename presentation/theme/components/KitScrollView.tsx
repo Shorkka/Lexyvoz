@@ -48,7 +48,8 @@ const KitScrollView = () => {
 
   return (
     <FlatList
-    
+      horizontal={true}
+      style={{ flexGrow: 1 }}  
       data={data?.data || []} 
       keyExtractor={(item) => item.kit_id.toString()}
       renderItem={({ item }) => (
@@ -72,7 +73,7 @@ const KitScrollView = () => {
         </View>
       )}
       contentContainerStyle={styles.listContent}
-      showsVerticalScrollIndicator={false}
+      showsVerticalScrollIndicator={true}
     />
   );
 };
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     padding: 10,
     ...Platform.select({
       android: {
-        elevation: 4,
+        elevation: 2,
       },
       ios: {
         shadowColor: '#000',

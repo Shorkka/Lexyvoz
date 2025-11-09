@@ -5,7 +5,7 @@ import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import ThemedLoading from '@/presentation/theme/components/ThemedLoading';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, View } from 'react-native';

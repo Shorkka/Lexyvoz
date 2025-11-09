@@ -5,7 +5,7 @@ import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';

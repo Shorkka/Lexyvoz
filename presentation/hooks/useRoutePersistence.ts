@@ -1,13 +1,30 @@
+// presentation/hooks/useRoutePersistence.ts
 import { useEffect } from 'react';
-import { usePathname } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { usePathname, useRootNavigationState } from 'expo-router';
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
-export const useRoutePersistence = () => {
+const KEY = 'lexyvoz:lastPath';
+
+export function useRoutePersistence() {
   const pathname = usePathname();
+  const navState = useRootNavigationState();
+  const { status } = useAuthStore();
 
+  const isRouterReady = !!navState?.key;
+
+  // 1) Persistir solo cuando hay sesión y no es /login
   useEffect(() => {
-    if (pathname && pathname !== '/login') {
-      AsyncStorage.setItem('lastRoute', pathname);
+    if (!isRouterReady) return;
+    if (status !== 'authenticated') return;
+    if (!pathname || pathname === '/login') return;
+    try { localStorage.setItem(KEY, pathname); } catch {}
+  }, [pathname, status, isRouterReady]);
+
+  // 2) Si NO hay sesión, solo limpiar la key (no navegues aquí)
+  useEffect(() => {
+    if (!isRouterReady) return;
+    if (status === 'unauthenticated') {
+      try { localStorage.removeItem(KEY); } catch {}
     }
-  }, [pathname]);
-};
+  }, [status, isRouterReady]);
+}

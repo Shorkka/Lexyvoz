@@ -1,33 +1,53 @@
-import { View, KeyboardAvoidingView, ScrollView, StyleSheet, Alert, TouchableOpacity, Image, Modal } from 'react-native';
-import React, { useState } from 'react';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import AuthGuard from '@/presentation/theme/components/AuthGuard';
-import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
-import styleImage from '@/constants/GlobalStyles';
+import React, { useState } from 'react';
+import {
+  Alert,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+
+import styleImage from '@/constants/GlobalStyles';
 
 import { predefinedAvatars } from '@/constants/avatars';
+import type { FileLike } from '@/presentation/utils/defaultAvatar';
 import { pickUserImage } from '@/utils/imageUtils';
 import { Asset } from 'expo-asset';
-import type { FileLike } from '@/presentation/utils/defaultAvatar';
+
+const ORANGE = '#fba557';
 
 const ProfileScreen = () => {
   const avatar = require('../../../../assets/images/perfil.png');
-  const { user, updateUser, userType, updateAvatar } = useAuthStore(); 
+  const { user, updateUser, userType, updateAvatar } = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
+
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Modal para elegir avatar
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  // Selección pendiente en el modal (no se sube hasta Aceptar)
+  const [pendingSelection, setPendingSelection] = useState<
+    | { type: 'predefined'; src: any }
+    | { type: 'custom'; file: FileLike }
+    | null
+  >(null);
 
   const [formData, setFormData] = useState({
     nombre: user?.nombre || '',
@@ -79,17 +99,36 @@ const ProfileScreen = () => {
     else router.replace('/home');
   };
 
-  // Avatar predefinido → convertir require() a FileLike y subir
-  const handleSelectPredefined = async (src: any) => {
+  // --- Modal: seleccionar sin subir todavía ---
+  const selectPredefined = (src: any) => {
+    setPendingSelection({ type: 'predefined', src });
+  };
+
+  const pickCustomImage = async () => {
+    const file = await pickUserImage();
+    if (!file) return;
+    setPendingSelection({ type: 'custom', file });
+  };
+
+  const confirmAvatarChange = async () => {
+    if (!pendingSelection) {
+      Alert.alert('Selecciona una imagen', 'Elige un avatar o sube una imagen.');
+      return;
+    }
     try {
-      const [asset] = await Asset.loadAsync(src);
-      const file: FileLike = {
-        uri: asset.localUri ?? asset.uri,
-        name: 'avatar_predefinido.png',
-        type: 'image/png',
-      };
-      await updateAvatar(file);
+      if (pendingSelection.type === 'predefined') {
+        const [asset] = await Asset.loadAsync(pendingSelection.src);
+        const file: FileLike = {
+          uri: asset.localUri ?? asset.uri,
+          name: 'avatar_predefinido.png',
+          type: 'image/png',
+        };
+        await updateAvatar(file);
+      } else {
+        await updateAvatar(pendingSelection.file);
+      }
       setShowAvatarModal(false);
+      setPendingSelection(null);
       Alert.alert('Éxito', 'Avatar actualizado');
     } catch (e) {
       console.error(e);
@@ -97,26 +136,25 @@ const ProfileScreen = () => {
     }
   };
 
-  // Avatar propio → abrir galería y subir
-  const handlePickCustom = async () => {
-    const file = await pickUserImage();
-    if (!file) return;
-    try {
-      await updateAvatar(file);
-      setShowAvatarModal(false);
-      Alert.alert('Éxito', 'Avatar actualizado');
-    } catch (e) {
-      console.error(e);
-      Alert.alert('Error', 'No se pudo actualizar el avatar');
-    }
+  const cancelAvatarChange = () => {
+    setPendingSelection(null);
+    setShowAvatarModal(false);
   };
+
+  // Obtener source de previsualización
+  const previewSource =
+    pendingSelection?.type === 'predefined'
+      ? pendingSelection.src
+      : pendingSelection?.type === 'custom'
+      ? { uri: pendingSelection.file.uri }
+      : null;
 
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ScrollView
-            style={{ flex: 1, backgroundColor: backgroundColor }}
+            style={{ flex: 1, backgroundColor }}
             contentContainerStyle={{
               flexGrow: 1,
               justifyContent: 'center',
@@ -124,9 +162,9 @@ const ProfileScreen = () => {
               paddingHorizontal: 20,
             }}
           >
-            <ThemedBackground fullHeight backgroundColor="#fba557" style={styles.orangeBackground}>
+            <ThemedBackground fullHeight backgroundColor={ORANGE} style={styles.orangeBackground}>
               {/* Botón de regreso */}
-              <TouchableOpacity style={styles.backButton} onPress={returnPage}>
+              <TouchableOpacity style={styles.backButton} onPress={returnPage} accessibilityLabel="Regresar">
                 <Ionicons name="arrow-back" size={24} color="black" />
               </TouchableOpacity>
 
@@ -135,6 +173,7 @@ const ProfileScreen = () => {
                   <TouchableOpacity
                     onPress={() => isEditing && setShowAvatarModal(true)}
                     activeOpacity={0.85}
+                    accessibilityLabel="Cambiar avatar"
                   >
                     <Image
                       source={user?.imagen_url ? { uri: user.imagen_url } : avatar}
@@ -166,7 +205,11 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Nombre completo</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.nombre} onChangeText={(v) => handleInputChange('nombre', v)} style={styles.input} />
+                    <ThemedTextInput
+                      value={formData.nombre}
+                      onChangeText={(v) => handleInputChange('nombre', v)}
+                      style={styles.input}
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.nombre}</ThemedText>
                   )}
@@ -175,7 +218,13 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Correo electrónico</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.correo} onChangeText={(v) => handleInputChange('correo', v)} style={styles.input} keyboardType="email-address" />
+                    <ThemedTextInput
+                      value={formData.correo}
+                      onChangeText={(v) => handleInputChange('correo', v)}
+                      style={styles.input}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.correo}</ThemedText>
                   )}
@@ -212,7 +261,9 @@ const ProfileScreen = () => {
                     </>
                   ) : (
                     <ThemedText style={styles.value}>
-                      {user?.fecha_de_nacimiento ? formatDate(new Date(user.fecha_de_nacimiento)) : 'No especificada'}
+                      {user?.fecha_de_nacimiento
+                        ? formatDate(new Date(user.fecha_de_nacimiento))
+                        : 'No especificada'}
                     </ThemedText>
                   )}
                 </View>
@@ -220,7 +271,12 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Teléfono</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.numero_telefono} onChangeText={(v) => handleInputChange('numero_telefono', v)} style={styles.input} keyboardType="phone-pad" />
+                    <ThemedTextInput
+                      value={formData.numero_telefono}
+                      onChangeText={(v) => handleInputChange('numero_telefono', v)}
+                      style={styles.input}
+                      keyboardType="phone-pad"
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.numero_telefono || 'No especificado'}</ThemedText>
                   )}
@@ -229,7 +285,11 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Sexo</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.sexo} onChangeText={(v) => handleInputChange('sexo', v)} style={styles.input} />
+                    <ThemedTextInput
+                      value={formData.sexo}
+                      onChangeText={(v) => handleInputChange('sexo', v)}
+                      style={styles.input}
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.sexo || 'No especificado'}</ThemedText>
                   )}
@@ -238,7 +298,11 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Domicilio</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.domicilio} onChangeText={(v) => handleInputChange('domicilio', v)} style={styles.input} />
+                    <ThemedTextInput
+                      value={formData.domicilio}
+                      onChangeText={(v) => handleInputChange('domicilio', v)}
+                      style={styles.input}
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.domicilio || 'No especificado'}</ThemedText>
                   )}
@@ -247,7 +311,12 @@ const ProfileScreen = () => {
                 <View style={styles.profileSection}>
                   <ThemedText style={styles.label}>Código Postal</ThemedText>
                   {isEditing ? (
-                    <ThemedTextInput value={formData.codigo_postal} onChangeText={(v) => handleInputChange('codigo_postal', v)} style={styles.input} keyboardType="numeric" />
+                    <ThemedTextInput
+                      value={formData.codigo_postal}
+                      onChangeText={(v) => handleInputChange('codigo_postal', v)}
+                      style={styles.input}
+                      keyboardType="numeric"
+                    />
                   ) : (
                     <ThemedText style={styles.value}>{user?.codigo_postal || 'No especificado'}</ThemedText>
                   )}
@@ -258,7 +327,11 @@ const ProfileScreen = () => {
                   <View style={styles.profileSection}>
                     <ThemedText style={styles.label}>Especialidad</ThemedText>
                     {isEditing ? (
-                      <ThemedTextInput value={formData.especialidad || ''} onChangeText={(v) => handleInputChange('especialidad', v)} style={styles.input} />
+                      <ThemedTextInput
+                        value={formData.especialidad || ''}
+                        onChangeText={(v) => handleInputChange('especialidad', v)}
+                        style={styles.input}
+                      />
                     ) : (
                       <ThemedText style={styles.value}>{user?.especialidad || 'No especificada'}</ThemedText>
                     )}
@@ -270,7 +343,11 @@ const ProfileScreen = () => {
                   <View style={styles.profileSection}>
                     <ThemedText style={styles.label}>Escolaridad</ThemedText>
                     {isEditing ? (
-                      <ThemedTextInput value={formData.escolaridad || ''} onChangeText={(v) => handleInputChange('escolaridad', v)} style={styles.input} />
+                      <ThemedTextInput
+                        value={formData.escolaridad || ''}
+                        onChangeText={(v) => handleInputChange('escolaridad', v)}
+                        style={styles.input}
+                      />
                     ) : (
                       <ThemedText style={styles.value}>{user?.escolaridad || 'No especificada'}</ThemedText>
                     )}
@@ -305,27 +382,76 @@ const ProfileScreen = () => {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* MODAL: elegir avatar */}
-      <Modal visible={showAvatarModal} transparent animationType="slide" onRequestClose={() => setShowAvatarModal(false)}>
+      {/* MODAL: elegir avatar (seleccionar -> previsualizar -> Aceptar) */}
+      <Modal visible={showAvatarModal} transparent animationType="slide" onRequestClose={cancelAvatarChange}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <ThemedText style={{ fontSize: 18, fontWeight: '600', marginBottom: 10 }}>Elige tu avatar</ThemedText>
+            <ThemedText style={{ fontSize: 18, fontWeight: '600', marginBottom: 10 }}>
+              Elige tu avatar
+            </ThemedText>
 
+            {/* Previsualización (si hay selección) */}
+            {previewSource && (
+              <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                <Image
+                  source={previewSource}
+                  style={{ width: 96, height: 96, borderRadius: 48, borderWidth: 3, borderColor: ORANGE }}
+                />
+                <ThemedText style={{ marginTop: 8 }}>Previsualización</ThemedText>
+              </View>
+            )}
+
+            {/* Avatares predefinidos */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 10 }}>
-              {predefinedAvatars.map((src, idx) => (
-                <TouchableOpacity key={idx} onPress={() => handleSelectPredefined(src)} style={{ marginHorizontal: 6 }}>
-                  <Image source={src} style={{ width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: '#fba557' }} />
-                </TouchableOpacity>
-              ))}
+              {predefinedAvatars.map((src, idx) => {
+                const isSelected =
+                  pendingSelection?.type === 'predefined' && pendingSelection?.src === src;
+                return (
+                  <TouchableOpacity key={idx} onPress={() => selectPredefined(src)} style={{ marginHorizontal: 6 }}>
+                    <Image
+                      source={src}
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: 36,
+                        borderWidth: 3,
+                        borderColor: isSelected ? ORANGE : '#ddd',
+                      }}
+                    />
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
 
-            <ThemedButton onPress={handlePickCustom} style={{ marginTop: 8, backgroundColor: '#fba557' }}>
-              <ThemedText style={{ color: '#fff' }}>Subir imagen propia</ThemedText>
-            </ThemedButton>
+            {/* Botones del modal con formato naranja */}
+            <View style={{ width: '100%', marginTop: 8 }}>
+              <ThemedButton onPress={pickCustomImage} style={{ backgroundColor: ORANGE, borderRadius: 10, paddingVertical: 12 }}>
+                <ThemedText style={{ color: '#fff', textAlign: 'center' }}>Subir imagen propia</ThemedText>
+              </ThemedButton>
 
-            <ThemedButton onPress={() => setShowAvatarModal(false)} style={{ marginTop: 10, backgroundColor: '#ccc' }}>
-              <ThemedText>Cancelar</ThemedText>
-            </ThemedButton>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 10 }}>
+                <ThemedButton
+                  onPress={confirmAvatarChange}
+                  disabled={!pendingSelection}
+                  style={{
+                    flex: 1,
+                    backgroundColor: pendingSelection ? ORANGE : '#f0bf8d',
+                    borderRadius: 10,
+                    paddingVertical: 12,
+                    opacity: pendingSelection ? 1 : 0.7,
+                  }}
+                >
+                  <ThemedText style={{ color: '#fff', textAlign: 'center' }}>Aceptar</ThemedText>
+                </ThemedButton>
+
+                <ThemedButton
+                  onPress={cancelAvatarChange}
+                  style={{ flex: 1, backgroundColor: '#ccc', borderRadius: 10, paddingVertical: 12 }}
+                >
+                  <ThemedText style={{ textAlign: 'center' }}>Cancelar</ThemedText>
+                </ThemedButton>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -353,7 +479,7 @@ const styles = StyleSheet.create({
 
   // Modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 12, width: '85%', maxHeight: '60%', alignItems: 'center' },
+  modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 12, width: '85%', maxHeight: '70%', alignItems: 'center' },
 });
 
 export default ProfileScreen;

@@ -1,5 +1,5 @@
 import { productsApi } from "@/core/auth/api/productsApi";
-import { EjercicioResponseMapper,  EjerciciosDisponiblesParaUnKitMapper, EjercicioUsuarioActualMapper, EstadisticasEjerciciosMapper, ReactivoMapper, TiposEjerciciosMapper, VerificarCompatibilidadMapper } from "../mappers/ejercicios.mapper";
+import { EjercicioResponseMapper,  EjerciciosDisponiblesParaUnKitMapper, EjerciciosReactivosMappper, EjercicioUsuarioActualMapper, EstadisticasEjerciciosMapper, MisEjerciciosMapper, ReactivoMapper, TiposEjerciciosMapper, VerificarCompatibilidadMapper } from "../mappers/ejercicios.mapper";
 
 export interface EjercicioData{
     titulo: string;
@@ -168,7 +168,7 @@ export const obtenerEjerciciosDisponiblesParaKit = async (
                 activo
             }
         });
-        return EjerciciosDisponiblesParaUnKitMapper.toEjerciciosDisponiblesParaUnKit(data);
+        return EjerciciosDisponiblesParaUnKitMapper.toArray(data);
     } catch (error) {
         console.error("Error fetching exercises available for kit:", error);
         throw error;
@@ -299,9 +299,38 @@ export const obtenerEjerciciosDeKitPorID = async (
                 limit
             }
         });
-        return EjerciciosDisponiblesParaUnKitMapper.toEjerciciosDisponiblesParaUnKit(data);
+        return EjerciciosDisponiblesParaUnKitMapper.toArray(data);
     } catch (error) {
         console.error("Error fetching exercises from kit:", error);
         throw error;
+    }
+}
+
+export const ObtenerEjerciciosConReactivosRespuestas = async (ejercicioId: number) => {
+    try {
+        const { data } = await productsApi.get(`/ejercicios/${ejercicioId}/respuestas`);
+        return EjerciciosReactivosMappper.toEjerciciosReactivos(data);
+    } catch (error) {
+        console.error("Error fetching exercises with reactive responses:", error);
+        throw error;
+    }
+}
+
+export const ObtenerMisEjercicios = async () => {
+    try {
+        const {data } = await productsApi.get('ejercicios/mis-ejercicios')
+        return MisEjerciciosMapper.toMisEjercicios(data)
+    } catch(error){
+        console.error("Error con la respuesta de los ejercicios", error)
+        throw error;
+    }
+}
+
+export const obtenerReporteAciertosKitsPacientes = async (kit_id: number, paciente_id: number) => {
+    try {
+        const { data } = await productsApi.get(`reactivos/reportes/kit/${kit_id}/paciente/${paciente_id}`);
+        return {data}
+    }catch(error){
+        console.log("Error al obtener el reporte de los ejerecicios", error)
     }
 }

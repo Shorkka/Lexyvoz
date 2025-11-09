@@ -1,17 +1,17 @@
-import React from 'react';
-import { View, Image, Text, Pressable } from 'react-native';
-import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import styles from '@/constants/GlobalStyles';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import ThemedPressableDrawerItem from '@/presentation/theme/components/ThemedPressableDrawerItem';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import styles from '@/constants/GlobalStyles';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+import { Ionicons } from '@expo/vector-icons';
+import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import { router } from 'expo-router';
+import React from 'react';
+import { Image, Pressable, Text, View } from 'react-native';
 const avatar = require('@/assets/images/perfil.png');
 
-const DoctorDrawer = (props: DrawerContentComponentProps) => {
-  const { logout } = useAuthStore();
+const UserDrawer = (props: DrawerContentComponentProps) => {
+  const { logout,user } = useAuthStore();
   const textColor = useThemeColor({}, 'text');
 
   const exit = () => {
@@ -29,10 +29,10 @@ const DoctorDrawer = (props: DrawerContentComponentProps) => {
         {/* Sección de perfil */}
         <View style={styles.headerContainer}>
           <View style={styles.avatarContainer}>
-            <Image source={avatar} style={styles.avatar} />
+            <Image source={user?.imagen_url ? { uri: user.imagen_url } : avatar} style={styles.avatar} />
           </View>
           <Text style={{ marginTop: 10, color: textColor, fontWeight: 'bold' }}>
-            Paciente {}
+            {}{user?.nombre}
           </Text>
         </View>
 
@@ -50,7 +50,7 @@ const DoctorDrawer = (props: DrawerContentComponentProps) => {
         <ThemedPressableDrawerItem
           icon="home"
           label="Inicio"
-          onPress={() => router.replace('/home')} 
+          onPress={() => router.replace('/(app)/(usuario)/(stack)/home')} 
         />
         <ThemedPressableDrawerItem
           icon="notifications-none"
@@ -75,4 +75,4 @@ const DoctorDrawer = (props: DrawerContentComponentProps) => {
   );
 };
 
-export default DoctorDrawer;
+export default UserDrawer;

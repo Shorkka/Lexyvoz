@@ -1,14 +1,19 @@
-import { 
-  View, StyleSheet, ScrollView, Pressable, Modal, ActivityIndicator, Alert 
-} from 'react-native';
-import React, { useEffect, useState } from 'react';
-import AuthGuard from '@/presentation/theme/components/AuthGuard';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useCitasStore } from '@/infraestructure/store/useCitaStore';
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator, Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Cita {

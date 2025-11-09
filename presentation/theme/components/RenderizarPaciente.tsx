@@ -9,13 +9,14 @@ import { Paciente } from '@/core/auth/interface/doctor-paciente';
 interface RenderizarPacienteProps {
   pacientes: Paciente[];
   searchText: string;
-  onPacientePress?: (pacienteId: number) => void; // Nueva prop
-}
+  onPacientePress?: (pacienteId: number) => void; 
+
+  }
 
 const RenderizarPaciente: React.FC<RenderizarPacienteProps> = ({ 
   pacientes, 
   searchText, 
-  onPacientePress 
+  onPacientePress,
 }) => {
   // Filtrar pacientes según el texto de búsqueda
   const filteredPacientes = pacientes.filter(paciente =>
@@ -27,6 +28,7 @@ const RenderizarPaciente: React.FC<RenderizarPacienteProps> = ({
     <FlatList
       data={filteredPacientes}
       keyExtractor={(item) => item.usuario_id.toString()}
+      scrollEnabled={true}
       renderItem={({ item }) => (
         <Pressable 
           style={styles.pacienteItem}

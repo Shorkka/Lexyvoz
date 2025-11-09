@@ -141,3 +141,85 @@ export interface PaginationPorTipo {
     total_items:    number;
     items_per_page: number;
 }
+
+export interface ResponseReactivoDeEjercicio {
+    message:         string;
+    ejercicio:       EjercicioReactivo;
+    reactivos:       Reactivo[];
+    total_reactivos: number;
+}
+
+export interface EjercicioReactivo {
+    ejercicio_id: number;
+    titulo:       string;
+    descripcion:  string;
+}
+
+export interface Reactivo {
+    ejercicio_reactivo_id: number;
+    ejercicio_id:          number;
+    reactivo_id:           number;
+    orden:                 number;
+    activo:                boolean;
+    pseudopalabra:         string;
+    tiempo_duracion:       number;
+    sub_tipo_id:           number;
+    sub_tipo_nombre:       string;
+    tipo_id:               number;
+    tipo_nombre:           string;
+}
+
+export interface MisEjercicios {
+    message:    string;
+    data:       Datu[];
+    pagination: PaginationReactivos;
+}
+
+export interface Datu {
+    ejercicio_id:    number;
+    titulo:          string;
+    descripcion:     string;
+    creado_por:      number;
+    tipo_ejercicio:  number;
+    created_at:      Date;
+    updated_at:      Date;
+    activo:          boolean;
+    creador_nombre:  string;
+    creador_correo:  string;
+    tipo_nombre:     string;
+    total_reactivos: string;
+    total_kits:      string;
+}
+
+export interface PaginationReactivos {
+    current_page:   number;
+    total_pages:    number;
+    total_items:    number;
+    items_per_page: number;
+}
+export interface NuevoResponseEjercicioReactivo {
+    message:         string;
+    ejercicio:       Ejercicios;
+    reactivos:       Reactivos[];
+    total_reactivos: number;
+}
+
+export interface Ejercicios {
+    ejercicio_id: number;
+    titulo:       string;
+    descripcion:  string;
+}
+
+export interface Reactivos {
+    ejercicio_reactivo_id: number;
+    ejercicio_id:          number;
+    reactivo_id:           number;
+    orden:                 number;
+    activo:                boolean;
+    pseudopalabra:         string;
+    tiempo_duracion:       number;
+    sub_tipo_id:           number;
+    sub_tipo_nombre:       string;
+    tipo_id:               number;
+    tipo_nombre:           string;
+}

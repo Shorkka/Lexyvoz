@@ -1,26 +1,27 @@
-import { 
-  View, 
-  useWindowDimensions, 
-  KeyboardAvoidingView, 
-  SafeAreaView, 
-  ScrollView, 
-  StyleSheet, 
-  ActivityIndicator 
-} from 'react-native';
-import React from 'react';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import AuthGuard from '@/presentation/theme/components/AuthGuard';
-import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
-import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
-import CardViewEditkits from '@/presentation/theme/components/CardViewEditkits';
 import { GlobalStyles } from '@/assets/styles/GlobalStyles';
-import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
-import { router } from 'expo-router';
 import { useDoctorPacienteStore } from '@/infraestructure/store/useDoctorPacienteStore';
+import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
+import CardViewEditkits from '@/presentation/theme/components/CardViewEditkits';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+import RenderizarPaciente from '@/presentation/theme/components/RenderizarPaciente';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { router } from 'expo-router';
 import Hashids from "hashids";
+import React from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions
+} from 'react-native';
 const DoctorScreen = () => {
   const hashids = new Hashids("mi-secreto", 10);
   const { width, height } = useWindowDimensions();
@@ -38,7 +39,6 @@ const DoctorScreen = () => {
   } = usePacientesDeDoctorQuery(user?.doctor_id || 0);
 
   const pacientes = pacientesData?.data || [];
-  console.log(user)
   const navigateToProfile = (pacienteId: number) => {
     const encodedId = hashids.encode(pacienteId);
     router.push({
@@ -51,14 +51,14 @@ const DoctorScreen = () => {
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
         <ScrollView 
-          contentContainerStyle={{ flexGrow: 1 }} 
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ flexGrow: 1}} 
         >
         <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
           <ThemedBackground
-            fullHeight
+         
             backgroundColor="#fba557"
             style={[GlobalStyles.orangeBackground, { padding: 16, flex: 1, justifyContent: "space-between" }]}
+            
           >
             {/* Título */}
             <ThemedText type="welcome" style={styles.welcomeText}>
@@ -86,9 +86,8 @@ const DoctorScreen = () => {
                 </View>
 
                 {/* Scroll interno para pacientes */}
-                <ScrollView 
+                <View 
                   style={{ maxHeight: isMobile ? height * 0.25 : height * 0.4 }}
-                  nestedScrollEnabled
                 >
                   {isLoading ? (
                     <View style={styles.centerContainer}>
@@ -111,30 +110,39 @@ const DoctorScreen = () => {
                       onPacientePress={navigateToProfile} 
                     />
                   )}
-                </ScrollView>
+                </View>
               </View>
 
               {/* Columna derecha: Kits */}
               <View style={[styles.rightColumn, isMobile && { width: '100%', marginTop: 20 }]}>
-                <View style={styles.sectionTitle}>
+               <View>
                   <ThemedText style={styles.sectionTitleText}>Kits</ThemedText>
                 </View>
 
                 {/* Scroll interno para Kits */}
-                <View style={[{ maxHeight: isMobile ? height * 0.3 : height * 0.4, flexGrow: 0 }]}>
-                  <CardViewEditkits/>
+                <View>
+                  <CardViewEditkits  maxHeight={isMobile ? Math.floor(height * 0.2) : Math.floor(height * 0.4)}/>
                 </View>
+
               </View>
             </View>
 
-            {/* Botón global fijo */}
-            <View style={styles.buttonContainer}>
-              <ThemedButton
-                onPress={() => router.push('/(app)/(doctor)/(stack)/add_paciente')}
-              >
-                <ThemedText style={styles.buttonText}>Añadir paciente</ThemedText>
-              </ThemedButton>
-            </View>
+     {/* Botón global al final (sin flotar) */}
+              <View style={[styles.buttonContainer, { position: 'relative'}]}>
+                <ThemedButton
+                  style={{
+                    // ↓ No lo “flotes” sobre otros (elevation bajo)
+                    ...Platform.select({
+                      android: { elevation: 1 },
+                      ios:     { shadowOpacity: 0.12 },
+                      web:     { boxShadow: '0 1px 4px rgba(0,0,0,.12)' },
+                    }),
+                  }}
+                  onPress={() => router.push('/(app)/(doctor)/(stack)/add_paciente')}
+                >
+                  <ThemedText style={styles.buttonText}>Añadir paciente</ThemedText>
+                </ThemedButton>
+              </View>
           </ThemedBackground>
         </KeyboardAvoidingView>
         </ScrollView>
@@ -192,15 +200,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonContainer: {
-    width: '60%',
+    width: '100%',
+    backgroundColor: '#ee7200',
     borderRadius: 10,
-    alignSelf: 'center',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    marginBottom: 10,
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.6,
+        shadowRadius: 5,
+      },
+    }),
   },
   buttonText: {
     color: '#fff',

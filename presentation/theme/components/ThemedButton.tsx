@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { ReactNode } from 'react';
 import { Platform, Pressable, PressableProps, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useThemeColor } from '../hooks/useThemeColor';
+import { useThemeColor } from './hooks/useThemeColor';
 
 
 interface Props extends PressableProps {

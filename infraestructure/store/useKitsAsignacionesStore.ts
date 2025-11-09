@@ -44,8 +44,8 @@ export const useKitsAsignacionesStore = () => {
 
   // 🔹 Asignar un kit a un paciente
   const asignarKitMutation = useMutation({
-    mutationFn: ({ kit_id, paciente_id }: { kit_id: number; paciente_id: number }) =>
-      asignarKit(kit_id, paciente_id),
+    mutationFn: ({ kitId, pacienteId }: { kitId: number; pacienteId: number }) =>
+      asignarKit(kitId, pacienteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kits-asignados"] });
     },

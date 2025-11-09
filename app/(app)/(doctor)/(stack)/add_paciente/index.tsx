@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, StyleSheet, ScrollView, 
-  Pressable, Modal, Alert, ActivityIndicator, Image
-} from 'react-native';
-import AuthGuard from '@/presentation/theme/components/AuthGuard';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useAlert } from '@/presentation/hooks/useAlert';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Definimos las interfaces basadas en la respuesta real de la API

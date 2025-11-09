@@ -2,7 +2,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useThemeColor } from '../hooks/useThemeColor';
+import { useThemeColor } from './hooks/useThemeColor';
 import { ThemedText } from './ThemedText';
 
 interface ThemedDropdownProps {

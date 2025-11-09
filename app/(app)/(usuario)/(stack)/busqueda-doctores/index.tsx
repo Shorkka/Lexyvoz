@@ -1,19 +1,23 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { 
-  View, StyleSheet, KeyboardAvoidingView, 
-  ScrollView, Pressable, Modal 
-} from 'react-native';
-import AuthGuard from '@/presentation/theme/components/AuthGuard';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import ThemedButton from '@/presentation/theme/components/ThemedButton';
-import { RenderizarDoctores } from '@/presentation/theme/components/RenderizarDoctores';
-import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
 import { useAuthKitsStore } from '@/infraestructure/store/useAuthKitsStore ';
+import { useSolicitudesVinculacionStore } from '@/infraestructure/store/useSolicitudesVinculacionStore';
 import { useAlert } from '@/presentation/hooks/useAlert';
+import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import Filtro from '@/presentation/theme/components/Filtro';
+import { RenderizarDoctores } from '@/presentation/theme/components/RenderizarDoctores';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import ThemedButton from '@/presentation/theme/components/ThemedButton';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Doctor {
@@ -85,7 +89,6 @@ const Search = () => {
         }
       });
     }
-    console.log('Doctores después de ordenar:', doctores);
     return doctores;
   }, [doctorsData, filtro, orden]);
 
@@ -107,7 +110,6 @@ const Search = () => {
   };
 
   useEffect(() => {
-    console.log('Doctores ordenados:', doctoresOrdenados);
     const totalDoctores = doctoresOrdenados.length;
     setCanGoBack(page > 1);
     setCanGoNext(page * limit < totalDoctores);

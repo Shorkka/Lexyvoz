@@ -1,5 +1,5 @@
 import { Link, LinkProps } from 'expo-router';
-import { useThemeColor } from '../hooks/useThemeColor';
+import { useThemeColor } from './hooks/useThemeColor';
 
 const ThemedLink = ({ style, ...rest }: LinkProps) => {
   const primaryColor = useThemeColor({}, 'primary');

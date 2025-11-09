@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { KeyboardAvoidingView, ScrollView, View, Text} from 'react-native';
+import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedLink from '@/presentation/theme/components/ThemedLink';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 import ThemedTextInput from '@/presentation/theme/components/ThemedTextInput';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router } from 'expo-router';
-import { useRegisterStore } from '@/core/auth/context/RegisterContext';
+import React, { useState } from 'react';
+import { KeyboardAvoidingView, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Lista única de dominios permitidos

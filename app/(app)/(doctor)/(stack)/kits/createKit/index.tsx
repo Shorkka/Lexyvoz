@@ -4,16 +4,16 @@ import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ReactivosView from '@/presentation/theme/components/ReactivosView';
 import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
-  ScrollView,
-  View,
-  StyleSheet,
   Platform,
+  ScrollView,
+  StyleSheet,
   useWindowDimensions,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

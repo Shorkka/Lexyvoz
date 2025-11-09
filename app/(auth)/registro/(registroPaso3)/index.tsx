@@ -1,6 +1,7 @@
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useAlert } from '@/presentation/hooks/useAlert';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import ProgressHeader from '@/presentation/theme/components/ProgressHeader';
 import RadioButton from '@/presentation/theme/components/radioButtonView';
 import TermsAndConditions from '@/presentation/theme/components/TermsAndConditions';
@@ -9,19 +10,18 @@ import ThemedButton from '@/presentation/theme/components/ThemedButton';
 import ThemedDatePicker from '@/presentation/theme/components/ThemedDatePicker';
 import ThemedInput from '@/presentation/theme/components/ThemedInput';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 
 import { router } from 'expo-router';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
   useWindowDimensions,
   View,
-  Text,
-  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -83,7 +83,7 @@ const Step3Screen = () => {
         payload.especialidad = form.especialidad?.trim() ?? '';
       }
 
-      const success = await register(payload, true);
+      const success = await register(payload, false);
 
       if (success) {
         showAlert('Registro exitoso', 'Tu cuenta ha sido creada correctamente.', [

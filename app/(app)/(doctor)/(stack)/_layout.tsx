@@ -17,7 +17,7 @@ const StackLayout = () => {
       router.back();
     }
   }
-  const handleHeaderRightPress = () => {
+  const goHome = () => {
     if (router.canDismiss()) {
       router.dismiss(); // Cierra modales si existen
     }
@@ -31,6 +31,28 @@ const StackLayout = () => {
         headerStyle: {
           backgroundColor: '#fefcc3',
         },
+        headerTitleAlign: 'center',
+        headerTitle: () => (
+          <Pressable onPress={goHome} hitSlop={10}>
+            <ThemedText
+              type="title"
+              // evita que se recorte, usa un contenedor flexible
+              style={{
+                fontWeight: '900',
+                color: '#ffa500',
+                // Opcional: ajuste por plataforma/tamaño
+                fontSize: Platform.select({
+                  ios: 20,
+                  android: 20,
+                  default: Math.max(18, Math.min(22, width * 0.05)),
+                }),
+              }}
+              numberOfLines={1}
+            >
+              Lexyvoz
+            </ThemedText>
+          </Pressable>
+        ),
         headerLeft: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 15 }}>
 
@@ -51,20 +73,17 @@ const StackLayout = () => {
               )}
             </Pressable>
           </View>
+          
         ),
         headerRight: () => (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 15 }}>
-          <Pressable 
-            onPress={handleHeaderRightPress}
-            style={({ pressed }) => ({
-              opacity: pressed ? 0.5 : 1,
-              marginRight: 15
-            })}
+          <Pressable
+            onPress={goHome}
+            style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1, marginRight: 15 })}
+            hitSlop={10}
           >
-          <ThemedText type = 'title' style = {{right: Platform.select ({web: width* 0.1, default: width*0.1 })}}>Lexyvoz</ThemedText>
+            <Ionicons name="home-outline" size={24} color="#ffa500" />
           </Pressable>
-          </View>
-        )
+        ),
       }}
     >
       <Stack.Screen 
@@ -80,7 +99,6 @@ const StackLayout = () => {
         options={{ 
           title: ' ',
           headerShown: true,
-          presentation: 'modal'
         }}
       />
       <Stack.Screen 
@@ -88,7 +106,6 @@ const StackLayout = () => {
         options={{ 
           title: 'Listar Kit',
           headerShown: true,
-          presentation: 'modal'
         }}
       />
       <Stack.Screen 

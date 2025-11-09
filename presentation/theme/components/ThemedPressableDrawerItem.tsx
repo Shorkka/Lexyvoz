@@ -2,7 +2,7 @@ import { Feather, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet, Text, TextStyle, ViewStyle } from 'react-native';
 
-import { useThemeColor } from '../hooks/useThemeColor';
+import { useThemeColor } from './hooks/useThemeColor';
 
 type IconSet = 'Ionicons' | 'MaterialIcons' | 'Feather';
 

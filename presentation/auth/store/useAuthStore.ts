@@ -222,19 +222,22 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
                 console.error('Error actualizando avatar:', e);
                 }
             },
-    logout: async () => {
-        await SecureStorageAdapter.deleteItem('authSession');
-        AsyncStorage.clear();
-        set({ 
+        logout: async () => {
+        try {
+            await SecureStorageAdapter.deleteItem('authSession');
+            await SecureStorageAdapter.deleteItem('token');
+            await AsyncStorage.clear();
+            try { localStorage.removeItem('lexyvoz:lastPath'); } catch {}
+        } finally {
+            set({
             status: 'unauthenticated',
             user: undefined,
             userType: undefined,
-            userName: undefined
-        });
-        await AsyncStorage.removeItem('lastRoute');
-
-    },
-
+            userName: undefined,
+            token: undefined,
+            });
+        }
+        },
     updateUser: async (updatedFields: Partial<User>) => {
         const currentUser = get().user;
         if (!currentUser) return;

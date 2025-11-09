@@ -16,9 +16,9 @@ export interface Asignacion {
 
 
 // Asignar kits
-export const asignarKit = async (kit_id: number, paciente_id: number) => {
+export const asignarKit = async (kitId: number, pacienteId: number) => {
   try {
-    const { data } = await productsApi.post<AsignarKitsResponse>(`/kits-asignados`, { kit_id, paciente_id });
+    const { data } = await productsApi.post<AsignarKitsResponse>(`/kits-asignados`, { kitId, pacienteId });
     return { data };
   } catch (error) {
     console.error('Error al asignar kit:', error);
@@ -28,7 +28,7 @@ export const asignarKit = async (kit_id: number, paciente_id: number) => {
 
 // Obtener kits asignados
 export const obtenerKitsAsignados = async (
-  page: number,
+  page: number, 
   limit: number,
   estado: string
 ) => {

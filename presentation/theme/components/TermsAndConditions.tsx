@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
-import TermsModal from './TermsModal';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useThemeColor } from './hooks/useThemeColor';
 import TermsContent from './TermsContent';
-import { useThemeColor } from '../hooks/useThemeColor';
+import TermsModal from './TermsModal';
 
 type ConfirmResult = {
   accepted: boolean;

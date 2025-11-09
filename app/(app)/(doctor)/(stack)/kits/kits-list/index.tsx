@@ -1,12 +1,12 @@
-import {KeyboardAvoidingView, ScrollView } from 'react-native'
-import { useLocalSearchParams } from "expo-router";
-import React from 'react'
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import { useLocalSearchParams } from "expo-router";
+import React from 'react';
+import { KeyboardAvoidingView, ScrollView } from 'react-native';
 
-import { ThemedText } from '@/presentation/theme/components/ThemedText';
-import { useThemeColor } from '@/presentation/theme/hooks/useThemeColor';
 import { useKitsStore } from '@/infraestructure/store/useKitsStore';
+import { ThemedText } from '@/presentation/theme/components/ThemedText';
+import { useThemeColor } from '@/presentation/theme/components/hooks/useThemeColor';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -15,7 +15,7 @@ const KitList = () => {
   const { kitId } = useLocalSearchParams();
   const{ useKitsQuery } = useKitsStore();
   const backgroundColor = useThemeColor({}, 'background');
-  const { data: kitsData, isLoading, isError, error } = useKitsQuery();
+  const { data: isLoading, isError, error } = useKitsQuery();
   if (isLoading){
     return (<ThemedText>Cargando...</ThemedText>
     )
@@ -24,8 +24,6 @@ const KitList = () => {
     return (<ThemedText>Error: {String(error)}</ThemedText>
     )
   }
-  const kits = kitsData?.data || [];
-  console.log('Kits disponibles:', kits);
   return (
   <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
