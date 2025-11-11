@@ -1,3 +1,4 @@
+// app/(app)/(usuario)/(stack)/juegos/lectura/index.tsx
 import * as React from 'react';
 import {
   View,
@@ -28,8 +29,9 @@ import {
   ReactivoLecturaPalabras,
 } from '@/presentation/interface/lectura.reactivo';
 import { useQueryClient } from '@tanstack/react-query';
+import { useKitsAsignacionesStore } from '@/infraestructure/store/useKitsAsignacionesStore';
 
-/* ===== Helpers robustos para nombre/mime ===== */
+/* ===== helpers de archivo de audio (igual que ya tenías) ===== */
 const sanitizeFileName = (name: string) => name.replace(/[^a-zA-Z0-9._-]+/g, "_");
 const guessExtFromUri = (uri?: string): string => {
   if (!uri) return "m4a";
@@ -86,9 +88,7 @@ async function writeProg(kitId: number, ejercicioId: number, completados: number
 /** === Progreso por-actividad (para reanudar índice exacto si quieres) === */
 const perActivityKey = (kitId: number, ejercicioId: number) => `lexyvoz:progreso:${kitId}:${ejercicioId}`;
 
-/* =========================================================
-   Hook de grabación con duración (con logs)
-   ========================================================= */
+/* ====== hook de grabación (igual que ya tenías) ====== */
 function useAudioRecorder() {
   const [recording, setRecording] = React.useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = React.useState(false);
@@ -163,9 +163,7 @@ function useAudioRecorder() {
   return { isRecording, uri, durationMs, start, stop, reset };
 }
 
-/* =========================================================
-   Reproductor sencillo (expo-av)
-   ========================================================= */
+/* ====== reproductor simple ====== */
 const AudioPlayer: React.FC<{ uri?: string; label?: string; }> = ({ uri, label = 'Escuchar' }) => {
   const soundRef = React.useRef<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
@@ -245,9 +243,7 @@ const AudioPlayer: React.FC<{ uri?: string; label?: string; }> = ({ uri, label =
   );
 };
 
-/* =========================================================
-   Botón único de grabación (toggle)
-   ========================================================= */
+/* ====== botón de grabar ====== */
 const VoiceRecordButton: React.FC<{
   isRecording: boolean;
   hasAudio: boolean;
@@ -278,9 +274,7 @@ const VoiceRecordButton: React.FC<{
   );
 };
 
-/* =========================================================
-   RENDERERS
-   ========================================================= */
+/* ====== distintos renderers (igual que ya tenías) ====== */
 const PseudopalabrasRenderer: React.FC<LecturaRendererProps> = ({
   titulo, reactivos, onFinishReactivo, submitted, onNext,
 }) => {
@@ -289,7 +283,6 @@ const PseudopalabrasRenderer: React.FC<LecturaRendererProps> = ({
 
   const handlePrimary = React.useCallback(() => {
     if (submitted) {
-      console.log('[UI] Siguiente (pseudopalabras) -> reset audio antes de avanzar');
       rec.reset();
       return onNext?.();
     }
@@ -352,7 +345,6 @@ const DensasRenderer: React.FC<LecturaRendererProps> = ({
 
   const handlePrimary = React.useCallback(() => {
     if (submitted) {
-      console.log('[UI] Siguiente (densas) -> reset audio antes de avanzar');
       rec.reset();
       return onNext?.();
     }
@@ -415,7 +407,6 @@ const PalabrasRenderer: React.FC<LecturaRendererProps> = ({
 
   const handlePrimary = React.useCallback(() => {
     if (submitted) {
-      console.log('[UI] Siguiente (palabras) -> reset audio antes de avanzar');
       rec.reset();
       return onNext?.();
     }
@@ -480,7 +471,6 @@ const LecturaGenericoRenderer: React.FC<LecturaRendererProps> = ({
 
   const handlePrimary = React.useCallback(() => {
     if (submitted) {
-      console.log('[UI] Siguiente (genérico) -> reset audio antes de avanzar');
       rec.reset();
       return onNext?.();
     }
@@ -543,12 +533,10 @@ const RENDERERS: Record<string, React.FC<LecturaRendererProps>> = {
   __default: LecturaGenericoRenderer,
 };
 
-/* =========================================================
-   Contenedor de pantalla
-   ========================================================= */
 export default function LecturaSubScreen() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const { editarEstadoKitAsignadoMutation } = useKitsAsignacionesStore();
 
   const invalidateKitsProgress = React.useCallback(() => {
     queryClient.invalidateQueries({
@@ -564,19 +552,19 @@ export default function LecturaSubScreen() {
     ejercicioId?: string;
     titulo?: string;
     totalReactivos?: string;
+    kitAsignadoId?: string; // 👈 nuevo
   }>();
- 
+
   const sub = String(params.sub ?? '').toLowerCase();
   const kitId = Number(params.kitId ?? 0);
   const ejercicioId = Number(params.ejercicioId ?? 0);
   const kitName = params.kitName ?? '';
   const titulo = params.titulo ?? '';
   const totalReactivosParam = Number(params.totalReactivos ?? '') || undefined;
+  const kitAsignadoId = params.kitAsignadoId ? String(params.kitAsignadoId) : undefined;
 
   const { useReactivosDeEjercicioQuery } = useEjerciciosStore();
   const { data, isLoading, error } = useReactivosDeEjercicioQuery(ejercicioId);
-
-  const pacienteId = user?.paciente_id ?? user?.usuario_id ?? 0;
 
   const [idx, setIdx] = React.useState(0);
   const [submitted, setSubmitted] = React.useState(false);
@@ -585,14 +573,12 @@ export default function LecturaSubScreen() {
 
   const resumeKey = React.useMemo(() => perActivityKey(kitId, ejercicioId), [kitId, ejercicioId]);
 
-  // Invalida al salir de la pantalla (back/unmount)
   React.useEffect(() => {
     return () => {
       invalidateKitsProgress();
     };
   }, [invalidateKitsProgress]);
 
-  /** ====== MAPEO ====== */
   const reactivosAll: ReactivoLectura[] = React.useMemo(() => {
     const raw = Array.isArray((data as any)?.reactivos) ? (data as any).reactivos : [];
 
@@ -682,7 +668,6 @@ export default function LecturaSubScreen() {
     [reactivosAll, idx]
   );
 
-  /** ====== Persistencia (reanudar índice) ====== */
   React.useEffect(() => {
     (async () => {
       try {
@@ -698,7 +683,7 @@ export default function LecturaSubScreen() {
         console.log('[resumeProgress] error', e);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reactivosAll.length, resumeKey]);
 
   const saveResume = React.useCallback(
@@ -721,7 +706,6 @@ export default function LecturaSubScreen() {
     [idx, reactivosAll.length, kitId, ejercicioId, resumeKey]
   );
 
-  /** ====== Ir al siguiente reactivo ====== */
   const goNext = React.useCallback(async () => {
     const total = totalReactivos ?? reactivosAll.length;
     await writeProg(kitId, ejercicioId, Math.min(idx + 1, total));
@@ -736,10 +720,14 @@ export default function LecturaSubScreen() {
       await writeProg(kitId, ejercicioId, total);
       await saveResume(true);
       setShowCongrats(true);
-    }
-  }, [idx, reactivosAll.length, totalReactivos, kitId, ejercicioId, saveResume]);
 
-  /** ====== Enviar resultado de un reactivo ====== */
+      // ✅ marca kit como completado a nivel asignación
+      if (kitAsignadoId) {
+        editarEstadoKitAsignadoMutation.mutate({ id: kitAsignadoId, estado: 'completado' });
+      }
+    }
+  }, [idx, reactivosAll.length, totalReactivos, kitId, ejercicioId, saveResume, kitAsignadoId, editarEstadoKitAsignadoMutation]);
+
   const handleFinishReactivo = React.useCallback(async (res: {
     reactivoId: number;
     correcto?: boolean;
@@ -748,6 +736,7 @@ export default function LecturaSubScreen() {
     audioUri?: string;
   }) => {
     try {
+      const pacienteId = user?.paciente_id ?? user?.usuario_id ?? 0;
       if (!pacienteId || !res?.reactivoId) {
         Alert.alert('Faltan datos', 'No tenemos usuario/paciente o reactivo.');
         return;
@@ -788,14 +777,16 @@ export default function LecturaSubScreen() {
       console.log('[handleFinishReactivo] envío OK');
       setSubmitted(true);
 
-      // Actualiza PROG_KEY al completar este reactivo:
       const total = totalReactivos ?? reactivosAll.length;
       await writeProg(kitId, ejercicioId, Math.min(idx + 1, total));
 
-      // Si es el último, invalida kits:
       const isLast = (idx + 1) >= reactivosAll.length;
       if (isLast) {
+        // Si es el último, invalida y marca completado
         invalidateKitsProgress();
+        if (kitAsignadoId) {
+          editarEstadoKitAsignadoMutation.mutate({ id: kitAsignadoId, estado: 'completado' });
+        }
       }
 
       Alert.alert('Enviado', 'Tu lectura fue enviada correctamente.');
@@ -805,16 +796,14 @@ export default function LecturaSubScreen() {
     } finally {
       setSending(false);
     }
-  }, [pacienteId, kitId, ejercicioId, idx, reactivosAll.length, totalReactivos, invalidateKitsProgress]);
+  }, [user?.paciente_id, user?.usuario_id, kitId, ejercicioId, idx, reactivosAll.length, totalReactivos, invalidateKitsProgress, kitAsignadoId, editarEstadoKitAsignadoMutation]);
 
   const Renderer = (RENDERERS[sub] ?? RENDERERS.__default);
 
-  // === Progreso visual local (contador y barra):
   const totalLocal = totalReactivos ?? reactivosAll.length;
   const doneLocal  = Math.min(submitted ? idx + 1 : idx, totalLocal || 0);
   const pct        = totalLocal > 0 ? Math.round((doneLocal / totalLocal) * 100) : 0;
 
-  // === Navegación centralizada al índice de ejercicios (con params) ===
   const navigateToJuegos = React.useCallback(() => {
     router.replace({
       pathname: '/(app)/(usuario)/(stack)/juegos',
@@ -823,12 +812,10 @@ export default function LecturaSubScreen() {
   }, [kitId, kitName]);
 
   const goHome = React.useCallback(() => {
-    // Si quieres llevar a home, puedes ajustar aquí. De momento mejor llevar al índice de juegos del kit.
     navigateToJuegos();
   }, [navigateToJuegos]);
 
   const goMenuEjercicios = React.useCallback(() => {
-    // FIX: corregido el typo y preservamos params
     navigateToJuegos();
   }, [navigateToJuegos]);
 
@@ -839,7 +826,6 @@ export default function LecturaSubScreen() {
           style={{ backgroundColor: APP_BG }}
           contentContainerStyle={{ paddingBottom: 24 }}
         >
-          {/* Header con progreso, contador y botón guardar/salir */}
           <View style={styles.headerRow}>
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text style={{ color: '#fff', fontWeight: '800' }} numberOfLines={1}>
@@ -847,7 +833,6 @@ export default function LecturaSubScreen() {
               </Text>
               {!!kitName && <Text style={{ color: '#fff' }} numberOfLines={1}>{kitName}</Text>}
 
-              {/* Barra de progreso */}
               {!!totalLocal && totalLocal > 0 && (
                 <View style={styles.progressRow}>
                   <Text style={styles.progressLabel}>{pct}%</Text>
@@ -861,11 +846,9 @@ export default function LecturaSubScreen() {
             <Pressable
               style={styles.exitBtn}
               onPress={async () => {
-                // Calculamos done al vuelo para evitar valores stale
                 const total = totalLocal || reactivosAll.length || 0;
                 const done = Math.min(submitted ? idx + 1 : idx, total);
 
-                // Guardamos reanudación y barra global
                 await AsyncStorage.setItem(resumeKey, JSON.stringify({
                   idx,
                   total: reactivosAll.length,
@@ -875,11 +858,7 @@ export default function LecturaSubScreen() {
                   updatedAt: Date.now(),
                 }));
                 await writeProg(kitId, ejercicioId, done);
-
-                // Invalida el caché para que la lista actualice las barras:
                 invalidateKitsProgress();
-
-                // Navega al índice de juegos conservando kitId/kitName
                 navigateToJuegos();
               }}
             >
@@ -923,7 +902,7 @@ export default function LecturaSubScreen() {
           </View>
         </Modal>
 
-        {/* Modal de felicitación al terminar */}
+        {/* Modal de felicitación */}
         <Modal visible={showCongrats} transparent animationType="fade" statusBarTranslucent>
           <View style={styles.modalBackdrop}>
             <View style={[styles.modalCard, { alignItems: 'stretch' }]}>
@@ -951,9 +930,7 @@ export default function LecturaSubScreen() {
   );
 }
 
-/* =========================================================
-   Estilos
-   ========================================================= */
+/* ===== estilos (igual que ya tenías) ===== */
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
   exitBtn: {

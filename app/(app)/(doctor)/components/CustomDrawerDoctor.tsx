@@ -9,12 +9,12 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
-const avatar = require('@/assets/images/perfil.png');
 
 const DoctorDrawer = (props: DrawerContentComponentProps) => {
   const { logout, user } = useAuthStore();
   const textColor = useThemeColor({}, 'text');
-
+  
+  const avatar = user?.imagen_url ? user?.imagen_url :require('@/assets/images/perfil.png');
   const go = (href: string) => {
     props.navigation.closeDrawer();
     router.replace(href as any);

@@ -1,3 +1,4 @@
+// app/(auth)/registro/(registroPaso2)/index.tsx  (Step2Screen)
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 import AddressAutocomplete from '@/presentation/theme/components/AddressAutocomplete';
 import GenderSelector from '@/presentation/theme/components/GenderSelector';
@@ -61,8 +62,8 @@ const Step2Screen = () => {
     setForm((prev) => ({
       ...prev,
       domicilio: direccion,
-      colonia: colonia || '',
-      codigo_postal: codigoPostal || '',
+      colonia: colonia ?? prev.colonia,
+      codigo_postal: codigoPostal ?? prev.codigo_postal, // <- preserva CP si la API no lo trae
     }));
     setErrors((prev) => ({
       ...prev,
@@ -111,6 +112,7 @@ const Step2Screen = () => {
               <AddressAutocomplete
                 onAddressSelect={handleAddressSelect}
                 value={form.domicilio}
+                codigoPostalValue={form.codigo_postal}  // <- CP externo para confirmación
               />
               {errors.domicilio ? (
                 <ThemedText type="error" style={{ marginTop: 4 }}>
@@ -123,17 +125,14 @@ const Step2Screen = () => {
                 <ThemedText>Código Postal</ThemedText>
                 <ThemedTextInput
                   value={form.codigo_postal}
-                  onChangeText={(value) => onChange('codigo_postal', value)}
+                  onChangeText={(value) =>
+                    onChange('codigo_postal', value.replace(/\D/g, '').slice(0, 5))
+                  }
                   error={!!errors.codigo_postal}
                   errorMessage={errors.codigo_postal}
                   keyboardType="numeric"
                   placeholder=""
                   maxLength={5}
-                  editable={Platform.OS === 'web'}
-                  style={{
-                    borderBottomWidth: 0,
-                    ...(Platform.OS !== 'web' ? { backgroundColor: '#f0f0f0' } : {}),
-                  }}
                 />
               </View>
 

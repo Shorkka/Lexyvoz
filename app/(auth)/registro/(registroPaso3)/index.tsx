@@ -1,3 +1,4 @@
+// app/(auth)/registro/(registroPaso3)/index.tsx  (Step3Screen)
 import { useRegisterStore } from '@/core/auth/context/RegisterContext';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 import { useAlert } from '@/presentation/hooks/useAlert';
@@ -12,7 +13,7 @@ import ThemedInput from '@/presentation/theme/components/ThemedInput';
 import { ThemedText } from '@/presentation/theme/components/ThemedText';
 
 import { router } from 'expo-router';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -45,21 +46,36 @@ const Step3Screen = () => {
     acepta_terminos: false,
   });
 
+  // ✅ Validación del Paso 2 (no dejar completar si faltan datos)
+  const step2Ok = useMemo(() => {
+    const phoneOk = /^\d{10}$/.test(data.numero_telefono || '');
+    const sexoOk  = !!(data.sexo || '').trim();
+    const domOk   = !!(data.domicilio || '').trim();
+    const cpOk    = /^\d{5}$/.test(data.codigo_postal || '');
+    return phoneOk && sexoOk && domOk && cpOk;
+  }, [data]);
+
+  useEffect(() => {
+    if (!step2Ok) {
+      showAlert('Faltan datos', 'Completa el Paso 2 (dirección y código postal).', [
+        { text: 'OK', onPress: () => router.replace('/(auth)/registro/(registroPaso2)') },
+      ]);
+    }
+  }, [step2Ok, showAlert]);
+
   const isFormValid = useMemo(() => {
     const tipoOk = form.tipo !== '';
     const fechaOk = fechaTocada && !!form.fecha_de_nacimiento;
     const terminosOk = form.acepta_terminos === true;
 
     if (form.tipo === 'Doctor') {
-      return tipoOk && fechaOk && form.especialidad.trim() !== '' && terminosOk;
+      return step2Ok && tipoOk && fechaOk && form.especialidad.trim() !== '' && terminosOk;
     }
-
     if (form.tipo === 'Usuario') {
-      return tipoOk && fechaOk && terminosOk;
+      return step2Ok && tipoOk && fechaOk && terminosOk;
     }
-
     return false;
-  }, [form, fechaTocada]);
+  }, [form, fechaTocada, step2Ok]);
 
   const completarRegistro = async () => {
     if (!isFormValid) return;
@@ -73,7 +89,7 @@ const Step3Screen = () => {
         numero_telefono: data.numero_telefono!,
         sexo: data.sexo!,
         tipo: form.tipo!,
-        domicilio: data.domicilio ?? null, 
+        domicilio: data.domicilio ?? null,
         codigo_postal: data.codigo_postal!,
       };
 
@@ -84,7 +100,6 @@ const Step3Screen = () => {
       }
 
       const success = await register(payload, false);
-
       if (success) {
         showAlert('Registro exitoso', 'Tu cuenta ha sido creada correctamente.', [
           { text: 'OK', onPress: () => router.replace('/login') },
@@ -113,7 +128,7 @@ const Step3Screen = () => {
           <ThemedBackground backgroundColor="#fff" align="center">
             <ThemedText type="subtitle">Registro de usuario</ThemedText>
 
-            {/* --- Tipo de usuario --- */}
+            {/* Tipo de usuario */}
             <View style={{ width: '100%', marginTop: 12 }}>
               <ThemedText style={{ fontSize: 14, top: 15 }}>Tipo de usuario</ThemedText>
               <View
@@ -146,10 +161,7 @@ const Step3Screen = () => {
               <ThemedDatePicker
                 label="Fecha de Nacimiento"
                 value={form.fecha_de_nacimiento}
-                onChange={(date) => {
-                  setForm({ ...form, fecha_de_nacimiento: date });
-                  setFechaTocada(true);
-                }}
+                onChange={(date) => { setForm({ ...form, fecha_de_nacimiento: date }); setFechaTocada(true); }}
                 style={{ width: '100%' }}
               />
 
@@ -188,7 +200,7 @@ const Step3Screen = () => {
                 </Pressable>
               </View>
 
-              {/* --- Botones --- */}
+              {/* Botones */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -225,7 +237,7 @@ const Step3Screen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* MODAL de T&C con consentimientos (solo estado local, no backend) */}
+      {/* MODAL T&C */}
       <TermsAndConditions
         visible={showTerms}
         onClose={() => setShowTerms(false)}

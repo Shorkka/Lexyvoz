@@ -123,69 +123,58 @@ export const authCheckStatus = async () => {
 
 /* 🔹 REGISTER (FormData, permite opcional imagen) */
 export const authRegister = async (
-  registerData: UpdateProfileInput & { imagen?: UpdateProfileInput['imagen'] },
+  registerData: UpdateProfileInput,
   _options?: { withDefaultAvatar?: boolean }
 ) => {
   try {
-    const body: any = {
-      ...registerData,
-      // si el backend requiere escolaridad para Paciente, fija por defecto N/A
-      ...(registerData?.tipo === 'Paciente' && !registerData.escolaridad
-        ? { escolaridad: 'N/A' }
-        : {}),
-    };
+    // Mapear "Usuario" → "Paciente" para el backend
+    const tipoBackend =
+      registerData?.tipo === 'Usuario' ? 'Paciente' : (registerData?.tipo as any);
 
-    const form = new FormData();
-    // Normaliza campos antes de anexar
-    const normalized = compact({
-      nombre: body.nombre,
-      correo: body.correo?.toLowerCase(),
-      contrasenia: body.contrasenia,
-      fecha_de_nacimiento: toISODateOnly(body.fecha_de_nacimiento),
-      numero_telefono: toTenDigits(body.numero_telefono),
-      sexo: body.sexo,
-      tipo: body.tipo,
-      especialidad: body.tipo === 'Doctor' ? body.especialidad : undefined,
-      escolaridad: body.tipo === 'Paciente' ? body.escolaridad : undefined,
-      domicilio: body.domicilio,
+    const payload = compact({
+      nombre: registerData.nombre,
+      correo: registerData.correo?.toLowerCase(),
+      contrasenia: registerData.contrasenia,
+      fecha_de_nacimiento: toISODateOnly(registerData.fecha_de_nacimiento),
+      numero_telefono: toTenDigits(registerData.numero_telefono),
+      sexo: registerData.sexo,
+      tipo: tipoBackend, // <-- importante
+      domicilio: registerData.domicilio,
       codigo_postal:
-        body.codigo_postal != null ? String(body.codigo_postal) : undefined,
+        registerData.codigo_postal != null
+          ? String(registerData.codigo_postal).slice(0, 5)
+          : undefined,
+      // campos condicionales
+      escolaridad: tipoBackend === 'Paciente'
+        ? (registerData.escolaridad || 'N/A')
+        : undefined,
+      especialidad: tipoBackend === 'Doctor'
+        ? (registerData.especialidad || undefined)
+        : undefined,
     });
 
-    Object.entries(normalized).forEach(([k, v]) => form.append(k, String(v)));
-
-    if (body.imagen) {
-      const img: any = body.imagen;
-      if (img instanceof Blob || (typeof File !== 'undefined' && img instanceof File)) {
-        form.append('imagen', img as Blob);
-      } else if (img.uri) {
-        // @ts-ignore RN file
-        form.append('imagen', {
-          uri: img.uri,
-          name: img.name || 'avatar.jpg',
-          type: img.type || 'image/jpeg',
-        });
-      }
-    }
-
-    const { data } = await productsApi.post('/auth/register', form, {
-      // Deja que axios arme el boundary de multipart
+    const { data } = await productsApi.post('/auth/register', payload, {
+      headers: {
+        'x-skip-auth': '1',            // evita que el interceptor ponga Bearer
+        'Content-Type': 'application/json',
+      },
     });
 
     return { user: data?.user ?? data };
-  } catch (error) {
+  } catch (error: any) {
     if (isAxiosError(error)) {
-      console.error('[authRegister] backend:', error.response?.data);
-      throw new Error(
-        error.response?.data?.message ||
-          error.response?.data?.error ||
-          'Error en el registro'
-      );
+      const raw = error.response?.data;
+      const msg =
+        typeof raw === 'string'
+          ? raw
+          : raw?.message || raw?.error || raw?.errors?.[0]?.msg || 'Error en el registro';
+      console.error('[authRegister] status:', error.response?.status);
+      console.error('[authRegister] data:', raw);
+      throw new Error(msg);
     }
-    throw error;
+    throw new Error('No se pudo contactar al servidor.');
   }
 };
-
 /* 🔹 UPDATE USER (PUT /auth/profile con FormData). 
    Nota: mergea con el usuario actual de la sesión para no omitir requeridos. */
 export const authUpdateUser = async (

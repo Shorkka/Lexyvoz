@@ -1,6 +1,7 @@
 import { isAxiosError } from "axios";
 import { Platform } from "react-native";
 import { productsApi } from "@/core/auth/api/productsApi";
+import { ReultadoMapper } from "../mappers/resultados-mapper";
 
 export type RNFile = { uri: string; name?: string; type?: string };
 
@@ -111,3 +112,50 @@ export const resultadoLecturaForm = async (payload: ResultadoLecturaFormPayload)
     throw new Error(msg);
   }
 };
+
+export const respuestaResultadosBackend = async (kitId: number, paciente_id: number) =>{
+  try{
+  const data = await productsApi.get(`/reactivos/reportes/kit/${kitId}/paciente/${paciente_id}`)
+  return ReultadoMapper.toapifront(data);
+  }catch(error){
+    console.log(error);
+  }
+} 
+
+
+/** Estructuras que regresa tu backend */
+export type UltimoResultado = {
+  es_correcto: boolean;
+  tiempo_respuesta: number;      // ms (según tu app)
+  voz_usuario_url: string | null;
+  fecha_realizacion: string;     // ISO
+};
+
+export type EjercicioResumen = {
+  ejercicio_id: number;
+  aciertos: number;
+  total: number;
+  porcentaje: number;            // 0..100
+  tiempo_promedio: number;       // ms o seg (normalizamos abajo)
+  ultimo_resultado?: UltimoResultado;
+};
+
+export type CompletarResp = {
+  kit_id: number;
+  paciente_id: number;
+  ejercicios: EjercicioResumen[];
+};
+
+/** Util: normaliza ms -> seg si aplica */
+export function msOrSecToSec(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  // Si viene muy grande, asumimos ms
+  return value > 50 ? value / 1000 : value;
+}
+
+/** Calcula índice LS = (aciertos / tiempo_en_seg) * 100 */
+export function calcularIndiceLS(aciertos: number, tiempoPromedio: number): number {
+  const tSeg = Math.max( msOrSecToSec(tiempoPromedio), 0.001 );
+  const ls = (Number(aciertos) / tSeg) * 100;
+  return Math.round(ls * 10) / 10; // 1 decimal
+}

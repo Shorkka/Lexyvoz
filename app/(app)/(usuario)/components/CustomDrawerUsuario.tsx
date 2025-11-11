@@ -8,10 +8,10 @@ import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItemList } 
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
-const avatar = require('@/assets/images/perfil.png');
 
 const UserDrawer = (props: DrawerContentComponentProps) => {
   const { logout,user } = useAuthStore();
+  const avatar =user?.imagen_url? user?.imagen_url :require('@/assets/images/perfil.png');
   const textColor = useThemeColor({}, 'text');
 
   const exit = () => {

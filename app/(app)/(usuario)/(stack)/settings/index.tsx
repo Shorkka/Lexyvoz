@@ -1,4 +1,4 @@
-// app/(app)/(usuario)/(stack)/perfil/index.tsx
+// app/(app)/(common)/settings/index.tsx
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -33,14 +33,31 @@ import { Asset } from 'expo-asset';
 
 const ORANGE = '#fba557';
 
-const ProfileScreen = () => {
+/** Tipado local del formulario de Settings/Profile */
+type ProfileForm = {
+  nombre: string;
+  correo: string;
+  fecha_de_nacimiento?: Date;
+  numero_telefono: string;
+  sexo: string;
+  tipo: string; // solo lectura
+  domicilio: string;
+  codigo_postal: string;
+  imagen_url: string;
+  imagen_id?: string;
+
+  // Campos condicionales
+  doctor_especialidad?: string;
+  paciente_escolaridad?: string;
+};
+
+const SettingsScreen = () => {
   const fallbackAvatar = require('@/assets/images/perfil.png');
 
-  // Tu store debe aceptar FormData en updateUser
+  // del store
   const {
     user,
-    updateUser,
-    // updateAvatar, // ya no subimos aquí; lo mandamos en el mismo FormData del perfil
+    updateUser, // ahora acepta FormData (ver archivo del store)
   } = useAuthStore();
 
   const backgroundColor = useThemeColor({}, 'background');
@@ -48,6 +65,10 @@ const ProfileScreen = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // imagen seleccionada localmente (se manda en el PUT)
+  const [avatarFile, setAvatarFile] = useState<FileLike | null>(null);
+
+  // modal de selección de avatar
   const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<
     | { type: 'predefined'; src: any }
@@ -55,15 +76,10 @@ const ProfileScreen = () => {
     | null
   >(null);
 
-  // Archivo pendiente para enviar como "imagen" en FormData
-  const [avatarFile, setAvatarFile] = useState<FileLike | null>(null);
-  // Previsualización local (no toca el backend hasta guardar)
-  const [avatarPreviewUri, setAvatarPreviewUri] = useState<string | undefined>(undefined);
-
   const [localSaving, setLocalSaving] = useState(false);
-  const [avatarVersion, setAvatarVersion] = useState(0);
+  const [avatarVersion, setAvatarVersion] = useState(0); // para cache-busting
 
-  // ---------- helpers ----------
+  // helpers
   const toYMD = (d: Date | string | undefined) => {
     if (!d) return undefined;
     const dt = d instanceof Date ? d : new Date(d);
@@ -73,48 +89,40 @@ const ProfileScreen = () => {
     const da = String(dt.getDate()).padStart(2, '0');
     return `${y}-${m}-${da}`;
   };
-
   const formatDate = (date: Date) => date.toLocaleDateString('es-MX');
-  const norm = (v: any) => (typeof v === 'string' ? v.trim() : v);
   const digits10 = (s: string | undefined) =>
     (s?.match(/\d/g) || []).join('').slice(0, 10);
-
   const tipoKey = (t?: string) => (t || '').toString().trim().toLowerCase();
 
-  // Estado inicial para comparar cambios
-  const initialForm = useMemo(
-    () => ({
-      nombre: user?.nombre ?? '',
-      correo: (user?.correo ?? '').toLowerCase(),
-      contrasenia: '',
-      fecha_de_nacimiento: user?.fecha_de_nacimiento
-        ? new Date(user.fecha_de_nacimiento as any)
-        : undefined,
-      numero_telefono: user?.numero_telefono ?? '',
-      sexo: user?.sexo ?? '',
-      tipo: user?.tipo ?? '', // no se enviará
-      escolaridad: user?.escolaridad ?? '',
-      especialidad: user?.especialidad ?? '',
-      domicilio: user?.domicilio ?? '',
-      codigo_postal: user?.codigo_postal ?? '',
-    }),
-    [user]
-  );
+  // estado inicial
+  const initialForm = useMemo<ProfileForm>(() => ({
+    nombre:              user?.nombre ?? '',
+    correo:              (user?.correo ?? '').toLowerCase(),
+    fecha_de_nacimiento: user?.fecha_de_nacimiento ? new Date(user.fecha_de_nacimiento as any) : undefined,
+    numero_telefono:     user?.numero_telefono ?? '',
+    sexo:                user?.sexo ?? '',
+    tipo:                user?.tipo ?? '',
+    domicilio:           user?.domicilio ?? '',
+    codigo_postal:       user?.codigo_postal ?? '',
+    imagen_url:          user?.imagen_url ?? '',
+    doctor_especialidad:  (user as any)?.doctor_especialidad ?? (user as any)?.especialidad ?? undefined,
+    paciente_escolaridad: (user as any)?.paciente_escolaridad ?? (user as any)?.escolaridad ?? undefined,
+  }), [user]);
 
-  const [formData, setFormData] = useState(initialForm);
+  const [formData, setFormData] = useState<ProfileForm>(initialForm);
   useEffect(() => {
     setFormData(initialForm);
   }, [initialForm]);
 
   const isBusy = localSaving;
 
-  const handleInputChange = (field: keyof typeof formData, value: string | Date) => {
-    setFormData((s) => ({ ...s, [field]: value as any }));
+  const handleInputChange = <K extends keyof ProfileForm>(field: K, value: ProfileForm[K]) => {
+    setFormData((s) => ({ ...s, [field]: value }));
   };
 
   const handleDateChange = (_: any, selectedDate?: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) setFormData((s) => ({ ...s, fecha_de_nacimiento: selectedDate }));
+    if (selectedDate) handleInputChange('fecha_de_nacimiento', selectedDate);
   };
 
   const selectPredefined = (src: any) => setPendingSelection({ type: 'predefined', src });
@@ -125,7 +133,6 @@ const ProfileScreen = () => {
     setPendingSelection({ type: 'custom', file });
   };
 
-  // Ahora no subimos el avatar en este paso; solo lo dejamos listo para enviar en el FormData al guardar.
   const confirmAvatarChange = async () => {
     if (!pendingSelection) {
       Alert.alert('Selecciona una imagen', 'Elige un avatar o sube una imagen.');
@@ -145,15 +152,17 @@ const ProfileScreen = () => {
         fileToSend = pendingSelection.file;
       }
 
+      // Guardamos en estado; se mandará en el PUT
       setAvatarFile(fileToSend);
-      setAvatarPreviewUri(fileToSend.uri);
-      setAvatarVersion((v) => v + 1); // cache-busting visual si apuntas a URL
+
+      // preview inmediata
+      setAvatarVersion((v) => v + 1);
       setShowAvatarModal(false);
       setPendingSelection(null);
-      Alert.alert('Listo', 'La imagen se guardará al presionar "Guardar".');
+      Alert.alert('Éxito', 'Imagen seleccionada (se enviará al guardar)');
     } catch (e) {
       console.error(e);
-      Alert.alert('Error', 'No se pudo preparar la imagen.');
+      Alert.alert('Error', 'No se pudo preparar la imagen');
     }
   };
 
@@ -162,119 +171,103 @@ const ProfileScreen = () => {
     setShowAvatarModal(false);
   };
 
-  // Construye un FormData con SOLO los campos modificados
-  const buildFormDataDiff = (): FormData => {
-    const form = new FormData();
+  // crea el FormData
+  const buildFormData = () => {
+    const fd = new FormData();
+    const entries: { key: string; value: any }[] = [];
 
-    const appendIfChanged = (key: keyof typeof initialForm, mapper?: (x: any) => any) => {
-      const curRaw = formData[key];
-      const iniRaw = initialForm[key];
-      const cur = mapper ? mapper(curRaw) : curRaw;
-      const ini = mapper ? mapper(iniRaw) : iniRaw;
-
-      if (JSON.stringify(norm(cur)) !== JSON.stringify(norm(ini))) {
-        // En FormData todo deben ser strings/Blobs
-        if (cur === undefined || cur === null) return;
-        form.append(key, String(cur));
-      }
+    const append = (k: string, v: any) => {
+      fd.append(k, v as any);
+      entries.push({ key: k, value: v });
+      console.log(
+        '[settings] append',
+        k,
+        v && typeof v === 'object'
+          ? { ...v, uri: String((v as any).uri || '').slice(-36) }
+          : v
+      );
     };
 
-    // nombre, correo
-    appendIfChanged('nombre');
-    appendIfChanged('correo', (x: string) => x?.toLowerCase());
+    const appendIf = (k: string, v: any) => {
+      if (v === undefined || v === null) return;
+      const sv = typeof v === 'string' ? v.trim() : v;
+      if (typeof sv === 'string' && sv === '') return;
+      append(k, sv);
+    };
 
-    // contrasenia: solo si viene
-    if (formData.contrasenia && formData.contrasenia.trim() !== '') {
-      form.append('contrasenia', formData.contrasenia.trim());
+    // Campos opcionales: como es PUT sin obligatorios, sólo mandamos lo que haya
+    appendIf('nombre', formData.nombre);
+    appendIf('correo', formData.correo?.toLowerCase());
+
+    if (formData.fecha_de_nacimiento) {
+      const y = formData.fecha_de_nacimiento.getFullYear();
+      const m = String(formData.fecha_de_nacimiento.getMonth() + 1).padStart(2, '0');
+      const d = String(formData.fecha_de_nacimiento.getDate()).padStart(2, '0');
+      appendIf('fecha_de_nacimiento', `${y}-${m}-${d}`);
     }
 
-    // fecha_de_nacimiento: YYYY-MM-DD
-    const curDate = toYMD(formData.fecha_de_nacimiento as any);
-    const iniDate = toYMD(initialForm.fecha_de_nacimiento as any);
-    if (curDate && curDate !== iniDate) {
-      form.append('fecha_de_nacimiento', curDate);
-    }
+    appendIf('numero_telefono', digits10(formData.numero_telefono));
+    appendIf('sexo', formData.sexo);
+    appendIf('domicilio', formData.domicilio);
+    appendIf('codigo_postal', String(formData.codigo_postal || '').trim());
 
-    // numero_telefono: 10 dígitos
-    const curPhone = digits10(formData.numero_telefono);
-    const iniPhone = digits10(initialForm.numero_telefono);
-    if (curPhone !== iniPhone && curPhone) {
-      form.append('numero_telefono', curPhone);
-    }
-
-    appendIfChanged('sexo');
-
-    // domicilio, codigo_postal
-    appendIfChanged('domicilio');
-    appendIfChanged('codigo_postal', (x: string) => (x ?? '').toString().trim());
-
-    // Campos condicionales
     const kind = tipoKey(user?.tipo);
     if (kind === 'doctor') {
-      if (norm(formData.especialidad) !== norm(initialForm.especialidad) && formData.especialidad) {
-        form.append('especialidad', String(formData.especialidad));
-      }
-    } else if (kind === 'paciente') {
-      if (norm(formData.escolaridad) !== norm(initialForm.escolaridad) && formData.escolaridad) {
-        form.append('escolaridad', String(formData.escolaridad));
-      }
+      // el back espera "especialidad"
+      appendIf('especialidad', formData.doctor_especialidad);
+    }
+    if (kind === 'paciente') {
+      // el back espera "escolaridad"
+      appendIf('escolaridad', formData.paciente_escolaridad);
     }
 
-    // Archivo opcional
+    // Imagen opcional
     if (avatarFile) {
-      // React Native necesita este shape
-      form.append('imagen', {
+      append('imagen', {
         uri: avatarFile.uri,
         name: avatarFile.name || 'avatar.jpg',
         type: avatarFile.type || 'image/jpeg',
-      } as any);
+      });
     }
 
-    return form;
+    // Log estilo Postman
+    const postmanLog = [
+      'Form Data:',
+      formData.nombre ? `- nombre: ${formData.nombre}` : '',
+      formData.correo ? `- correo: ${formData.correo}` : '',
+      formData.fecha_de_nacimiento ? `- fecha_de_nacimiento: ${toYMD(formData.fecha_de_nacimiento)}` : '',
+      formData.numero_telefono ? `- numero_telefono: ${digits10(formData.numero_telefono)}` : '',
+      formData.sexo ? `- sexo: ${formData.sexo}` : '',
+      formData.domicilio ? `- domicilio: ${formData.domicilio}` : '',
+      formData.codigo_postal ? `- codigo_postal: ${String(formData.codigo_postal).trim()}` : '',
+      kind === 'doctor' && formData.doctor_especialidad ? `- especialidad: ${formData.doctor_especialidad}` : '',
+      kind === 'paciente' && formData.paciente_escolaridad ? `- escolaridad: ${formData.paciente_escolaridad}` : '',
+      avatarFile ? `- imagen: { name: ${avatarFile.name || 'avatar.jpg'}, type: ${avatarFile.type || 'image/jpeg'}, uri: ...${String(avatarFile.uri).slice(-32)} }` : '',
+    ].filter(Boolean);
+    console.log(postmanLog.join('\n'));
+
+    console.log('[settings] FormData entries (debug):', entries);
+
+    return fd;
   };
 
   const onSave = async () => {
     try {
-      if (!formData.nombre.trim() || !formData.correo.trim()) {
-        Alert.alert('Error', 'Nombre y correo son campos obligatorios');
-        return;
-      }
+      // ❗️como es PUT sin obligatorios: no validamos nombre/correo
       setLocalSaving(true);
 
-      const form = buildFormDataDiff();
-      // Si no hay nada que mandar (ni imagen), avisa
-      // Nota: FormData no permite contar directo; iteramos por debug
-      let hasAny = !!avatarFile; // si hay imagen ya es true
-      // @ts-ignore - RN FormData no expone entries tipadas, nos apoyamos en toString fallback
-      if (!hasAny) {
-        // pequeño truco para detectar si agregamos campos: clonamos y comprobamos length aproximado
-        // Alternativa: rehacer build para que cuente campos a medida que agrega.
-        // Para simplicidad, volvemos a construir y contamos manualmente:
-        const keys: string[] = [];
-        const tmp = new FormData();
-        const appendSpy = (k: string, v: any) => { keys.push(k); tmp.append(k, v); };
-        const cmp = new FormData();
-        // reconstruimos por segunda vez, pero usando appendSpy
-        // — para no complicarlo, comprobamos manualmente lo más importante:
-        // Si hay al menos nombre/correo/fecha/teléfono/sexo/domicilio/cp/escolaridad/especialidad -> hasAny
-        // (Si necesitas exactitud, puedes reestructurar buildFormDataDiff para devolver {form, count})
-        hasAny = true; // asumimos true para no bloquear guardado por este edge
-      }
+      const fd = buildFormData();
 
-      await updateUser(form as any); // Asegúrate que tu action ponga Content-Type multipart/form-data (o lo deje al RN)
+      // aquí ya podemos mandar FormData directo porque el store lo acepta
+      await updateUser(fd);
+
       setIsEditing(false);
-      // si se subió avatar, resetea el pending y preview
-      if (avatarFile) {
-        setAvatarFile(null);
-        setAvatarPreviewUri(undefined);
-        setAvatarVersion((v) => v + 1);
-      }
       Alert.alert('Perfil actualizado', 'Tus cambios se han guardado correctamente');
+
+      if (avatarFile) setAvatarVersion((v) => v + 1);
     } catch (error: any) {
-      console.error('Error updating profile:', error?.response?.data || error?.message || error);
-      // Muestra mensaje del backend si viene
-      const msg = error?.response?.data?.message || error?.message || 'No se pudo actualizar el perfil';
-      Alert.alert('Error', msg);
+      console.error('Error updating profile:', error?.response?.data ?? error?.message ?? error);
+      Alert.alert('Error', 'No se pudo actualizar el perfil');
     } finally {
       setLocalSaving(false);
     }
@@ -313,6 +306,8 @@ const ProfileScreen = () => {
     );
   };
 
+  const kind = tipoKey(user?.tipo);
+
   return (
     <AuthGuard>
       <SafeAreaView style={{ flex: 1, backgroundColor }}>
@@ -336,10 +331,10 @@ const ProfileScreen = () => {
                   >
                     <Image
                       source={
-                        avatarPreviewUri
-                          ? { uri: avatarPreviewUri }
-                          : user?.imagen_url
-                          ? { uri: `${user.imagen_url}?v=${avatarVersion}` }
+                        avatarFile
+                          ? { uri: `${avatarFile.uri}` }
+                          : formData.imagen_url
+                          ? { uri: `${formData.imagen_url}?v=${avatarVersion}` }
                           : fallbackAvatar
                       }
                       style={[styleImage.avatar, styles.avatarRing]}
@@ -354,15 +349,15 @@ const ProfileScreen = () => {
 
                 <View style={styles.headerTexts}>
                   <ThemedText type="welcome" style={styles.displayName}>
-                    {user?.nombre || 'Mi Perfil'}
+                    {formData.nombre || 'Mi Perfil'}
                   </ThemedText>
                   <View style={styles.headerRow}>
                     {HeaderBadge}
-                    {!!user?.correo && (
+                    {!!formData.correo && (
                       <View style={[styles.badge, { backgroundColor: '#fff' }]}>
                         <Ionicons name="mail-outline" size={16} />
                         <ThemedText style={styles.badgeText} numberOfLines={1}>
-                          {user?.correo}
+                          {formData.correo}
                         </ThemedText>
                       </View>
                     )}
@@ -396,7 +391,7 @@ const ProfileScreen = () => {
                     placeholder="Tu nombre completo"
                   />
                 ) : (
-                  <ThemedText style={styles.value}>{user?.nombre || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.nombre || '—'}</ThemedText>
                 )}
               </View>
 
@@ -413,23 +408,9 @@ const ProfileScreen = () => {
                     placeholder="tu@correo.com"
                   />
                 ) : (
-                  <ThemedText style={styles.value}>{user?.correo || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.correo || '—'}</ThemedText>
                 )}
               </View>
-
-              {/* Password (solo edición) */}
-              {isEditing && (
-                <View style={styles.fieldBlock}>
-                  <ThemedText style={styles.label}>Nueva contraseña</ThemedText>
-                  <ThemedTextInput
-                    value={formData.contrasenia}
-                    onChangeText={(v) => handleInputChange('contrasenia', v)}
-                    style={styles.input}
-                    secureTextEntry
-                    placeholder="Dejar en blanco para no cambiar"
-                  />
-                </View>
-              )}
 
               {/* Fecha de nacimiento */}
               <View style={styles.fieldBlock}>
@@ -453,8 +434,8 @@ const ProfileScreen = () => {
                   </>
                 ) : (
                   <ThemedText style={styles.value}>
-                    {user?.fecha_de_nacimiento
-                      ? formatDate(new Date(user.fecha_de_nacimiento as any))
+                    {formData.fecha_de_nacimiento
+                      ? formatDate(formData.fecha_de_nacimiento)
                       : 'No especificada'}
                   </ThemedText>
                 )}
@@ -473,11 +454,11 @@ const ProfileScreen = () => {
                     maxLength={15}
                   />
                 ) : (
-                  <ThemedText style={styles.value}>{user?.numero_telefono || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.numero_telefono || '—'}</ThemedText>
                 )}
               </View>
 
-              {/* Sexo (chips) */}
+              {/* Sexo */}
               <View style={styles.fieldBlock}>
                 <ThemedText style={styles.label}>Sexo</ThemedText>
                 {isEditing ? (
@@ -487,7 +468,7 @@ const ProfileScreen = () => {
                     <SexChip value="Otro" label="Otro" />
                   </View>
                 ) : (
-                  <ThemedText style={styles.value}>{user?.sexo || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.sexo || '—'}</ThemedText>
                 )}
               </View>
 
@@ -502,7 +483,7 @@ const ProfileScreen = () => {
                     placeholder="Calle, número, colonia"
                   />
                 ) : (
-                  <ThemedText style={styles.value}>{user?.domicilio || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.domicilio || '—'}</ThemedText>
                 )}
               </View>
 
@@ -519,46 +500,68 @@ const ProfileScreen = () => {
                     maxLength={10}
                   />
                 ) : (
-                  <ThemedText style={styles.value}>{user?.codigo_postal || '—'}</ThemedText>
+                  <ThemedText style={styles.value}>{formData.codigo_postal || '—'}</ThemedText>
                 )}
               </View>
 
-              {/* Campos según tipo */}
-              {tipoKey(user?.tipo) === 'doctor' && (
+              {/* Campos condicionales */}
+              {kind === 'doctor' && (
                 <View style={styles.fieldBlock}>
                   <ThemedText style={styles.label}>Especialidad</ThemedText>
                   {isEditing ? (
                     <ThemedTextInput
-                      value={formData.especialidad || ''}
-                      onChangeText={(v) => handleInputChange('especialidad', v)}
+                      value={formData.doctor_especialidad ?? ''}
+                      onChangeText={(v) => handleInputChange('doctor_especialidad', v)}
                       style={styles.input}
                       placeholder="Ej. Neurología"
                     />
                   ) : (
-                    <ThemedText style={styles.value}>{user?.especialidad || '—'}</ThemedText>
+                    <ThemedText style={styles.value}>{formData.doctor_especialidad || '—'}</ThemedText>
                   )}
                 </View>
               )}
 
-              {tipoKey(user?.tipo) === 'paciente' && (
+              {kind === 'paciente' && (
                 <View style={styles.fieldBlock}>
                   <ThemedText style={styles.label}>Escolaridad</ThemedText>
                   {isEditing ? (
                     <ThemedTextInput
-                      value={formData.escolaridad || ''}
-                      onChangeText={(v) => handleInputChange('escolaridad', v)}
+                      value={formData.paciente_escolaridad ?? ''}
+                      onChangeText={(v) => handleInputChange('paciente_escolaridad', v)}
                       style={styles.input}
                       placeholder="Ej. Secundaria"
                     />
                   ) : (
-                    <ThemedText style={styles.value}>{user?.escolaridad || '—'}</ThemedText>
+                    <ThemedText style={styles.value}>{formData.paciente_escolaridad || '—'}</ThemedText>
                   )}
                 </View>
               )}
+
+              {/* Info de imagen */}
+              <View style={styles.fieldBlock}>
+                <ThemedText style={styles.label}>Imagen</ThemedText>
+                <ThemedText style={{ color: '#111' }}>
+                  {avatarFile
+                    ? (avatarFile.name || 'avatar.jpg')
+                    : (formData.imagen_url ? 'Imagen actual en el servidor' : '—')}
+                </ThemedText>
+                {isEditing && (
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                    <ThemedButton onPress={() => setShowAvatarModal(true)} style={{ backgroundColor: ORANGE }}>
+                      <ThemedText style={{ color: '#fff' }}>Cambiar imagen</ThemedText>
+                    </ThemedButton>
+                    {avatarFile && (
+                      <ThemedButton onPress={() => setAvatarFile(null)} style={{ backgroundColor: '#999' }}>
+                        <ThemedText style={{ color: '#fff' }}>Quitar selección</ThemedText>
+                      </ThemedButton>
+                    )}
+                  </View>
+                )}
+              </View>
             </View>
           </ScrollView>
 
-          {/* Footer de acciones fijo */}
+          {/* footer acciones */}
           <View style={styles.footer}>
             {isEditing ? (
               <>
@@ -569,9 +572,8 @@ const ProfileScreen = () => {
                 <ThemedButton
                   disabled={isBusy}
                   onPress={() => {
-                    setFormData((s) => ({ ...s, contrasenia: '' }));
                     setAvatarFile(null);
-                    setAvatarPreviewUri(undefined);
+                    setFormData(initialForm);
                     setIsEditing(false);
                   }}
                   style={[styles.footerBtn, styles.cancel]}
@@ -590,7 +592,7 @@ const ProfileScreen = () => {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
-      {/* MODAL: elegir avatar */}
+      {/* modal avatar */}
       <Modal visible={showAvatarModal} transparent animationType="slide" onRequestClose={cancelAvatarChange}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -648,9 +650,7 @@ const ProfileScreen = () => {
                     paddingVertical: 12,
                   }}
                 >
-                  <ThemedText style={{ color: '#fff', textAlign: 'center', fontWeight: '700' }}>
-                    Usar esta imagen
-                  </ThemedText>
+                  <ThemedText style={{ color: '#fff', textAlign: 'center' }}>Usar esta imagen</ThemedText>
                 </ThemedButton>
 
                 <ThemedButton
@@ -665,7 +665,7 @@ const ProfileScreen = () => {
         </View>
       </Modal>
 
-      {/* Overlay global de loading */}
+      {/* overlay loading */}
       {isBusy && (
         <View style={styles.busyOverlay}>
           <ActivityIndicator size="large" />
@@ -698,7 +698,6 @@ const styles = StyleSheet.create({
     backgroundColor: ORANGE, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 10,
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, elevation: 2,
   },
-
   card: {
     marginHorizontal: 16, marginTop: -32,
     backgroundColor: '#fff', borderRadius: 16, padding: 16,
@@ -715,7 +714,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#fff', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#e4e4e7',
   },
-
   chipsRow: { flexDirection: 'row', gap: 8 },
   chip: {
     paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999,
@@ -724,7 +722,6 @@ const styles = StyleSheet.create({
   chipSelected: { backgroundColor: ORANGE },
   chipText: { fontSize: 13, fontWeight: '600', color: '#333' },
   chipTextSelected: { color: '#fff' },
-
   footer: {
     position: 'absolute', left: 0, right: 0, bottom: 0,
     padding: 12, backgroundColor: '#ffffffee',
@@ -739,14 +736,12 @@ const styles = StyleSheet.create({
   edit: { backgroundColor: '#111' },
   save: { backgroundColor: '#10b981' },
   cancel: { backgroundColor: '#ef4444' },
-
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modalContainer: { backgroundColor: '#fff', padding: 20, borderRadius: 12, width: '85%', maxHeight: '70%', alignItems: 'center' },
-
   busyOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.08)', alignItems: 'center', justifyContent: 'center',
   },
 });
 
-export default ProfileScreen;
+export default SettingsScreen;
