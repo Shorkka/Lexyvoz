@@ -1,11 +1,11 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
+import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
+import { useLocalSearchParams } from 'expo-router';
+import * as React from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { useEjerciciosStore } from '@/infraestructure/store/useEjercicioStore';
-import { EscritoRendererProps, ReactivoEscribirBien, ReactivoEscrito, ReactivoReordenamiento } from './interface/escrito.reactivo';
+import { EscritoRendererProps, ReactivoEscribirBien, ReactivoEscrito, ReactivoReordenamiento } from '../../../../../../presentation/interface/escrito.reactivo';
 
 // ---- Renderers de cada subtipo ----
 const EscribirBienRenderer: React.FC<EscritoRendererProps> = ({
@@ -165,7 +165,7 @@ export default function EscritoSubScreen() {
 
   return (
     <AuthGuard>
-      <ThemedBackground fullHeight backgroundColor="#f8e7c2" style={{ padding: 16 }}>
+      <ThemedBackground fullHeight backgroundColor="#fba557" style={{ padding: 16 }}>
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
           {isLoading && <Text style={styles.muted}>Cargando…</Text>}
           {error && <Text style={styles.error}>Error al cargar reactivos.</Text>}

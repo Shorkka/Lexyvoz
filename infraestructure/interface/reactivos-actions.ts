@@ -1,5 +1,6 @@
 import { productsApi } from "@/core/auth/api/productsApi"
-import { CompatibilidadEjerciciosReactivosMapper, ObtenerEjerciciosReactivosMapper, ReactivoMapper, SubTiposReactivosMapper, tiposReactivosMapper } from "../mappers/reactivos.mapper";
+import { CompatibilidadEjerciciosReactivosMapper, ImagenCorrectaArchivoMapper, ImagenCorrectaMapper, ImagenCorrectaResultadosMapper, ObtenerEjerciciosReactivosMapper, ReactivoMapper, ReporteKitPacienteMapper, SubTiposReactivosMapper, tiposReactivosMapper } from "../mappers/reactivos.mapper";
+import { ImagenCorrectaArchivo, ImagenCorrectaResponse, ImagenCorrectaResultado, ReporteKitPacienteResponse } from "@/core/auth/interface/reactivos";
 export interface CrearReactivo {
   pseudopalabra:   string;
   id_sub_tipo:     number;
@@ -188,4 +189,43 @@ export const deleteEjercicioReactivo = async (
     console.error("Error al eliminar ejercicio reactivo:", error);
     throw error;
   }
+};
+export const imagenCorrecta = async (): Promise<ImagenCorrectaResponse> => {
+  try {
+    const { data } = await productsApi.post("reactivos/imagen-correcta");
+    return ImagenCorrectaMapper.fromApiResp(data);
+  } catch (error) {
+    console.log("Fallo al obtener 'imagen-correcta'", error);
+    throw error;
+  }
+};
+
+
+export const imagenCorrectaResultados = async (): Promise<ImagenCorrectaResultado> => {
+  try {
+    const { data } = await productsApi.post("/reactivos/imagen-correcta/resultado");
+    return ImagenCorrectaResultadosMapper.fromApiResp(data);
+  } catch (error) {
+    console.log("Fallo al obtener los resultados de 'imagen-correcta'", error);
+    throw error;
+  }
+};
+
+export const imagenArchivada = async (): Promise<ImagenCorrectaArchivo> => {
+  try {
+    const { data } = await productsApi.post("reactivos/imagen-correcta/archivos");
+    return ImagenCorrectaArchivoMapper.fromApiResp(data);
+  } catch (error) {
+    console.log("Fallo al obtener las imágenes archivadas", error);
+    throw error;
+  }
+};
+export const obtenerReporteKitPaciente = async (
+  kit_id: number,
+  paciente_id: number
+): Promise<ReporteKitPacienteResponse> => {
+  
+  const url = `reactivos/reportes/kit/${kit_id}/paciente/${paciente_id}`;
+  const { data } = await productsApi.get(url);
+  return ReporteKitPacienteMapper.fromApiResp(data);
 };

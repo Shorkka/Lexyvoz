@@ -1,4 +1,4 @@
-// ✅ useReactivosStore.ts
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   crearReactivoKits,
@@ -14,15 +14,19 @@ import {
   editarEjerciciosReactivos,
   deleteEjercicioReactivo,
   CrearReactivo,
-  CrearEjercicioReactivo
+  CrearEjercicioReactivo,
+  imagenCorrecta,
+  imagenCorrectaResultados,
+  imagenArchivada,
+  obtenerReporteKitPaciente
 } from "../interface/reactivos-actions";
+import { ReporteKitPacienteResponse } from "@/core/auth/interface/reactivos";
 
 export const useReactivosStore = () => {
   const queryClient = useQueryClient();
 
   // ----------------- QUERIES -----------------
 
-  // 🔹 Obtener todos los reactivos (con filtros y paginación)
   const useReactivoKitsQuery = (
     page?: number,
     limit?: number,
@@ -37,7 +41,7 @@ export const useReactivosStore = () => {
       staleTime: 1000 * 60 * 5,
     });
 
-  // 🔹 Obtener reactivo por ID
+
   const useReactivoPorIdQuery = (reactivo_id?: number) =>
     useQuery({
       queryKey: ["reactivos", reactivo_id],
@@ -46,7 +50,6 @@ export const useReactivosStore = () => {
       staleTime: 1000 * 60 * 5,
     });
 
-  // 🔹 Obtener subtipos de reactivos por ID
   const useSubtiposReactivosQuery = (sub_tipo_id?: number, page?: number, limit?: number, activo?: boolean) =>
     useQuery({
       queryKey: ["reactivos", "subtipos", sub_tipo_id, { page, limit, activo }],
@@ -55,7 +58,6 @@ export const useReactivosStore = () => {
       staleTime: 1000 * 60 * 5,
     });
 
-  // 🔹 Obtener tipos de reactivos por ID
   const useTiposReactivosQuery = (tipo_id?: number) =>
     useQuery({
       queryKey: ["reactivos", "tipos", tipo_id],
@@ -64,7 +66,7 @@ export const useReactivosStore = () => {
       staleTime: 1000 * 60 * 5,
     });
 
-  // 🔹 Obtener compatibilidad de ejercicios con reactivos
+
   const useCompatibilidadReactivosQuery = (ejercicio_id?: number, tipo_id?: number) =>
     useQuery({
       queryKey: ["reactivos", "compatibilidad", ejercicio_id, tipo_id],
@@ -81,6 +83,38 @@ export const useReactivosStore = () => {
       enabled: !!ejercicio_id,
       staleTime: 1000 * 60 * 5,
     });
+        const useImagenCorrectaQuery = () =>
+      useQuery({
+        queryKey: ["reactivos", "imagen-correcta", "imagenes"],
+        queryFn: () => imagenCorrecta(),
+        staleTime: 1000 * 60 * 5,
+      });
+
+
+    const useImagenCorrectaResultadosQuery = () =>
+      useQuery({
+        queryKey: ["reactivos", "imagen-correcta", "resultados"],
+        queryFn: () => imagenCorrectaResultados(),
+        staleTime: 1000 * 60 * 5,
+      });
+
+  
+    const useImagenArchivadaQuery = () =>
+      useQuery({
+        queryKey: ["reactivos", "imagen-correcta", "archivados"],
+        queryFn: () => imagenArchivada(),
+        staleTime: 1000 * 60 * 5,
+      });
+        
+    const useReporteKitPacienteQuery = (kit_id?: number, paciente_id?: number) =>
+    useQuery<ReporteKitPacienteResponse, Error>({
+      queryKey: ["reportes", "kit-paciente", kit_id, paciente_id],
+      queryFn: () => obtenerReporteKitPaciente(kit_id as number, paciente_id as number),
+      enabled: !!kit_id && !!paciente_id,
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+    });
+
 
   // ----------------- MUTATIONS -----------------
 
@@ -136,6 +170,10 @@ export const useReactivosStore = () => {
     },
   });
 
+  
+
+
+
   return {
     // Queries
     useReactivoKitsQuery,
@@ -144,7 +182,11 @@ export const useReactivosStore = () => {
     useTiposReactivosQuery,
     useCompatibilidadReactivosQuery,
     useEjerciciosReactivosQuery,
+    useImagenCorrectaQuery,
+    useImagenCorrectaResultadosQuery,
+    useImagenArchivadaQuery,
 
+    useReporteKitPacienteQuery,
     // Mutations
     crearReactivoMutation,
     editarReactivoMutation,

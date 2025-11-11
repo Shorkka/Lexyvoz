@@ -5,14 +5,16 @@ import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
 const APP_ROUTES = {
   DOCTOR_HOME: '/main',
-  USER_HOME: '/home',
-  LOGIN: '/login',
+  USER_HOME:   '/home',
+  ADMIN_HOME:  '/admin', 
+  LOGIN:       '/login',
 } as const;
 
 const CheckAuthenticationLayout = () => {
-  const { status, userType, checkStatus, loadSession} = useAuthStore();
+  const { status, userType, checkStatus, loadSession } = useAuthStore();
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
+
   useEffect(() => {
     const initializeApp = async () => {
       await loadSession();
@@ -21,6 +23,7 @@ const CheckAuthenticationLayout = () => {
     };
     initializeApp();
   }, [loadSession, checkStatus]);
+
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -30,10 +33,14 @@ const CheckAuthenticationLayout = () => {
     }
 
     if (status === 'authenticated') {
-      const targetRoute = userType === 'Doctor' 
-        ? APP_ROUTES.DOCTOR_HOME 
-        : APP_ROUTES.USER_HOME;
-      
+      // normaliza por si el backend manda variaciones (admin/Admin/Administrador)
+      const t = String(userType || '').toLowerCase();
+
+      const targetRoute =
+        t.startsWith('adm') ? APP_ROUTES.ADMIN_HOME  :
+        t.startsWith('doc') ? APP_ROUTES.DOCTOR_HOME :
+        APP_ROUTES.USER_HOME;
+
       router.replace(targetRoute);
     }
   }, [status, userType, isInitialized, router]);

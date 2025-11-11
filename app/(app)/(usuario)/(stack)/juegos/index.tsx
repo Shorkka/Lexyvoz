@@ -12,11 +12,13 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
 import FiltroTipos, { TipoFiltro } from '@/presentation/theme/components/FiltroTipos';
 import { useEjerciciosStore } from '@/infraestructure/store/useEjercicioStore';
+import { useKitsStore } from '@/infraestructure/store/useKitsStore';
 import { normalizeEjercicioItem } from '@/utils/ejercicios';
 
 const ORANGE = '#ee7200';
@@ -46,6 +48,7 @@ function EjercicioCard({
   getProgreso,
   setProgreso,
   visible = true,
+  locked = false,
 }: {
   e: any;
   kitId: number;
@@ -61,12 +64,12 @@ function EjercicioCard({
   getProgreso: (ejercicioId: number, total?: number) => { done: number; total?: number; pct: number };
   setProgreso: (ejercicioId: number, completados: number) => void;
   visible?: boolean;
+  locked?: boolean;
 }) {
   const ne = React.useMemo(() => normalizeEjercicioItem(e), [e]);
   const { useReactivosDeEjercicioQuery } = useEjerciciosStore();
 
   const ejercicioId = ne.ejercicio_id ?? 0;
-
   const { data, isLoading, error } = useReactivosDeEjercicioQuery(ejercicioId);
 
   const reactivos = React.useMemo(() => {
@@ -85,15 +88,12 @@ function EjercicioCard({
     [reactivos]
   );
 
-  // Meta
   const meta = React.useMemo(() => {
     if (!sorted.length) {
       const tipoId = (ne.tipo_id === 1 || ne.tipo_id === 2 || ne.tipo_id === 3) ? (ne.tipo_id as 1|2|3) : undefined;
       const tipoNombre = tipoId ? TIPO_CONF[tipoId].label : (ne.tipo_nombre || '');
       return { tipoId, tipoNombre, subtipoId: undefined, subtipoNombre: undefined, ordenIds: [] };
     }
-
-    // mayoritario por tipo
     const tipoCounts = new Map<number, number>();
     const tipoNameMap = new Map<number, string>();
     for (const r of sorted) {
@@ -109,7 +109,6 @@ function EjercicioCard({
     }
     const tipoNombre = tipoId ? (tipoNameMap.get(tipoId) ?? TIPO_CONF[tipoId].label) : undefined;
 
-    // subtipo
     const subCounts = new Map<number, number>();
     const subNameMap = new Map<number, string>();
     for (const r of sorted) {
@@ -136,13 +135,10 @@ function EjercicioCard({
     onResolvedMeta(ejercicioId, { ...meta, totalReactivos: totalFromPayload });
   }, [ejercicioId, meta.tipoId, meta.subtipoId, meta.tipoNombre, meta.subtipoNombre, totalFromPayload, sorted.length, meta, onResolvedMeta]);
 
-  // Progreso (y clamp si guardaste más del total)
   const { done, total } = getProgreso(ejercicioId, totalFromPayload);
   React.useEffect(() => {
-    if (typeof totalFromPayload === 'number') {
-      if (done > totalFromPayload) {
-        setProgreso(ejercicioId, totalFromPayload);
-      }
+    if (typeof totalFromPayload === 'number' && done > totalFromPayload) {
+      setProgreso(ejercicioId, totalFromPayload);
     }
   }, [ejercicioId, totalFromPayload, done, setProgreso]);
 
@@ -156,7 +152,10 @@ function EjercicioCard({
     subtipoNombre: r.sub_tipo_nombre ? String(r.sub_tipo_nombre) : undefined,
   })).filter(x => Number.isFinite(x.id));
 
+  const pct = typeof total === 'number' && total > 0 ? Math.round((done / total) * 100) : 0;
+
   const onPress = () => {
+    if (locked) return;
     const navParams = {
       kitId: String(kitId),
       kitName,
@@ -171,37 +170,29 @@ function EjercicioCard({
       ordenJson: JSON.stringify(ordenIdsArr),
       ordenDetalleJson: JSON.stringify(ordenDetalleArr),
     };
-
-    router.push({
-      pathname: `/(app)/(usuario)/(stack)/juegos/${tipo.seg}`,
-      params: navParams,
-    });
+    router.push({ pathname: `/(app)/(usuario)/(stack)/juegos/${tipo.seg}`, params: navParams });
   };
 
   return (
     <Pressable
       onPress={onPress}
-      android_ripple={{ color: '#eee' }}
+      android_ripple={{ color: locked ? 'transparent' : '#eee' }}
       style={[
         styles.card,
         !visible && { display: 'none' },
+        locked && { opacity: 0.5 },
       ]}
     >
       <View style={styles.cardHeader}>
         <Ionicons name={tipo.icon} size={18} color={ORANGE} />
         <Text style={styles.cardType}>{tipo.label}</Text>
+        {locked && <Text style={styles.lockBadge}> • bloqueado</Text>}
         {isLoading && <Text style={styles.loadingBadge}> • cargando…</Text>}
         {error && <Text style={styles.errorBadge}> • error</Text>}
       </View>
 
-      <Text style={styles.cardTitle} numberOfLines={1}>
-        {ne.titulo ?? 'Sin título'}
-      </Text>
-      {!!ne.descripcion && (
-        <Text style={styles.cardDesc} numberOfLines={3}>
-          {ne.descripcion}
-        </Text>
-      )}
+      <Text style={styles.cardTitle} numberOfLines={1}>{ne.titulo ?? 'Sin título'}</Text>
+      {!!ne.descripcion && <Text style={styles.cardDesc} numberOfLines={3}>{ne.descripcion}</Text>}
 
       <View style={styles.metaRow}>
         {typeof totalFromPayload === 'number'
@@ -216,57 +207,62 @@ function EjercicioCard({
         </View>
       )}
 
-      {typeof total === 'number' ? (
-        <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>{done}/{total}</Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${Math.round((total > 0 ? done / total : 0) * 100)}%` }]} />
+      {typeof total === 'number'
+        ? (
+          <View style={styles.progressRow}>
+            <Text style={styles.progressLabel}>{done}/{total} • {pct}%</Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${pct}%` }]} />
+            </View>
           </View>
-        </View>
-      ) : (
-        <Text style={styles.progressLabelMuted}>
-          Progreso: {done} (total N/D)
-        </Text>
-      )}
+        )
+        : <Text style={styles.progressLabelMuted}>Progreso: {done} (total N/D)</Text>}
     </Pressable>
   );
 }
 
 export default function KitEjerciciosScreen() {
-    const params = useLocalSearchParams<{ kitId?: string; kitName?: string; KitName?: string }>();
-    const kitId = params.kitId ? Number(params.kitId) : NaN;
-    const rawName = (params.kitName ?? params.KitName ?? '').trim();
-    const kitName = rawName ? rawName : `Kit #${params.kitId ?? ''}`;
+  const params = useLocalSearchParams<{ kitId?: string; kitName?: string; KitName?: string }>();
+  const kitId = params.kitId ? Number(params.kitId) : NaN;
+  const rawName = (params.kitName ?? params.KitName ?? '').trim();
+  const kitName = rawName ? rawName : `Kit #${params.kitId ?? ''}`;
 
-  const { useEjerciciosDisponiblesParaKitQuery } = useEjerciciosStore();
-  const { data, isLoading, error } = useEjerciciosDisponiblesParaKitQuery(
-    Number.isFinite(kitId) ? Number(kitId) : 0,
-    1, 500, true
+  const { useEjerciciosDeUnKitQuery } = useKitsStore();
+  const { data, isLoading, error } = useEjerciciosDeUnKitQuery(
+    Number.isFinite(kitId) ? Number(kitId) : 0
   );
 
-  const pickArray = React.useCallback((d: any) => {
-    if (!d) return [];
-    if (Array.isArray(d?.data)) return d.data;
-    if (Array.isArray(d?.data?.data)) return d.data.data;
-    if (Array.isArray(d?.items)) return d.items;
-    if (Array.isArray(d?.rows)) return d.rows;
-    if (Array.isArray(d)) return d;
-    return [];
-  }, []);
-
-  // Normalizamos SIEMPRE
+  // Normalizar y ordenar por orden_en_kit
   const ejercicios = React.useMemo<any[]>(() => {
-    const arr = pickArray(data);
-    return arr.map(normalizeEjercicioItem);
-  }, [data, pickArray]);
+    const arr = Array.isArray((data as any)?.ejercicios) ? (data as any).ejercicios : [];
+    return arr.map(normalizeEjercicioItem)
+              .sort((a: any, b: any) => (a.orden_en_kit - b.orden_en_kit) || (a.ejercicio_id - b.ejercicio_id));
+  }, [data]);
 
   const [tipoFiltro, setTipoFiltro] = React.useState<TipoFiltro>('todos');
 
-  // Estado de progreso global del kit (persistido)
+  // Progreso global del kit (persistido)
   const [progressMap, setProgressMap] = React.useState<Record<string, number>>({});
-  React.useEffect(() => {
-    loadProgress().then(pm => { setProgressMap(pm); });
-  }, []);
+
+  // Cargar al montar
+  React.useEffect(() => { loadProgress().then(pm => setProgressMap(pm)); }, []);
+
+  // Volver a leer cada que la pantalla gana foco (para liberar siguiente ejercicio al regresar)
+  useFocusEffect(
+    React.useCallback(() => {
+      let alive = true;
+      (async () => {
+        try {
+          const s = await AsyncStorage.getItem(PROG_KEY);
+          if (alive && s) {
+            const pm = JSON.parse(s) as Record<string, number>;
+            setProgressMap(prev => ({ ...prev, ...pm }));
+          }
+        } catch {}
+      })();
+      return () => { alive = false; };
+    }, [])
+  );
 
   const setProgreso = async (ejercicioId: number, completados: number) => {
     const k = keyFor(Number(kitId), ejercicioId);
@@ -303,7 +299,7 @@ export default function KitEjerciciosScreen() {
     });
   }, []);
 
-  // ✅ Conteos por tipo usando la meta resuelta (arregla el badge de "Lectura")
+  // Conteos para filtros
   const counts = React.useMemo(() => {
     const c: Record<1 | 2 | 3, number> = { 1: 0, 2: 0, 3: 0 };
     for (const e of ejercicios) {
@@ -323,6 +319,27 @@ export default function KitEjerciciosScreen() {
     escrito: counts[2],
   }), [ejercicios.length, counts]);
 
+  // Bloqueo secuencial + ocultar los de 0 reactivos
+  const lockMap = React.useMemo(() => {
+    const m: Record<number, boolean> = {};
+    let prevIncomplete = false;
+    for (const e of ejercicios) {
+      const id = e.ejercicio_id;
+      const total = metaMap[id]?.totalReactivos;
+      const hide = total === 0;
+      if (!hide) {
+        const { done } = getProgreso(id, total);
+        const completed = typeof total === 'number' && total > 0 ? done >= total : false;
+        m[id] = prevIncomplete;
+        if (!completed) prevIncomplete = true;
+      } else {
+        m[id] = false;
+      }
+    }
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ejercicios, metaMap, progressMap]);
+
   if (!Number.isFinite(kitId)) {
     return <Text style={styles.errorText}>Falta un kitId válido.</Text>;
   }
@@ -330,7 +347,7 @@ export default function KitEjerciciosScreen() {
   if (isLoading) {
     return (
       <AuthGuard>
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#fffcc3' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fba557' }}>
           <ThemedBackground justifyContent="center" align="center" fullHeight backgroundColor="#e1944e">
             <ActivityIndicator size="large" color={ORANGE} />
             <Text style={{ marginTop: 12, color: '#222' }}>Cargando ejercicios…</Text>
@@ -350,7 +367,6 @@ export default function KitEjerciciosScreen() {
           backgroundColor="#e1944e"
           style={{ paddingVertical: 24, paddingHorizontal: 16 }}
         >
-          {/* Encabezado */}
           <View style={styles.headerRow}>
             <Text style={styles.kitTitle} numberOfLines={1}>{kitName}</Text>
             <FiltroTipos
@@ -367,10 +383,16 @@ export default function KitEjerciciosScreen() {
               {ejercicios.map((e, idx) => {
                 const id = e.ejercicio_id || idx;
                 const meta = metaMap[id];
-                const visible =
+                const hide = typeof meta?.totalReactivos === 'number' && meta.totalReactivos === 0;
+                if (hide) return null;
+
+                const inFilter =
                   tipoFiltro === 'todos'
                     ? true
-                    : (meta?.tipoId === target[tipoFiltro]);
+                    : (meta?.tipoId === target[tipoFiltro] || e?.tipo_id === target[tipoFiltro]);
+                if (!inFilter) return null;
+
+                const locked = Boolean(lockMap[id]);
 
                 return (
                   <EjercicioCard
@@ -381,16 +403,15 @@ export default function KitEjerciciosScreen() {
                     onResolvedMeta={onResolvedMeta}
                     getProgreso={getProgreso}
                     setProgreso={setProgreso}
-                    visible={visible}
+                    visible={true}
+                    locked={locked}
                   />
                 );
               })}
 
               {ejercicios.length === 0 && (
                 <View style={[styles.centerBox, { paddingVertical: 40 }]}>
-                  <Text style={{ color: '#333' }}>
-                    No hay ejercicios en el kit.
-                  </Text>
+                  <Text style={{ color: '#333' }}>No hay ejercicios en el kit.</Text>
                 </View>
               )}
             </View>
@@ -411,19 +432,8 @@ function Meta({ icon, text }: { icon: React.ComponentProps<typeof Ionicons>['nam
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  kitTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#1b1b1b',
-    maxWidth: '60%',
-  },
-
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  kitTitle: { fontSize: 22, fontWeight: '800', color: '#1b1b1b', maxWidth: '60%' },
   scrollContainer: { paddingBottom: 24 },
   gridWrap: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 },
 
@@ -441,6 +451,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
   cardType: { marginLeft: 6, color: ORANGE, fontWeight: '700' },
   loadingBadge: { marginLeft: 6, color: '#666', fontSize: 12 },
+  lockBadge: { marginLeft: 6, color: '#666', fontSize: 12 },
   errorBadge: { marginLeft: 6, color: 'red', fontSize: 12 },
   cardTitle: { color: '#111', fontWeight: '800', fontSize: 16, marginBottom: 6 },
   cardDesc: { color: '#444', fontSize: 13, lineHeight: 18, marginBottom: 8 },
@@ -451,12 +462,7 @@ const styles = StyleSheet.create({
   progressRow: { marginTop: 2 },
   progressLabel: { color: '#333', fontSize: 12, marginBottom: 6 },
   progressLabelMuted: { color: '#666', fontSize: 12, marginTop: 4 },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#eee',
-    borderRadius: 999,
-    overflow: 'hidden',
-  },
+  progressBar: { height: 8, backgroundColor: '#eee', borderRadius: 999, overflow: 'hidden' },
   progressFill: { height: 8, backgroundColor: ORANGE },
 
   centerBox: { alignItems: 'center', justifyContent: 'center' },

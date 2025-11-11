@@ -17,8 +17,10 @@ const DrawerLayout = () => {
         drawerStyle: {
           backgroundColor: '#ffb525',
         },
-        drawerItemStyle: { display: 'none' }
+        drawerItemStyle: { display: 'none' },
+        
       }}
+      
     >
       <Drawer.Screen
         name="(stack)" 

@@ -1,3 +1,4 @@
+// AddressAutocompleteWeb.tsx
 import React, { useState, useRef } from 'react';
 import {
   View,
@@ -23,6 +24,8 @@ type Props = {
   onAddressSelect: (address: Address) => void;
   limit?: number;
   value?: string;
+  minChars?: number;  // nuevo
+  country?: string;   // nuevo
 };
 
 const GOOGLE_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_WEB || '';
@@ -32,11 +35,12 @@ export default function AddressAutocompleteWeb({
   onAddressSelect,
   limit = 5,
   value = '',
+  minChars = 3,
+  country = 'mx',
 }: Props) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const inputRef = useRef<any>(null);
@@ -57,7 +61,6 @@ export default function AddressAutocompleteWeb({
   const openDropdown = () => setShowDropdown(true);
   const closeDropdown = () => setShowDropdown(false);
 
-  // ✅ aceptar lo escrito manualmente
   const saveTypedAddress = () => {
     const text = (query || '').trim();
     if (!text) return;
@@ -66,44 +69,35 @@ export default function AddressAutocompleteWeb({
     closeDropdown();
   };
 
-  // buscar sugerencias (con debounce)
   const searchPlaces = (text: string) => {
     setQuery(text);
-    setError(null);
     openDropdown();
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
-    if (text.trim().length < 3) {
+    const trimmed = text.trim();
+    if (trimmed.length < minChars || !GOOGLE_KEY) {
       setResults([]);
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
-      if (!GOOGLE_KEY) {
-        setResults([]);
-        setError('Google API key no configurada. Puedes guardar la dirección manualmente.');
-        return;
-      }
       setLoading(true);
       try {
         const url =
           `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
-          `?input=${encodeURIComponent(text)}` +
-          `&components=country:mx&language=es&key=${GOOGLE_KEY}`;
+          `?input=${encodeURIComponent(trimmed)}` +
+          `&components=country:${country}&language=es&key=${GOOGLE_KEY}`;
         const res = await fetch(PROXY + url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (data.status === 'OK') {
           setResults((data.predictions || []).slice(0, limit));
-          setError(null);
         } else {
           setResults([]);
-          setError('Sin sugerencias. Puedes guardar la dirección manualmente.');
         }
       } catch {
-        setResults([]);
-        setError('No se pudo conectar con Google. Guarda la dirección manualmente.');
+        setResults([]); // silencioso
       } finally {
         setLoading(false);
       }
@@ -139,7 +133,7 @@ export default function AddressAutocompleteWeb({
       setResults([]);
       closeDropdown();
     } catch {
-      saveTypedAddress();
+      saveTypedAddress(); // fallback silencioso
     }
   };
 
@@ -155,8 +149,8 @@ export default function AddressAutocompleteWeb({
         },
       ]}
     >
-      {/* Opción manual: se acepta con click */}
-      {query.trim().length >= 3 ? (
+      {/* Opción manual siempre visible si hay texto */}
+      {query.trim().length >= 1 ? (
         <TouchableOpacity
           style={[styles.item, styles.manualItem, styles.clickable]}
           onPress={saveTypedAddress}
@@ -216,15 +210,13 @@ export default function AddressAutocompleteWeb({
         </View>
       ) : null}
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
       {showDropdown &&
         (Platform.OS === 'web'
           ? ReactDOM.createPortal(
-              (results.length > 0 || (query.trim().length >= 3 && !loading)) ? Dropdown : null,
+              (results.length > 0 || (query.trim().length >= 1 && !loading)) ? Dropdown : null,
               document.body
             )
-          : (results.length > 0 || (query.trim().length >= 3 && !loading)) && Dropdown)}
+          : (results.length > 0 || (query.trim().length >= 1 && !loading)) && Dropdown)}
     </View>
   );
 }
@@ -243,7 +235,6 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   loaderContainer: { position: 'absolute', right: 12, top: 12 },
-  error: { marginTop: 6, fontSize: 13, color: '#d32f2f' },
   results: {
     zIndex: 999999,
     backgroundColor: '#fff',

@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+// AddressAutocompleteUniversal.tsx
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   TextInput,
@@ -23,93 +24,159 @@ type Address = {
 type Props = {
   onAddressSelect: (address: Address) => void;
   value?: string;
+  minChars?: number;  // umbral para empezar a sugerir (por defecto 3)
+  country?: string;   // ISO2 (ej. 'mx'), por defecto 'mx'
 };
 
 const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_PLACES_API_KEY_ANDROID || '';
 
-export default function AddressAutocompleteUniversal({ onAddressSelect, value }: Props) {
-  const [query, setQuery] = useState(value || '');
+export default function AddressAutocompleteUniversal({
+  onAddressSelect,
+  value = '',
+  minChars = 3,
+  country = 'mx',
+}: Props) {
+  const [query, setQuery] = useState(value);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchPredictions = useCallback(async (text: string) => {
-    if (!text) {
-      setResults([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-        text
-      )}&key=${API_KEY}&language=es&components=country:mx`;
-      const res = await fetch(url);
-      const json = await res.json();
-      setResults(json.predictions || []);
-    } catch (err) {
-      console.error('Error fetching predictions', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const saveTypedAddress = useCallback(() => {
+    const text = (query || '').trim();
+    if (!text) return;
+    onAddressSelect({ direccion: text });
+    setResults([]);
+  }, [onAddressSelect, query]);
 
-  const fetchDetails = async (placeId: string, description: string) => {
-    try {
-      const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${API_KEY}&language=es`;
-      const res = await fetch(url);
-      const json = await res.json();
-      const details = json.result;
+  const fetchPredictions = useCallback(
+    async (text: string) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
 
-      if (!details) return;
+      setQuery(text);
+      const trimmed = text.trim();
 
-      const components = details.address_components || [];
-      const getComp = (type: string) =>
-        components.find((c: any) => c.types.includes(type))?.long_name || '';
+      if (!trimmed || trimmed.length < minChars || !API_KEY) {
+        // Limpia sugerencias en textos cortos o sin API key; aceptamos manual si el usuario quiere.
+        setResults([]);
+        return;
+      }
 
-      const address: Address = {
-        direccion: details.formatted_address || description,
-        colonia: getComp('sublocality') || getComp('neighborhood'),
-        codigoPostal: getComp('postal_code'),
-        ciudad: getComp('locality'),
-        estado: getComp('administrative_area_level_1'),
-        pais: getComp('country'),
-        lat: details.geometry?.location?.lat || 0,
-        lng: details.geometry?.location?.lng || 0,
-      };
+      debounceRef.current = setTimeout(async () => {
+        setLoading(true);
+        try {
+          const url =
+            `https://maps.googleapis.com/maps/api/place/autocomplete/json?` +
+            `input=${encodeURIComponent(trimmed)}` +
+            `&key=${API_KEY}` +
+            `&language=es` +
+            `&components=country:${country}`;
+          const res = await fetch(url);
+          const json = await res.json();
+          setResults(Array.isArray(json.predictions) ? json.predictions : []);
+        } catch {
+          // Silencioso: no mostramos errores; el usuario puede guardar manualmente
+          setResults([]);
+        } finally {
+          setLoading(false);
+        }
+      }, 300);
+    },
+    [ country, minChars]
+  );
 
-      onAddressSelect(address);
-      setQuery(address.direccion);
-      setResults([]);
-    } catch (err) {
-      console.error('Error fetching details', err);
-    }
-  };
+  const fetchDetails = useCallback(
+    async (placeId: string, description: string) => {
+      if (!API_KEY) {
+        saveTypedAddress();
+        return;
+      }
+      try {
+        const url =
+          `https://maps.googleapis.com/maps/api/place/details/json?` +
+          `place_id=${placeId}&key=${API_KEY}&language=es`;
+        const res = await fetch(url);
+        const json = await res.json();
+        const details = json.result;
+        if (!details) {
+          saveTypedAddress();
+          return;
+        }
+
+        const components = details.address_components || [];
+        const getComp = (type: string) =>
+          components.find((c: any) => c.types.includes(type))?.long_name || '';
+
+        const address: Address = {
+          direccion: details.formatted_address || description,
+          colonia: getComp('sublocality') || getComp('neighborhood'),
+          codigoPostal: getComp('postal_code'),
+          ciudad: getComp('locality'),
+          estado: getComp('administrative_area_level_1'),
+          pais: getComp('country'),
+          lat: details.geometry?.location?.lat ?? undefined,
+          lng: details.geometry?.location?.lng ?? undefined,
+        };
+
+        onAddressSelect(address);
+        setQuery(address.direccion);
+        setResults([]);
+      } catch {
+        // Fallback silencioso a manual
+        saveTypedAddress();
+      }
+    },
+    [, onAddressSelect, saveTypedAddress]
+  );
+
+  // Componemos una lista que pone primero la opción manual (si hay texto).
+  const composedResults = [
+    ...(query.trim()
+      ? [
+          {
+            place_id: '__manual__',
+            description: `Usar esta dirección: ${query.trim()}`,
+            _isManual: true,
+          },
+        ]
+      : []),
+    ...results,
+  ];
 
   return (
     <View style={styles.container}>
       <TextInput
         value={query}
-        onChangeText={(text) => {
-          setQuery(text);
-          fetchPredictions(text);
-        }}
+        onChangeText={fetchPredictions}
         placeholder="Escribe tu dirección..."
         style={styles.input}
+        returnKeyType="done"
+        onSubmitEditing={saveTypedAddress} // enter acepta lo escrito
+        autoCorrect={false}
+        autoCapitalize="none"
       />
 
-      {loading && <ActivityIndicator size="small" color="#ff9900" />}
+      {loading && <ActivityIndicator size="small" color="#ff9900" style={{ marginTop: 6 }} />}
 
       <FlatList
-        data={results}
+        data={composedResults}
         keyExtractor={(item) => item.place_id}
+        keyboardShouldPersistTaps="handled"
         style={styles.results}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.item}
-            onPress={() => fetchDetails(item.place_id, item.description)}
+            onPress={() =>
+              item._isManual
+                ? saveTypedAddress()
+                : fetchDetails(item.place_id, item.description)
+            }
           >
-            <Text style={styles.itemText}>{item.description}</Text>
+            <Text style={styles.itemText}>
+              {item._isManual ? item.description : item.description}
+            </Text>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={null}
       />
     </View>
   );
@@ -133,7 +200,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 5,
     marginTop: 5,
-    maxHeight: 200,
+    maxHeight: 220,
   },
   item: {
     paddingVertical: 12,

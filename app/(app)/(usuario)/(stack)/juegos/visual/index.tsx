@@ -1,17 +1,17 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useEjerciciosStore } from '@/infraestructure/store/useEjercicioStore';
 import AuthGuard from '@/presentation/theme/components/AuthGuard';
 import ThemedBackground from '@/presentation/theme/components/ThemedBackground';
-import { useEjerciciosStore } from '@/infraestructure/store/useEjercicioStore';
+import { useLocalSearchParams } from 'expo-router';
+import * as React from 'react';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
-  VisualRendererProps,
   ReactivoVisual,
+  ReactivoVisualGenerico,
   ReactivoVisualIgualDiferente,
   ReactivoVisualImagenCorrecta,
   ReactivoVisualPalabraMalEscrita,
-  ReactivoVisualGenerico,
-} from './interface/visual.reactivos';
+  VisualRendererProps,
+} from '../../../../../../presentation/interface/visual.reactivos';
 
 const ORANGE = '#ee7200';
 

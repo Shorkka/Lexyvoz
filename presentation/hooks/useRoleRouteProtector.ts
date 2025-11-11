@@ -1,28 +1,54 @@
 // presentation/hooks/useRoleRouteProtector.ts
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useCallback } from 'react';
 import { usePathname, useRouter, useRootNavigationState, type Href } from 'expo-router';
 import { useAuthStore } from '@/presentation/auth/store/useAuthStore';
 
-type HardRole = 'Paciente' | 'Doctor' | 'Usuario';
+type HardRole = 'Paciente' | 'Doctor' | 'Usuario' | 'admin';
 
-const PUBLIC_PREFIX = [
-  '/login',
-  '/registro',         
-  '/password',
-] as const;
+const PUBLIC_PREFIX = ['/login', '/registro', '/password'] as const;
 
+// Prefijos permitidos por rol (el hook permite subrutas con startsWith)
 const ALLOWED_PREFIX = {
-  Paciente: ['/home', '/juegos', '/ejercicios', '/busqueda-doctores', '/settings', '/notifications', '/juegos/escrito', '/juegos/visual', 'juegos/lectura'
-    , '/juegos/escrito/interface', '/juegos/visual/interface', 'juegos/lectura/interface' ],
-  Doctor:   ['/main', '/add_paciente', '/ver_perfil_usuario', '/settings', '/notifications', '/agenda', '/kits', '/kits/createKit', '/kits/editKit', '/kits/asignar_kits'],
-  Usuario:  ['/home', '/juegos', '/ejercicios', '/busqueda-doctores', '/settings', '/notifications', '/juegos/escrito', '/juegos/visual', 'juegos/lectura'
-    , '/juegos/escrito/interface', '/juegos/visual/interface', 'juegos/lectura/interface' ],
+  Paciente: [
+    '/home',
+    '/juegos', '/juegos/escrito', '/juegos/visual', '/juegos/lectura',
+    '/juegos/escrito/interface', '/juegos/visual/interface', '/juegos/lectura/interface',
+    '/ejercicios',
+    '/busqueda-doctores',
+    '/settings',
+    '/notifications',
+  ],
+  Doctor: [
+    '/main',
+    '/add_paciente',
+    '/ver_perfil_usuario',
+    '/agenda',
+    '/kits', '/kits/createKit', '/kits/editKit', '/kits/asignar_kits',
+    '/settings',
+    '/notifications',
+  ],
+  Usuario: [
+    '/home',
+    '/juegos', '/juegos/escrito', '/juegos/visual', '/juegos/lectura',
+    '/juegos/escrito/interface', '/juegos/visual/interface', '/juegos/lectura/interface',
+    '/ejercicios',
+    '/busqueda-doctores',
+    '/settings',
+    '/notifications',
+  ],
+  admin: [
+    '/admin', 
+    '/admin/users', '/admin/users/create',
+    '/admin/kits',  '/admin/kits/create',
+    '/admin/settings',
+  ],
 } as const satisfies Record<HardRole, readonly string[]>;
 
 const HOME_BY_ROLE = {
   Paciente: '/home',
   Doctor:   '/main',
   Usuario:  '/home',
+  admin:    '/admin',
 } as const satisfies Record<HardRole, Href>;
 
 export function useRoleRouteProtector() {
@@ -35,21 +61,26 @@ export function useRoleRouteProtector() {
   const isClient = typeof window !== 'undefined';
   const scheduled = useRef(false);
 
+  // ← aquí el fix: devolvemos 'admin' en minúsculas
   const role = useMemo<HardRole | undefined>(() => {
     if (!userType) return undefined;
     const t = String(userType).toLowerCase();
+    if (t.startsWith('adm')) return 'admin';
     if (t.startsWith('doc')) return 'Doctor';
     if (t.startsWith('pac')) return 'Paciente';
     return 'Usuario';
   }, [userType]);
 
-  const safeReplace = (to: Href) => {
+  const safeReplace = useCallback((to: Href) => {
     if (scheduled.current) return;
     scheduled.current = true;
     requestAnimationFrame(() => {
       try { router.replace(to); } finally { scheduled.current = false; }
     });
-  };
+  }, [router]);
+
+  const matches = useCallback((prefix: string) =>
+    pathname === prefix || pathname.startsWith(prefix + '/'), [pathname]);
 
   useEffect(() => {
     if (!isClient || !isRouterReady) return;
@@ -57,16 +88,16 @@ export function useRoleRouteProtector() {
 
     // --- SIN SESIÓN: permitir rutas públicas ---
     if (status === 'unauthenticated') {
-      const isPublic = PUBLIC_PREFIX.some(p => pathname === p || pathname.startsWith(p + '/'));
+      const isPublic = PUBLIC_PREFIX.some(matches);
       if (!isPublic) safeReplace('/login' as Href);
       return;
     }
 
-    // --- CON SESIÓN COMPLETA ---
+    // --- SESIÓN NO LISTA O SIN ROL ---
     if (status !== 'authenticated' || !role) return;
 
-    // Si ya estás logueado, no te quedes en rutas públicas (ej. /login o /register)
-    const isPublic = PUBLIC_PREFIX.some(p => pathname === p || pathname.startsWith(p + '/'));
+    // Autenticado: sacar de rutas públicas
+    const isPublic = PUBLIC_PREFIX.some(matches);
     if (isPublic) {
       safeReplace(HOME_BY_ROLE[role]);
       return;
@@ -74,9 +105,9 @@ export function useRoleRouteProtector() {
 
     // Permisos por prefijo
     const allowed = ALLOWED_PREFIX[role];
-    const isAllowed = allowed.some(p => pathname === p || pathname.startsWith(p + '/'));
+    const isAllowed = allowed.some(matches);
     if (!isAllowed) {
       safeReplace(HOME_BY_ROLE[role]);
     }
-  }, [isClient, isRouterReady, pathname, status, role, router]);
+  }, [isClient, isRouterReady, pathname, status, role, router, matches, safeReplace]);
 }

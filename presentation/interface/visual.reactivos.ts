@@ -17,38 +17,38 @@ export interface ReactivoVisualIgualDiferente extends ReactivoVisualBase {
   sub_tipo_nombre: string; // "Igual-Diferente"
   payload: {
     instrucciones?: string; 
-    items: Array<{
+    items: {
       izquierda: string;
       derecha: string;
-      sonIguales?: boolean; // si el back lo manda
-    }>;
+      sonIguales?: boolean; 
+    }[];
   };
 }
 
 /** Subtipo: imagen-correcta */
 export interface ReactivoVisualImagenCorrecta extends ReactivoVisualBase {
-  sub_tipo_nombre: string; // "Imagen correcta"
+  sub_tipo_nombre: string;
   payload: {
     instrucciones?: string;
     enunciado?: string;
-    opciones: Array<{
+    opciones: {
       imageUrl: string;
       label?: string;
-      correcta?: boolean; // si el back lo manda
-    }>;
+      correcta?: boolean; 
+    }[];
   };
 }
 
 /** Subtipo: palabra-mal-escrita */
 export interface ReactivoVisualPalabraMalEscrita extends ReactivoVisualBase {
-  sub_tipo_nombre: string; // "Palabra mal escrita"
+  sub_tipo_nombre: string; 
   payload: {
-    instrucciones?: string; // "Selecciona la palabra incorrecta."
-    pares: Array<{
-      izquierda: string;
+    instrucciones?: string;
+    pares: {
+      izquierda: string; 
       derecha: string;
-      incorrecta: 0 | 1; // 0 => izquierda es incorrecta, 1 => derecha
-    }>;
+      incorrecta: 0 | 1; 
+    }[];
   };
 }
 

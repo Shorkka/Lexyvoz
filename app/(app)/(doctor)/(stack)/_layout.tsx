@@ -31,12 +31,14 @@ const StackLayout = () => {
         headerStyle: {
           backgroundColor: '#fefcc3',
         },
+        headerBackVisible: false,
+        headerBackButtonMenuEnabled: false,
+
         headerTitleAlign: 'center',
         headerTitle: () => (
           <Pressable onPress={goHome} hitSlop={10}>
             <ThemedText
               type="title"
-              // evita que se recorte, usa un contenedor flexible
               style={{
                 fontWeight: '900',
                 color: '#ffa500',
@@ -90,7 +92,7 @@ const StackLayout = () => {
         name="main/index" 
         options={{ 
           title: '',
-          headerShown: true
+          headerBackVisible: false
           
         }} 
       />
@@ -98,56 +100,56 @@ const StackLayout = () => {
         name="add_paciente/index" 
         options={{ 
           title: ' ',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
       <Stack.Screen 
         name="kits/kits-list/index" 
         options={{ 
           title: 'Listar Kit',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
       <Stack.Screen 
         name="kits/createKit/index" 
         options={{ 
           title: 'Crear Kits',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
       <Stack.Screen 
         name="kits/editKit/[kitId]/index" 
         options={{ 
           title: 'Editar Kit',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
       <Stack.Screen 
         name="agenda/index" 
         options={{ 
           title: 'Agenda',
-          headerShown: true,
+          headerShown: false,
         }}
       />
       <Stack.Screen
         name = "ver_perfil_usuario/[paciente_id]/index"
         options={{ 
           title: 'Perfil paciente',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
           <Stack.Screen 
         name="notifications/index" 
         options={{ 
           title: 'Notificaciones',
-          headerShown: true,
+          headerBackVisible: false,
         }} 
       />
             <Stack.Screen 
         name="kits/(terminardeCrearKit)/index" 
         options={{ 
           title: 'Terminar de Crear Kit',
-          headerShown: true,
+          headerBackVisible: false,
         }}
       />
 

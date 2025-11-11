@@ -50,7 +50,7 @@ const keyImg = (t?: string) => {
 const HomePacienteScreen = () => {
   const { userType, userName} = useAuthStore();
   const backgroundColor = useThemeColor({}, 'background');
-
+console.log(userType)
   // Estado para el modal y kit seleccionado
   const [selectedKit, setSelectedKit] = useState<Kit | null>(null);
   const [modalVisible, setModalVisible] = useState(false);

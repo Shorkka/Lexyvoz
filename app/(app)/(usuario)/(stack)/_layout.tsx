@@ -30,8 +30,11 @@ const StackLayout = () => {
         headerShadowVisible: false,
         headerStyle: { backgroundColor: '#fefcc3' },
         contentStyle: { backgroundColor: '#fefcc3' },
-
-        // ⬇️ TÍTULO CENTRADO Y COMPLETO
+        
+        headerBackVisible: false,
+        headerBackButtonMenuEnabled: false,
+        
+        
         headerTitleAlign: 'center',
         headerTitle: () => (
           <Pressable onPress={goHome} hitSlop={10}>
@@ -56,7 +59,6 @@ const StackLayout = () => {
         ),
         // Ayuda a centrar realmente el título cuando hay avatar a la izquierda y botón a la derecha
 
-        // ⬅️ Avatar / back
         headerLeft: () => (
           <Pressable
             onPress={handleHeaderLeftPress}
@@ -75,7 +77,6 @@ const StackLayout = () => {
           </Pressable>
         ),
 
-        // ➡️ Botón pequeño (no texto largo aquí)
         headerRight: () => (
           <Pressable
             onPress={goHome}
@@ -87,13 +88,13 @@ const StackLayout = () => {
         ),
       }}
     >
-      <Stack.Screen name="home/index" options={{ title: '', headerShown: true }} />
+      <Stack.Screen name="home/index" options={{ title: '', headerBackVisible: false }} />
       <Stack.Screen name="ejercicios/index" options={{ title: '', headerBackVisible: false }} />
       <Stack.Screen name="busqueda-doctores/index" options={{ title: ' ', headerBackVisible: false }} />
-      <Stack.Screen name="juegos/index" options={{ title: '', headerBackVisible: true }} />
-      <Stack.Screen name="juegos/escrito/index" options={{ title: '', headerBackVisible: true }} />
-      <Stack.Screen name="juegos/lectura/index" options={{ title: '', headerBackVisible: true }} />
-      <Stack.Screen name="juegos/visual/index" options={{ title: '', headerBackVisible: true }} />
+      <Stack.Screen name="juegos/index" options={{ title: '', headerBackVisible: false }} />
+      <Stack.Screen name="juegos/escrito/index" options={{ title: '', headerBackVisible: false }} />
+      <Stack.Screen name="juegos/lectura/index" options={{ title: '', headerBackVisible: false }} />
+      <Stack.Screen name="juegos/visual/index" options={{ title: '', headerBackVisible: false }} />
       <Stack.Screen name="settings/index" options={{ title: 'Perfil', headerBackVisible: false }} />
       <Stack.Screen name ="notifications/index" options = {{title: "Notificaciones", headerBackVisible: false}}/>
     </Stack>
